@@ -1,11 +1,50 @@
 {
  "interval": {
-    "type" : "spinbutton",
-    "default" : 1000,
-    "min" : 750,
-    "max" : 5000,
-    "step" : 50,
-    "units": "ms",
-    "description" : "Interval"
- }
+  "type" : "spinbutton",
+  "default" : 1000,
+  "min" : 750,
+  "max" : 5000,
+  "step" : 50,
+  "units": "ms",
+  "description" : "Interval"
+ },
+ "width": {
+  "type" : "spinbutton",
+  "default" : 5,
+  "min" : 1,
+  "max" : 20,
+  "step" : 0.5,
+  "units": "px",
+  "description" : "Line width of graph"
+ },
+ "cpu1": {
+		"type": "colorchooser",
+		"default": "rgba(255, 110, 0, 1)",
+		"description": "CPU1"
+	},
+	"cpu2": {
+		"type": "colorchooser",
+		"default": "rgba(203, 12, 41, 1)",
+		"description": "CPU2"
+	},
+	"cpu3": {
+		"type": "colorchooser",
+		"default": "rgba(73, 168, 53, 1)",
+		"description": "CPU3"
+	},
+	"cpu4": {
+		"type": "colorchooser",
+		"default": "rgba(45, 125, 179, 1)",
+		"description": "CPU4"
+	},
+	"mem": {
+		"type": "colorchooser",
+		"default": "rgba(171, 24, 82, 1)",
+		"description": "Memory"
+	},
+	"swap": {
+		"type": "colorchooser",
+		"default": "rgba(73, 168, 53, 1)",
+		"description": "Swap"
+	}
 }
