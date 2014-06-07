@@ -1,6 +1,3 @@
-let smaDepsGtop = true;
-let smaDepsNM = true;
-
 const Applet = imports.ui.applet;
 
 const Clutter = imports.gi.Clutter;
@@ -13,20 +10,9 @@ const ModalDialog = imports.ui.modalDialog;
 const Tooltips = imports.ui.tooltips;
 const Settings = imports.ui.settings;
 
-try {
-	const NMClient = imports.gi.NMClient;
-	const NetworkManager = imports.gi.NetworkManager;
-} catch (e){
-	global.logError(e);
-	smaDepsNM = false;
-}
-
-try {
-	const GTop = imports.gi.GTop;
-} catch (e){
-	global.logError(e);
-	smaDepsGtop = false;
-}
+const NMClient = imports.gi.NMClient;
+const NetworkManager = imports.gi.NetworkManager;
+const GTop = imports.gi.GTop;
 
 const Main = imports.ui.main;
 const Panel = imports.ui.panel;
@@ -61,26 +47,23 @@ MyApplet.prototype = {
 				colors: [[1, .43, 0], [.8, .05, .16], [.28, 0.66, .2], [.18, .49, .7]],//[1, .5, 0] Orange
 				total: [],
 				nice: [],
-				idle: [],
-				iowait: [],
-				sys: [],
 				user: [],
+				system: [],
 				submenu: new PopupMenu.PopupSubMenuMenuItem(_("CPU")),
-				items: [new PopupMenu.PopupMenuItem(_("nice")), new PopupMenu.PopupMenuItem(_("idle")), new PopupMenu.PopupMenuItem(_("iowait")), new PopupMenu.PopupSeparatorMenuItem(), new PopupMenu.PopupMenuItem(_("user")), new PopupMenu.PopupMenuItem(_("system"))]
+				items: [new PopupMenu.PopupMenuItem(_("User")), new PopupMenu.PopupMenuItem(_("System"))],
+				container: [new St.BoxLayout()]
 			};
 
    this.mem = {
 				gtop: new GTop.glibtop_mem(),
 				submenu: new PopupMenu.PopupSubMenuMenuItem(_("Memory")),
-				items: [new PopupMenu.PopupMenuItem(_("cached")), new PopupMenu.PopupMenuItem(_("buffered"))]
+				items: [new PopupMenu.PopupMenuItem(_("cached")), new PopupMenu.PopupMenuItem(_("buffered")), new PopupMenu.PopupMenuItem(_("free"))],
+				container: [new St.BoxLayout()]
 			};	
 			this.data = {
 				cpu: {
 					usage: [],
-					nice: [],
-					idle: [],
-					iowait: [],
-					sys: [],
+					system: [],
 					user: []
 				},
 				mem: {}
@@ -92,24 +75,27 @@ MyApplet.prototype = {
 			for(i = 0; i < this.cpu.count; ++i){
 				this.cpu.total.push(0);
 				this.cpu.nice.push(0);
-				this.cpu.idle.push(0);
-				this.cpu.iowait.push(0);
-				this.cpu.sys.push(0);
 				this.cpu.user.push(0);
-				this.cpu.submenu.addActor(new St.Label({text: "?%", style: "width: 40px; text-align: right"}));
+				this.cpu.container[0].add_actor(new St.Label({text: "?%", width: 40, style: "text-align: right"}));
 			}
+   this.cpu.submenu.addActor(this.cpu.container[0]);
 			for(i = 0; i < this.cpu.items.length; ++i){
+				this.cpu.container.push(new St.BoxLayout());
 				for(j = 0; j < this.cpu.count; ++j)
-				 this.cpu.items[i].addActor(new St.Label({text: "?%", style: "width: 40px; text-align: right"}));
+				 this.cpu.container[i + 1].add_actor(new St.Label({text: "?%", width: 40, style: "text-align: right"}));
+				this.cpu.items[i].addActor(this.cpu.container[i + 1]);
 			 this.cpu.submenu.menu.addMenuItem(this.cpu.items[i]);
 			}
 			this.menu.addMenuItem(this.cpu.submenu);
 
-   this.mem.submenu.addActor(new St.Label({text: "? MiB", style: "width: 60px; text-align: right"}));
-   this.mem.submenu.addActor(new St.Label({text: "?%", style: "width: 40px; text-align: right"}));
+   this.mem.container[0].add_actor(new St.Label({text: "? MiB", width: 100, style: "text-align: right"}));
+   this.mem.container[0].add_actor(new St.Label({text: "?%", width: 60, style: "text-align: right"}));
+   this.mem.submenu.addActor(this.mem.container[0]);
    for(i = 0; i < this.mem.items.length; ++i){
-				this.mem.items[i].addActor(new St.Label({text: "? MiB", style: "width: 60px; text-align: right"}));
-				this.mem.items[i].addActor(new St.Label({text: "?%", style: "width: 40px; text-align: right"}));
+				this.mem.container.push(new St.BoxLayout());
+				this.mem.container[i + 1].add_actor(new St.Label({text: "? MiB", width: 100, style: "text-align: right"}));
+				this.mem.container[i + 1].add_actor(new St.Label({text: "?%", width: 60, style: "text-align: right"}));
+			 this.mem.items[i].addActor(this.mem.container[i + 1]);
 			 this.mem.submenu.menu.addMenuItem(this.mem.items[i]);
 			}
 			this.menu.addMenuItem(this.mem.submenu);
@@ -126,6 +112,7 @@ MyApplet.prototype = {
 				_gsmApp.activate();
 			});
 			this.menu.addMenuItem(item);
+			this.getData();
 		} catch(e){
 			global.logError(e);
 		}
@@ -136,23 +123,18 @@ MyApplet.prototype = {
 			GTop.glibtop_get_cpu(this.cpu.gtop);
 			for(i = 0; i < this.cpu.count; ++i){
 				var dtotal	= this.cpu.gtop.xcpu_total[i] - this.cpu.total[i];
-				var dnice	= this.cpu.gtop.xcpu_nice[i]  - this.cpu.nice[i];
-				var didle 	= this.cpu.gtop.xcpu_idle[i]  - this.cpu.idle[i];
-				var diowait	= this.cpu.gtop.xcpu_iowait[i]- this.cpu.iowait[i];
-				
-				var dsys	= this.cpu.gtop.xcpu_sys[i]- this.cpu.sys[i];
-				var duser	= this.cpu.gtop.xcpu_user[i]- this.cpu.user[i];
+				var dnice	= this.cpu.gtop.xcpu_nice[i] - this.cpu.nice[i];
+				var duser	= this.cpu.gtop.xcpu_user[i] - this.cpu.user[i];
+				var dsystem	= this.cpu.gtop.xcpu_sys[i] - this.cpu.system[i];
 				
 				this.cpu.total[i] = this.cpu.gtop.xcpu_total[i];
 				this.cpu.nice[i] = this.cpu.gtop.xcpu_nice[i];
-				this.cpu.idle[i] = this.cpu.gtop.xcpu_idle[i];
-				this.cpu.iowait[i] = this.cpu.gtop.xcpu_iowait[i];
-				
-				this.cpu.sys[i] = this.cpu.gtop.xcpu_sys[i];
 				this.cpu.user[i] = this.cpu.gtop.xcpu_user[i];
+				this.cpu.system[i] = this.cpu.gtop.xcpu_sys[i];
 				
-				this.data.cpu.usage[i] = Math.round((duser + dnice + dsys) / dtotal * 1000, 2) / 10;
-				this.data.cpu.nice[i] = Math.round(dnice / dtotal * 1000, 2) / 10;
+				this.data.cpu.usage[i] = (duser + dnice + dsystem) / dtotal;
+				this.data.cpu.user[i] = duser / dtotal;
+				this.data.cpu.system[i] = dsystem / dtotal;
 			}
 			
 			GTop.glibtop_get_mem(this.mem.gtop);
@@ -186,11 +168,16 @@ MyApplet.prototype = {
  	try {
 			this.getData(); 
 			for(var i = 0; i < this.cpu.count; ++i){
-				this.cpu.submenu._children[i + 1].actor.set_text(this.data.cpu.usage[i] + "%");
-				this.cpu.items[0]._children[i + 1].actor.set_text(this.data.cpu.nice[i] + "%");
+				this.cpu.container[0].get_children()[i].set_text(Math.round(this.data.cpu.usage[i] * 100) + "%");
+				this.cpu.container[1].get_children()[i].set_text(Math.round(this.data.cpu.user[i] * 100) + "%");
+				this.cpu.container[2].get_children()[i].set_text(Math.round(this.data.cpu.system[i] * 100) + "%");
    }
-			this.mem.submenu._children[1].actor.set_text(this.data.mem.usedup + " MiB");
-			this.mem.submenu._children[2].actor.set_text(Math.round(1000 * this.data.mem.usedup / this.data.mem.total) / 10 + "%");
+			this.mem.container[0].get_children()[0].set_text(this.data.mem.usedup + " MiB");
+			this.mem.container[0].get_children()[1].set_text(Math.round(1000 * this.data.mem.usedup / this.data.mem.total) / 10 + "%");
+   this.mem.container[1].get_children()[0].set_text(this.data.mem.buffer + " MiB");
+			this.mem.container[1].get_children()[1].set_text(Math.round(1000 * this.data.mem.cached / this.data.mem.total) / 10 + "%");
+   this.mem.container[2].get_children()[0].set_text(this.data.mem.cached + " MiB");
+			this.mem.container[2].get_children()[1].set_text(Math.round(1000 * this.data.mem.buffer / this.data.mem.total) / 10 + "%");
    //this.canvas.queue_repaint();
 			if(this.menu.isOpen) Mainloop.timeout_add(this.settings.interval,	Lang.bind(this, this.refresh));
 		} catch(e){
