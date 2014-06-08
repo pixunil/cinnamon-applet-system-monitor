@@ -17,7 +17,25 @@
   "units": "px",
   "description" : "Line width of graph"
  },
- "cpu1": {
+ "colors": {
+		"type": "separator"
+	},
+ "disk": {
+		"type": "colorchooser",
+		"default": "rgba(73, 168, 53, 1)",
+		"description": "Disk"
+	},
+ "read": {
+		"type": "colorchooser",
+		"default": "rgba(45, 125, 179, 1)",
+		"description": "Read"
+	},
+	"write": {
+		"type": "colorchooser",
+		"default": "rgba(238, 29, 0, 1)",
+		"description": "Write"
+	},
+	"cpu1": {
 		"type": "colorchooser",
 		"default": "rgba(255, 110, 0, 1)",
 		"description": "CPU1"
