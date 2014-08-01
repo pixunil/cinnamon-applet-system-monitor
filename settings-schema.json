@@ -1,41 +1,41 @@
 {
- "interval": {
-  "type": "spinbutton",
-  "default": 1000,
-  "min": 750,
-  "max": 5000,
-  "step": 50,
-  "units": "ms",
-  "description": "Interval"
- },
- "width": {
-  "type": "spinbutton",
-  "default": 5,
-  "min": 1,
-  "max": 20,
-  "step": 0.5,
-  "units": "px",
-  "description": "Line width of graph"
- },
- "thermalmode": {
-  "type": "combobox",
-  "default": 1,
-  "options": {
+	"interval": {
+		"type": "spinbutton",
+		"default": 1000,
+		"min": 750,
+		"max": 5000,
+		"step": 50,
+		"units": "ms",
+		"description": "Interval"
+	},
+	"width": {
+		"type": "spinbutton",
+		"default": 5,
+		"min": 1,
+		"max": 20,
+		"step": 0.5,
+		"units": "px",
+		"description": "Line width of graph"
+	},
+	"thermalmode": {
+		"type": "combobox",
+		"default": 1,
+		"options": {
 			"Minimum": 0,
 			"Average": 1,
 			"Maximum": 2
 		},
-  "description": "Thermal calculation mode"
- },
- "colors": {
+		"description": "Thermal calculation mode"
+	},
+	"colors": {
 		"type": "separator"
 	},
- "disk": {
+	"disk": {
 		"type": "colorchooser",
 		"default": "rgba(73, 168, 53, 1)",
 		"description": "Disk"
 	},
- "read": {
+	"read": {
 		"type": "colorchooser",
 		"default": "rgba(45, 125, 179, 1)",
 		"description": "Read"
@@ -74,5 +74,73 @@
 		"type": "colorchooser",
 		"default": "rgba(73, 168, 53, 1)",
 		"description": "Swap"
+	},
+	"notifications": {
+		"type": "separator"
+	},
+	"notificationinfo": {
+		"type": "header",
+		"description": "The unit int equals one interval"
+	},
+	"cpuwarning": {
+		"type": "checkbox",
+		"default": false,
+		"description": "enable CPU warning"
+	},
+	"cpuwarningtime": {
+		"type": "spinbutton",
+		"min": 1,
+		"max": 40,
+		"default": 5,
+		"step": 1,
+		"units": "int",
+		"description": "Warning time",
+		"indent": true,
+		"dependency": "cpuwarning"
+	},
+	"cpuwarningmode": {
+		"type": "checkbox",
+		"default": true,
+		"description": "Use average CPU usage",
+		"indent": true,
+		"dependency": "cpuwarning"
+	},
+	"cpuwarningvalue": {
+		"type": "spinbutton",
+		"min": 50,
+		"max": 100,
+		"default": 100,
+		"step": 0.5,
+		"units": "%",
+		"description": "Warning CPU usage",
+		"indent": true,
+		"dependency": "cpuwarning"
+	},
+	"thermalwarning": {
+		"type": "checkbox",
+		"default": false,
+		"description": "enable thermal warning"
+	},
+	"thermalwarningtime": {
+		"type": "spinbutton",
+		"min": 1,
+		"max": 40,
+		"default": 5,
+		"step": 1,
+		"units": "int",
+		"description": "Warning time",
+		"indent": true,
+		"dependency": "thermalwarning"
+	},
+	"thermalwarningvalue": {
+		"type": "spinbutton",
+		"min": 25,
+		"max": 100,
+		"default": 50,
+		"step": 0.5,
+		"units": "\u00b0C",
+		"description": "Warning temperatur",
+		"indent": true,
+		"dependency": "thermalwarning"
 	}
 }

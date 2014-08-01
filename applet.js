@@ -252,7 +252,25 @@ MyApplet.prototype = {
 				this.data.cpu.usage[i] = (duser + dnice + dsystem) / dtotal;
 				this.data.cpu.user[i] = duser / dtotal;
 				this.data.cpu.system[i] = dsystem / dtotal;
+
+				if(this.settings.cpuwarning){
+					if(this.settings.cpuwarningmode)
+						r += this.data.cpu.usage[i];
+					else {
+						if(this.data.cpu.usage[i] >= this.settings.cpuwarningvalue / 100){
+							if(--this.notifications.cpu[i] == 0)
+								this.notify("Warning:", "CPU core " + (i + 1) + " usage was over " + this.settings.cpuwarningvalue + "% for " + this.settings.cpuwarningtime * this.settings.interval / 1000 + "sec");
+						} else
+							this.notifications.cpu[i] = this.settings.cpuwarningtime;
+					}
+				}
 			}
+
+			if(this.settings.cpuwarning && this.settings.cpuwarningmode && r / this.cpu.count >= this.settings.cpuwarningvalue / 100){
+				if(--this.notifications.cpu == 0)
+							this.notify("Warning:", "CPU usage was over " + this.settings.cpuwarningvalue + "% for " + this.settings.cpuwarningtime * this.settings.interval / 1000 + "sec");
+			} else
+				this.notifications.cpu = this.settings.cpuwarningtime;
 
 			GTop.glibtop_get_mem(this.mem.gtop);
 			this.data.mem.total = Math.round(this.mem.gtop.total / 1024 / 1024);
@@ -292,6 +310,12 @@ MyApplet.prototype = {
 				else if(this.settings.thermalmode == 2 && this.data.thermal[0] < this.data.thermal[i + 1]) this.data.thermal[0] = this.data.thermal[i + 1];
 			}
 			if(this.settings.thermalmode == 1) this.data.thermal[0] /= l;
+
+			if(this.settings.thermalwarning && this.data.thermal[0] > this.settings.thermalwarningvalue){
+				if(--this.notifications.thermal == 0)
+					this.notify("Warning:", "Temperature was over " + this.settings.thermalwarningvalue + "\u00b0C for " + this.settings.thermalwarningtime * this.settings.interval / 1000 + "sec");
+			} else
+				this.notifications.thermal = this.settings.thermalwarningtime;
 
 			this.data.time = time;
 			if(this.menu.isOpen) this.refresh();
@@ -390,6 +414,9 @@ MyApplet.prototype = {
 			global.logError(e);
 		}
 	},
+	notify: function(summary, body){
+		Util.spawnCommandLine("notify-send -i utilities-system-monitor " + summary + " '" + body + "'");
+	},
 	on_applet_clicked: function(event){
 		this.menu.toggle();
 		if(this.menu.isOpen) this.refresh();
@@ -404,6 +431,16 @@ MyApplet.prototype = {
 			}, this);
 			this.canvas.set_height((this.cpu.count + 4) * this.settings.width * 2);
 			this.canvas.set_height((this.cpu.count + 4) * this.settings.width * 2);
+			if(this.settings.cpuwarning){
+				if(this.settings.cpuwarningmode)
+					this.notifications.cpu = this.settings.cpuwarningtime;
+				else {
+					this.notifications.cpu = [];
+					for(i = 0; i < this.cpu.count; ++i)
+						this.notifications.cpu.push(this.settings.cpuwarningtime);
+				}
+			}
+			if(this.settings.thermalwarning) this.notifications.thermal = this.settings.thermalwarningtime;
 		} catch(e){
 			global.logError(e);
 		}
