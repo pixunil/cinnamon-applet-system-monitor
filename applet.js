@@ -35,6 +35,68 @@ function MyApplet(metadata, orientation, instanceId){
 MyApplet.prototype = {
 	__proto__: Applet.IconApplet.prototype,
 
+	cpu: {
+		gtop: new GTop.glibtop_cpu(),
+		count: GTop.glibtop_get_sysinfo().ncpu,
+		total: [],
+		nice: [],
+		user: [],
+		system: [],
+		submenu: new PopupMenu.PopupSubMenuMenuItem(_("CPU")),
+		container: [new St.BoxLayout()]
+	},
+	mem: {
+		gtop: new GTop.glibtop_mem(),
+		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Memory")),
+		container: [new St.BoxLayout()]
+	},
+	swap: {
+		gtop: new GTop.glibtop_swap(),
+		submenu: new PopupMenu.PopupMenuItem(_("Swap")),
+		container: [new St.BoxLayout()]
+	},
+	disk: {
+		gtop: new GTop.glibtop_fsusage(),
+		write: null,
+		read: null,
+		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Disk")),
+		container: [new St.BoxLayout()]
+	},
+	network: {
+		gtop: new GTop.glibtop_netload(),
+		up: null,
+		down: null,
+		dev: {},
+		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Network")),
+		menuitem: [],
+		container: [new St.BoxLayout()]
+	},
+	thermal: {
+		sensors: [],
+		path: "",
+		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Thermal")),
+		container: [new St.BoxLayout()]
+	},
+
+	data: {
+		time: 0,
+		cpu: {
+			usage: [],
+			system: [],
+			user: []
+		},
+		mem: {},
+		swap: {},
+		mounts: [],
+		disk: {max: 1},
+		network: {
+			up: [],
+			down: [],
+			max: 1
+		},
+		thermal: []
+	},
+
 	_init: function(metadata, orientation, instanceId){
 		Applet.IconApplet.prototype._init.call(this, orientation);
 
@@ -47,71 +109,16 @@ MyApplet.prototype = {
 			this.colors = {};
 			this.notifications = {};
 			this.settingProvider = new Settings.AppletSettings(this.settings, metadata.uuid, instanceId);
-			["interval", "thermalmode", "width",
+			["interval", "byteunit", "rateunit", "maxsize", "rateunit", "order", "thermalmode"].forEach(function(p){
+				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, p);
+			}, this);
+			//Settings with callback
+			["width",
 				"disk", "write", "read", "cpu1", "cpu2", "cpu3", "cpu4", "mem", "swap",
 				"cpuwarning", "cpuwarningtime", "cpuwarningmode", "cpuwarningvalue", "thermalwarning", "thermalwarningtime", "thermalwarningvalue"].forEach(function(p){
 				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, p, Lang.bind(this, this.on_settings_changed));
 			}, this);
 
-
-   this.cpu = {
-				gtop: new GTop.glibtop_cpu(),
-				count: GTop.glibtop_get_sysinfo().ncpu,
-				total: [],
-				nice: [],
-				user: [],
-				system: [],
-				submenu: new PopupMenu.PopupSubMenuMenuItem(_("CPU")),
-				container: [new St.BoxLayout()]
-			};
-
-   this.mem = {
-				gtop: new GTop.glibtop_mem(),
-				submenu: new PopupMenu.PopupSubMenuMenuItem(_("Memory")),
-				container: [new St.BoxLayout()]
-			};
-
-			this.swap = {
-				gtop: new GTop.glibtop_swap(),
-				submenu: new PopupMenu.PopupMenuItem(_("Swap")),
-				container: [new St.BoxLayout()]
-			};
-
-			this.disk = {
-				gtop: new GTop.glibtop_fsusage(),
-				write: 0,
-				read: 0,
-				submenu: new PopupMenu.PopupSubMenuMenuItem(_("Disk")),
-				container: [new St.BoxLayout()]
-			};
-
-			this.thermal = {
-				sensors: [],
-				path: "",
-				submenu: new PopupMenu.PopupSubMenuMenuItem(_("Thermal")),
-				container: [new St.BoxLayout()]
-			};
-
-			/*this.info = {
-				gtop: new GTop.glibtop_sysinfo(),
-				submenu: new PopupMenu.PopupSubMenuMenuItem(_("Information")),
-				items: [],
-				container: []
-			};*/
-
-			this.data = {
-				time: 0,
-				cpu: {
-					usage: [],
-					system: [],
-					user: []
-				},
-				mem: {},
-				swap: {},
-				mounts: [],
-				disk: {maxWrite: 1,	maxRead: 1},
-				thermal: []
-			};
 			this.menuManager = new PopupMenu.PopupMenuManager(this);
 			this.menu = new Applet.AppletPopupMenu(this, orientation);
 			this.menuManager.addMenu(this.menu);
@@ -120,7 +127,7 @@ MyApplet.prototype = {
 				this.cpu.total.push(0);
 				this.cpu.nice.push(0);
 				this.cpu.user.push(0);
-				this.cpu.container[0].add_actor(new St.Label({text: "?%", width: 60, style: "text-align: right"}));
+				this.cpu.container[0].add_actor(new St.Label({width: 60, style: "text-align: right"}));
 			}
 			this.cpu.container[0].set_margin_left(260 - this.cpu.count * 60);
 			this.cpu.submenu.addActor(this.cpu.container[0]);
@@ -129,33 +136,33 @@ MyApplet.prototype = {
 				item = new PopupMenu.PopupMenuItem(_(r[i]));
 				this.cpu.container.push(new St.BoxLayout({margin_left: 260 - this.cpu.count * 60}));
 				for(j = 0; j < this.cpu.count; ++j)
-					this.cpu.container[i + 1].add_actor(new St.Label({text: "?%", width: 60, style: "text-align: right"}));
+					this.cpu.container[i + 1].add_actor(new St.Label({width: 60, style: "text-align: right"}));
 				item.addActor(this.cpu.container[i + 1]);
 				this.cpu.submenu.menu.addMenuItem(item);
 			}
 			this.menu.addMenuItem(this.cpu.submenu);
 
-			this.mem.container[0].add_actor(new St.Label({text: "? MiB", width: 100, style: "text-align: right", margin_left: 100}));
-			this.mem.container[0].add_actor(new St.Label({text: "?%", width: 60, style: "text-align: right"}));
+			this.mem.container[0].add_actor(new St.Label({width: 100, style: "text-align: right", margin_left: 100}));
+			this.mem.container[0].add_actor(new St.Label({width: 60, style: "text-align: right"}));
 			this.mem.submenu.addActor(this.mem.container[0]);
 			r = ["used", "cached", "buffered"];
 			for(i = 0, l = r.length; i < l; ++i){
 				item = new PopupMenu.PopupMenuItem(_(r[i]));
 				this.mem.container.push(new St.BoxLayout());
-				this.mem.container[i + 1].add_actor(new St.Label({text: "? MiB", width: 100, style: "text-align: right", margin_left: 100}));
-				this.mem.container[i + 1].add_actor(new St.Label({text: "?%", width: 60, style: "text-align: right"}));
+				this.mem.container[i + 1].add_actor(new St.Label({width: 100, style: "text-align: right", margin_left: 100}));
+				this.mem.container[i + 1].add_actor(new St.Label({width: 60, style: "text-align: right"}));
 				item.addActor(this.mem.container[i + 1]);
 				this.mem.submenu.menu.addMenuItem(item);
 			}
 			this.menu.addMenuItem(this.mem.submenu);
 
-			this.swap.container[0].add_actor(new St.Label({text: "? MiB", width: 100, style: "text-align: right", margin_left: 100}));
-			this.swap.container[0].add_actor(new St.Label({text: "?%", width: 60, style: "text-align: right"}));
+			this.swap.container[0].add_actor(new St.Label({width: 100, style: "text-align: right", margin_left: 100}));
+			this.swap.container[0].add_actor(new St.Label({width: 60, style: "text-align: right"}));
 			this.swap.submenu.addActor(this.swap.container[0]);
 			this.menu.addMenuItem(this.swap.submenu);
 
-			this.disk.container[0].add_actor(new St.Label({text: "? MiB/s", width: 130, style: "text-align: right"}));
-			this.disk.container[0].add_actor(new St.Label({text: "? MiB/s", width: 130, style: "text-align: right"}));
+			this.disk.container[0].add_actor(new St.Label({width: 130, style: "text-align: right"}));
+			this.disk.container[0].add_actor(new St.Label({width: 130, style: "text-align: right"}));
 			this.disk.submenu.addActor(this.disk.container[0]);
 			let mountFile = Cinnamon.get_file_contents_utf8_sync('/etc/mtab').split("\n");
 			i = 0;
@@ -171,9 +178,9 @@ MyApplet.prototype = {
 					});
 					item = new PopupMenu.PopupMenuItem(mount[1]);
 					this.disk.container.push(new St.BoxLayout());
-					this.disk.container[i + 1].add_actor(new St.Label({text: "? GiB", width: 100, style: "text-align: right"}));
-					this.disk.container[i + 1].add_actor(new St.Label({text: "? GiB", width: 100, style: "text-align: right"}));
-					this.disk.container[i + 1].add_actor(new St.Label({text: "?%", width: 60, style: "text-align: right"}));
+					this.disk.container[i + 1].add_actor(new St.Label({width: 100, style: "text-align: right"}));
+					this.disk.container[i + 1].add_actor(new St.Label({width: 100, style: "text-align: right"}));
+					this.disk.container[i + 1].add_actor(new St.Label({width: 60, style: "text-align: right"}));
 					item.addActor(this.disk.container[i + 1]);
 					this.disk.submenu.menu.addMenuItem(item);
 					++i;
@@ -184,12 +191,36 @@ MyApplet.prototype = {
 			this.data.disk.taken = (this.disk.gtop.blocks - this.disk.gtop.bfree) / this.disk.gtop.blocks;
 			this.menu.addMenuItem(this.disk.submenu);
 
-			this.network.container[0].add_actor(new St.Label({text: "? kB/s \u25B2", width: 130, style: "text-align: right"}));
-			this.network.container[0].add_actor(new St.Label({text: "? kB/s \u25BC", width: 130, style: "text-align: right"}));
+			this.network.container[0].add_actor(new St.Label({width: 130, style: "text-align: right"}));
+			this.network.container[0].add_actor(new St.Label({width: 130, style: "text-align: right"}));
 			this.network.submenu.addActor(this.network.container[0]);
+			this.network.dev = {};
+			r = Cinnamon.get_file_contents_utf8_sync('/proc/net/dev').split("\n");
+			for(i = 2, j = 0, l = r.length; i < l; ++i){
+				s = r[i].match(/^\s*(\w+)/);
+				if(s !== null){
+					s = s[1];
+					if(s == "lo") continue;
+					this.network.dev[s] = [];
+					this.network.menuitem.push(item = new PopupMenu.PopupMenuItem(s));
+					this.network.container.push(new St.BoxLayout());
+					this.network.container[j + 1].add_actor(new St.Label({width: 130, style: "text-align: right"}));
+					this.network.container[j + 1].add_actor(new St.Label({width: 130, style: "text-align: right"}));
+					item.addActor(this.network.container[j + 1]);
+					this.network.submenu.menu.addMenuItem(item);
+					++j;
+				}
+			}
+			this.network.submenu.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+			this.network.menuitem.push(item = new PopupMenu.PopupMenuItem("Total"));
+			this.network.container.push(new St.BoxLayout());
+			this.network.container[j + 1].add_actor(new St.Label({width: 130, style: "text-align: right"}));
+			this.network.container[j + 1].add_actor(new St.Label({width: 130, style: "text-align: right"}));
+			item.addActor(this.network.container[j + 1]);
+			this.network.submenu.menu.addMenuItem(item);
 			this.menu.addMenuItem(this.network.submenu);
 
-			this.thermal.container[0].add_actor(new St.Label({text: "?\u00b0C", width: 80, style: "text-align: right", margin_left: 180}));
+			this.thermal.container[0].add_actor(new St.Label({width: 80, style: "text-align: right", margin_left: 180}));
 			this.thermal.submenu.addActor(this.thermal.container[0]);
 			r = GLib.spawn_command_line_sync("which sensors");
 			if(r[0] && r[3] == 0){
@@ -203,7 +234,7 @@ MyApplet.prototype = {
 						for(++i; r[i] && r[i].substr(0, 8) != "Adapter:"; ++i){
 							item = new PopupMenu.PopupMenuItem(r[i].match(/[^:]+/)[0]);
 							this.thermal.container.push(new St.BoxLayout());
-							this.thermal.container[this.thermal.container.length - 1].add_actor(new St.Label({text: "?\u00b0C", width: 80, style: "text-align: right", margin_left: 180}));
+							this.thermal.container[this.thermal.container.length - 1].add_actor(new St.Label({width: 80, style: "text-align: right", margin_left: 180}));
 							item.addActor(this.thermal.container[this.thermal.container.length - 1]);
 							this.thermal.submenu.menu.addMenuItem(item);
 							this.thermal.sensors.push(i);
@@ -237,6 +268,11 @@ MyApplet.prototype = {
 	getData: function(){
 		try {
 			let i, l, r = 0;
+
+			let time = GLib.get_monotonic_time() / 1000 / 1000;
+			let delta = time - this.data.time;
+			this.data.time = time;
+
 			GTop.glibtop_get_cpu(this.cpu.gtop);
 			for(i = 0; i < this.cpu.count; ++i){
 				var dtotal = this.cpu.gtop.xcpu_total[i] - this.cpu.total[i];
@@ -273,15 +309,15 @@ MyApplet.prototype = {
 				this.notifications.cpu = this.settings.cpuwarningtime;
 
 			GTop.glibtop_get_mem(this.mem.gtop);
-			this.data.mem.total = Math.round(this.mem.gtop.total / 1024 / 1024);
-			this.data.mem.used = Math.round(this.mem.gtop.used / 1024 / 1024);
-			this.data.mem.buffer = Math.round(this.mem.gtop.buffer / 1024 / 1024);
-			this.data.mem.cached = Math.round(this.mem.gtop.cached / 1024 / 1024);
+			this.data.mem.total = this.mem.gtop.total;
+			this.data.mem.used = this.mem.gtop.used;
+			this.data.mem.buffer = this.mem.gtop.buffer;
+			this.data.mem.cached = this.mem.gtop.cached;
 			this.data.mem.usedup = this.data.mem.used - this.data.mem.buffer - this.data.mem.cached;
 
 			GTop.glibtop_get_swap(this.swap.gtop);
-			this.data.swap.total = Math.round(this.swap.gtop.total / 1024 / 1024);
-			this.data.swap.used = Math.round(this.swap.gtop.used / 1024 / 1024);
+			this.data.swap.total = this.swap.gtop.total;
+			this.data.swap.used = this.swap.gtop.used;
 
 			let write = 0, read = 0;
 			for(i = 0; i < this.data.mounts.length; ++i){
@@ -289,8 +325,6 @@ MyApplet.prototype = {
 				write += this.disk.gtop.write;
 				read += this.disk.gtop.read;
 			}
-			let time = GLib.get_monotonic_time() / 1000;
-			let delta = (time - this.data.time) / 1000;
 			if(delta > 0 && this.disk.write && this.disk.read){
 				this.data.disk.write = (this.disk.size * (write - this.disk.write) / delta);
 				this.data.disk.read = (this.disk.size * (read - this.disk.read) / delta);
@@ -300,6 +334,26 @@ MyApplet.prototype = {
 
 			if(this.data.disk.max < this.data.disk.write) this.data.disk.max = this.data.disk.write;
 			if(this.data.disk.max < this.data.disk.read) this.data.disk.max = this.data.disk.read;
+
+			let up = [0], down = [0];
+			j = 1;
+			for(i in this.network.dev){
+				GTop.glibtop_get_netload(this.network.gtop, i);
+				up[0] += up[j] = this.network.gtop.bytes_out * 8;
+				down[0] += down[j] = this.network.gtop.bytes_in * 8;
+				++j;
+			}
+			if(delta > 0 && this.network.up && this.network.down){
+				for(i = 0, l = up.length; i < l; ++i){
+					this.data.network.up[i] = this.network.up[i]? (up[i] - this.network.up[i]) / delta : 0;
+					this.data.network.down[i] = this.network.down[i]? (down[i] - this.network.down[i]) / delta : 0;
+				}
+			}
+			this.network.up = up;
+			this.network.down = down;
+
+			if(this.data.network.max < this.data.network.up[0]) this.data.network.max = this.data.network.up[0];
+			if(this.data.network.max < this.data.network.down[0]) this.data.network.max = this.data.network.down[0];
 
 			r = GLib.spawn_command_line_sync(this.thermal.path)[1].toString().split("\n");
 			this.data.thermal[0] = 0;
@@ -317,7 +371,6 @@ MyApplet.prototype = {
 			} else
 				this.notifications.thermal = this.settings.thermalwarningtime;
 
-			this.data.time = time;
 			if(this.menu.isOpen) this.refresh();
 			Mainloop.timeout_add(this.settings.interval, Lang.bind(this, this.getData));
 		} catch(e){
@@ -342,17 +395,21 @@ MyApplet.prototype = {
 			ctx.arcNegative(w / 2, h / 2, r, a, a - Math.PI * this.data.disk.taken * 2);
 			ctx.moveTo(w / 2, h / 2);
 			ctx.fill();
-			r += this.settings.width / 2;
 
-			a = -Math.PI;
+			r += this.settings.width / 2;
 			ctx.setSourceRGBA(this.colors["read"][0], this.colors["read"][1], this.colors["read"][2], 1);
-			arc(Math.PI * this.data.disk.read / this.data.disk.max / 2, false);
 			a = -Math.PI;
+			arc(Math.PI * this.data.disk.read / this.data.disk.max / 2, false);
+			a = 0;
+			arc(Math.PI * this.data.network.down[0] / this.data.network.max / 2, true);
 			ctx.setSourceRGBA(this.colors["write"][0], this.colors["write"][1], this.colors["write"][2], 1);
+			a = -Math.PI;
 			arc(Math.PI * this.data.disk.write / this.data.disk.max / 2, true);
+			a = 0;
+			arc(Math.PI * this.data.network.up[0] / this.data.network.max / 2, false);
+
 			r += this.settings.width;
 			a = -Math.PI / 2;
-
 			for(let i = 0; i < this.cpu.count; ++i){
 				ctx.setSourceRGBA(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2], 1);
 				arc(Math.PI * this.data.cpu.user[i] * 2, true);
@@ -368,9 +425,9 @@ MyApplet.prototype = {
 			arc(Math.PI * this.data.mem.cached / this.data.mem.total * 2, false);
 			ctx.setSourceRGBA(this.colors["mem"][0], this.colors["mem"][1], this.colors["mem"][2], .5);
 			arc(Math.PI * this.data.mem.buffer / this.data.mem.total * 2, false);
+
 			r += this.settings.width;
 			a = -Math.PI / 2;
-
 			ctx.setSourceRGBA(this.colors["swap"][0], this.colors["swap"][1], this.colors["swap"][2], 1);
 			arc(Math.PI * this.data.swap.used / this.data.swap.total * 2, false);
 		} catch(e){
@@ -381,29 +438,34 @@ MyApplet.prototype = {
 		try {
 			let i, l;
 			for(i = 0; i < this.cpu.count; ++i){
-				this.cpu.container[0].get_children()[i].set_text((this.data.cpu.usage[i] * 100).toFixed(1) + "%");
-				this.cpu.container[1].get_children()[i].set_text((this.data.cpu.user[i] * 100).toFixed(1) + "%");
-				this.cpu.container[2].get_children()[i].set_text((this.data.cpu.system[i] * 100).toFixed(1) + "%");
+				this.cpu.container[0].get_children()[i].set_text(this.formatpercent(this.data.cpu.usage[i]));
+				this.cpu.container[1].get_children()[i].set_text(this.formatpercent(this.data.cpu.user[i]));
+				this.cpu.container[2].get_children()[i].set_text(this.formatpercent(this.data.cpu.system[i]));
 			}
 
-			this.mem.container[0].get_children()[0].set_text(this.data.mem.used + " MiB");
-			this.mem.container[0].get_children()[1].set_text((100 * this.data.mem.used / this.data.mem.total).toFixed(1) + "%");
-			this.mem.container[1].get_children()[0].set_text(this.data.mem.usedup + " MiB");
-			this.mem.container[1].get_children()[1].set_text((100 * this.data.mem.usedup / this.data.mem.total).toFixed(1) + "%");
-			this.mem.container[2].get_children()[0].set_text(this.data.mem.cached + " MiB");
-			this.mem.container[2].get_children()[1].set_text((100 * this.data.mem.cached / this.data.mem.total).toFixed(1) + "%");
-			this.mem.container[3].get_children()[0].set_text(this.data.mem.buffer + " MiB");
-			this.mem.container[3].get_children()[1].set_text((100 * this.data.mem.buffer / this.data.mem.total).toFixed(1) + "%");
+			this.mem.container[0].get_children()[0].set_text(this.formatbytes(this.data.mem.used));
+			this.mem.container[0].get_children()[1].set_text(this.formatpercent(this.data.mem.used, this.data.mem.total));
+			this.mem.container[1].get_children()[0].set_text(this.formatbytes(this.data.mem.usedup));
+			this.mem.container[1].get_children()[1].set_text(this.formatpercent(this.data.mem.usedup, this.data.mem.total));
+			this.mem.container[2].get_children()[0].set_text(this.formatbytes(this.data.mem.cached));
+			this.mem.container[2].get_children()[1].set_text(this.formatpercent(this.data.mem.cached, this.data.mem.total));
+			this.mem.container[3].get_children()[0].set_text(this.formatbytes(this.data.mem.buffer));
+			this.mem.container[3].get_children()[1].set_text(this.formatpercent(this.data.mem.buffer, this.data.mem.total));
 
-			this.swap.container[0].get_children()[0].set_text(this.data.swap.used + " MiB");
-			this.swap.container[0].get_children()[1].set_text(Math.round(1000 * this.data.swap.used / this.data.swap.total) / 10 + "%");
+			this.swap.container[0].get_children()[0].set_text(this.formatbytes(this.data.swap.used));
+			this.swap.container[0].get_children()[1].set_text(this.formatpercent(this.data.swap.used, this.data.swap.total));
 
-			this.disk.container[0].get_children()[0].set_text(this.data.disk.write.toFixed(1) + " MiB/s \u25B2");
-			this.disk.container[0].get_children()[1].set_text(this.data.disk.read.toFixed(1) + " MiB/s \u25BC");
+			this.disk.container[0].get_children()[this.settings.order? 0 : 1].set_text(this.formatrate(this.data.disk.write) + " \u25B2");
+			this.disk.container[0].get_children()[this.settings.order? 1 : 0].set_text(this.formatrate(this.data.disk.read) + " \u25BC");
 			for(i = 0; i < this.data.mounts.length; ++i){
-				this.disk.container[i + 1].get_children()[0].set_text(((this.data.mounts[i].blocks - this.data.mounts[i].free) * this.data.mounts[i].size / 1024 / 1024 / 1024).toFixed(1) + " GiB");
-				this.disk.container[i + 1].get_children()[1].set_text((this.data.mounts[i].blocks * this.data.mounts[i].size / 1024 / 1024 / 1024).toFixed(1) + " GiB");
-				this.disk.container[i + 1].get_children()[2].set_text(((this.data.mounts[i].blocks - this.data.mounts[i].free) * 100 / this.data.mounts[i].blocks).toFixed(1) + "%");
+				this.disk.container[i + 1].get_children()[0].set_text(this.formatbytes((this.data.mounts[i].blocks - this.data.mounts[i].free) * this.data.mounts[i].size));
+				this.disk.container[i + 1].get_children()[1].set_text(this.formatbytes(this.data.mounts[i].blocks * this.data.mounts[i].size));
+				this.disk.container[i + 1].get_children()[2].set_text(this.formatpercent(this.data.mounts[i].blocks - this.data.mounts[i].free, this.data.mounts[i].blocks));
+			}
+
+			for(i = 0, l = this.data.network.up.length; i < l; ++i){
+				this.network.container[i].get_children()[this.settings.order? 0 : 1].set_text(this.formatrate(this.data.network.up[i]) + " \u25B2");
+				this.network.container[i].get_children()[this.settings.order? 1 : 0].set_text(this.formatrate(this.data.network.down[i]) + " \u25BC");
 			}
 
 			for(i = 0, l = this.data.thermal.length; i < l; ++i)
@@ -416,6 +478,27 @@ MyApplet.prototype = {
 	},
 	notify: function(summary, body){
 		Util.spawnCommandLine("notify-send -i utilities-system-monitor " + summary + " '" + body + "'");
+	},
+	formatbytes: function(bytes){
+		let prefix = ["", "K", "M", "G", "T", "P", "E", "Z", "Y"];
+		let a = 1, j = 0;
+		while(bytes / a > this.settings.maxsize){
+			a *= this.settings.byteunit? 1024 : 1000;
+			++j;
+		}
+		return (bytes / a).toFixed(1) + " " + prefix[j] + (this.settings.byteunit && j? "i" : "") + "B";
+	},
+	formatrate: function(bytes){
+		let prefix = ["", "K", "M", "G", "T", "P", "E", "Z", "Y"];
+		let a = (this.settings.rateunit < 2? 1 : .125), j = 0;
+		while(bytes / a > this.settings.maxsize){
+			a *= this.settings.rateunit & 1? 1024 : 1000;
+			++j;
+		}
+		return (bytes / a).toFixed(1) + " " + prefix[j] + (this.settings.rateunit & 1 && j? "i" : "") + (this.settings.rateunit < 2? "B" : "bit") + "/s";
+	},
+	formatpercent: function(part, total){
+		return (100 * part / (total || 1)).toFixed(1) + "%";
 	},
 	on_applet_clicked: function(event){
 		this.menu.toggle();

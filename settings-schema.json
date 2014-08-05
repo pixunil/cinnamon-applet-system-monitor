@@ -17,6 +17,44 @@
 		"units": "px",
 		"description": "Line width of graph"
 	},
+	"byteunit": {
+		"type": "combobox",
+		"default": true,
+		"options": {
+			"Bytes with binary prefix": true,
+			"Bytes with decimal prefix": false
+		},
+		"description": "Bytes unit"
+	},
+	"rateunit": {
+		"type": "combobox",
+		"default": 1,
+		"options": {
+			"Bytes with binary prefix per second": 1,
+			"Bytes with decimal prefix per second": 0,
+			"Bits with binary prefix per second": 3,
+			"Bits with decimal prefix per second": 2
+		},
+		"description": "Rates unit"
+	},
+	"maxsize": {
+		"type": "spinbutton",
+		"default": 2000,
+		"min": 1000,
+		"max": 10000,
+		"step": 100,
+		"units": " ",
+		"description": "Maximal size"
+	},
+	"order": {
+		"type": "combobox",
+		"default": true,
+		"options": {
+			"Write - Read / Up - Down": true,
+			"Read - Write / Down - Up": false
+		},
+		"description": "Order of Disk and Network items"
+	},
 	"thermalmode": {
 		"type": "combobox",
 		"default": 1,
@@ -35,15 +73,15 @@
 		"default": "rgba(73, 168, 53, 1)",
 		"description": "Disk"
 	},
-	"read": {
-		"type": "colorchooser",
-		"default": "rgba(45, 125, 179, 1)",
-		"description": "Read"
-	},
 	"write": {
 		"type": "colorchooser",
 		"default": "rgba(238, 29, 0, 1)",
-		"description": "Write"
+		"description": "Write / Up"
+	},
+	"read": {
+		"type": "colorchooser",
+		"default": "rgba(45, 125, 179, 1)",
+		"description": "Read / Down"
 	},
 	"cpu1": {
 		"type": "colorchooser",
