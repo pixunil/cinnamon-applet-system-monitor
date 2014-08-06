@@ -52,7 +52,7 @@ MyApplet.prototype = {
 	},
 	swap: {
 		gtop: new GTop.glibtop_swap(),
-		submenu: new PopupMenu.PopupMenuItem(_("Swap")),
+		submenu: new PopupMenu.PopupMenuItem(_("Swap"), {reactive: false}),
 		container: [new St.BoxLayout()]
 	},
 	disk: {
@@ -133,7 +133,7 @@ MyApplet.prototype = {
 			this.cpu.submenu.addActor(this.cpu.container[0]);
 			r = ["User", "System"];
 			for(i = 0, l = r.length; i < l; ++i){
-				item = new PopupMenu.PopupMenuItem(_(r[i]));
+				item = new PopupMenu.PopupMenuItem(_(r[i]), {reactive: false});
 				this.cpu.container.push(new St.BoxLayout({margin_left: 260 - this.cpu.count * 60}));
 				for(j = 0; j < this.cpu.count; ++j)
 					this.cpu.container[i + 1].add_actor(new St.Label({width: 60, style: "text-align: right"}));
@@ -147,7 +147,7 @@ MyApplet.prototype = {
 			this.mem.submenu.addActor(this.mem.container[0]);
 			r = ["used", "cached", "buffered"];
 			for(i = 0, l = r.length; i < l; ++i){
-				item = new PopupMenu.PopupMenuItem(_(r[i]));
+				item = new PopupMenu.PopupMenuItem(_(r[i]), {reactive: false});
 				this.mem.container.push(new St.BoxLayout());
 				this.mem.container[i + 1].add_actor(new St.Label({width: 100, style: "text-align: right", margin_left: 100}));
 				this.mem.container[i + 1].add_actor(new St.Label({width: 60, style: "text-align: right"}));
@@ -176,7 +176,7 @@ MyApplet.prototype = {
 						free: this.disk.gtop.bfree,
 						blocks: this.disk.gtop.blocks
 					});
-					item = new PopupMenu.PopupMenuItem(mount[1]);
+					item = new PopupMenu.PopupMenuItem(mount[1], {reactive: false});
 					this.disk.container.push(new St.BoxLayout());
 					this.disk.container[i + 1].add_actor(new St.Label({width: 100, style: "text-align: right"}));
 					this.disk.container[i + 1].add_actor(new St.Label({width: 100, style: "text-align: right"}));
@@ -202,7 +202,7 @@ MyApplet.prototype = {
 					s = s[1];
 					if(s == "lo") continue;
 					this.network.dev[s] = [];
-					this.network.menuitem.push(item = new PopupMenu.PopupMenuItem(s));
+					this.network.menuitem.push(item = new PopupMenu.PopupMenuItem(s, {reactive: false}));
 					this.network.container.push(new St.BoxLayout());
 					this.network.container[j + 1].add_actor(new St.Label({width: 130, style: "text-align: right"}));
 					this.network.container[j + 1].add_actor(new St.Label({width: 130, style: "text-align: right"}));
@@ -212,7 +212,7 @@ MyApplet.prototype = {
 				}
 			}
 			this.network.submenu.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-			this.network.menuitem.push(item = new PopupMenu.PopupMenuItem("Total"));
+			this.network.menuitem.push(item = new PopupMenu.PopupMenuItem("Total", {reactive: false}));
 			this.network.container.push(new St.BoxLayout());
 			this.network.container[j + 1].add_actor(new St.Label({width: 130, style: "text-align: right"}));
 			this.network.container[j + 1].add_actor(new St.Label({width: 130, style: "text-align: right"}));
@@ -230,9 +230,9 @@ MyApplet.prototype = {
 					if(r[i].substr(0, 8) == "Adapter:"){
 						if(s) this.thermal.submenu.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 						s = r[i].substr(9);
-						this.thermal.submenu.menu.addMenuItem(new PopupMenu.PopupMenuItem(s));
+						this.thermal.submenu.menu.addMenuItem(new PopupMenu.PopupMenuItem(s, {reactive: false}));
 						for(++i; r[i] && r[i].substr(0, 8) != "Adapter:"; ++i){
-							item = new PopupMenu.PopupMenuItem(r[i].match(/[^:]+/)[0]);
+							item = new PopupMenu.PopupMenuItem(r[i].match(/[^:]+/)[0], {reactive: false});
 							this.thermal.container.push(new St.BoxLayout());
 							this.thermal.container[this.thermal.container.length - 1].add_actor(new St.Label({width: 80, style: "text-align: right", margin_left: 180}));
 							item.addActor(this.thermal.container[this.thermal.container.length - 1]);
