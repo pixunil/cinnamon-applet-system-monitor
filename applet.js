@@ -366,11 +366,13 @@ MyApplet.prototype = {
 				}
 			}
 
-			if(this.settings.cpuwarning && this.settings.cpuwarningmode && r / this.cpu.count >= this.settings.cpuwarningvalue / 100){
-				if(--this.notifications.cpu == 0)
-							this.notify("Warning:", "CPU usage was over " + this.settings.cpuwarningvalue + "% for " + this.settings.cpuwarningtime * this.settings.interval / 1000 + "sec");
-			} else
-				this.notifications.cpu = this.settings.cpuwarningtime;
+			if(this.settings.cpuwarning && this.settings.cpuwarningmode){
+				if(r / this.cpu.count >= this.settings.cpuwarningvalue / 100){
+					if(--this.notifications.cpu == 0)
+						this.notify("Warning:", "CPU usage was over " + this.settings.cpuwarningvalue + "% for " + this.settings.cpuwarningtime * this.settings.interval / 1000 + "sec");
+				} else
+					this.notifications.cpu = this.settings.cpuwarningtime;
+			}
 
 			GTop.glibtop_get_mem(this.mem.gtop);
 			this.data.mem.total = this.mem.gtop.total;
@@ -576,7 +578,7 @@ MyApplet.prototype = {
 			global.logError(e);
 		}
 	},
-	refresh: function (){
+	refresh: function(){
 		try {
 			let i, l;
 			for(i = 0; i < this.cpu.count; ++i){
