@@ -8,15 +8,6 @@
 		"units": "ms",
 		"description": "Interval"
 	},
-	"width": {
-		"type": "spinbutton",
-		"default": 5,
-		"min": 1,
-		"max": 20,
-		"step": 0.5,
-		"units": "px",
-		"description": "Line width of graph"
-	},
 	"byteunit": {
 		"type": "combobox",
 		"default": true,
@@ -65,13 +56,40 @@
 		},
 		"description": "Thermal calculation mode"
 	},
-	"colors": {
+	"graph": {
 		"type": "separator"
 	},
-	"disk": {
+	"graphsize": {
+		"type": "spinbutton",
+		"default": 100,
+		"min": 100,
+		"max": 400,
+		"step": 10,
+		"units": "px",
+		"description": "Height of graph"
+	},
+	"graphsteps": {
+		"type": "spinbutton",
+		"default": 60,
+		"min": 5,
+		"max": 200,
+		"step": 5,
+		"units": " ",
+		"description": "Ammount of history steps"
+	},
+	"graphcurve": {
+		"type": "combobox",
+		"default": false,
+		"options": {
+			"Line": false,
+			"Curve": true
+		},
+		"description": "Type of history graph"
+	},
+	"thermal": {
 		"type": "colorchooser",
-		"default": "rgba(73, 168, 53, 1)",
-		"description": "Disk"
+		"default": "rgba(238, 80, 29, 1)",
+		"description": "Thermal"
 	},
 	"write": {
 		"type": "colorchooser",
