@@ -59,6 +59,20 @@
 	"graph": {
 		"type": "separator"
 	},
+	"graphtype": {
+		"type": "combobox",
+		"default": 0,
+		"options": {
+			"Pie": 0,
+			"Arc": 1,
+			"CPU History": 2,
+			"Memory History": 3,
+			"Disk History": 4,
+			"Network History": 5,
+			"Thermal History": 6
+		},
+		"description": "Type of graph"
+	},
 	"graphsize": {
 		"type": "spinbutton",
 		"default": 100,
