@@ -478,7 +478,7 @@ MyApplet.prototype = {
 					ctx.stroke();
 				}
 
-				let dr = this.settings.graphsize / (this.cpu.count + 4) / 2;
+				let dr = h / (this.cpu.count + 4) / 2;
 				var r = dr, a;
 				ctx.setLineWidth(dr);
 				ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
@@ -539,7 +539,7 @@ MyApplet.prototype = {
 					ctx.stroke();
 				}
 
-				var dr = this.settings.graphsize / (this.cpu.count + 5.5);
+				var dr = Math.min(w / (this.cpu.count + 5.5) / 2, h / (this.cpu.count + 5.5));
 				var r = dr, a = 0;
 
 				ctx.setLineWidth(dr);
