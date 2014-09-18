@@ -91,14 +91,15 @@
 		"units": " ",
 		"description": "Ammount of history steps"
 	},
-	"graphcurve": {
+	"graphapperance": {
 		"type": "combobox",
 		"default": false,
 		"options": {
-			"Line": false,
-			"Curve": true
+			"Line": 0,
+			"Curve": 1,
+			"Bars": 2
 		},
-		"description": "Type of history graph"
+		"description": "Apperance of history graphs"
 	},
 	"thermal": {
 		"type": "colorchooser",
