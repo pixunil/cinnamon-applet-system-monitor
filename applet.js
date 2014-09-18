@@ -273,13 +273,15 @@ MyApplet.prototype = {
 					if(r[i].substr(0, 8) == "Adapter:" && !r[i].match(/virtual/i)){
 						s = r[i].substr(9);
 						for(++i; r[i] && r[i].substr(0, 8) != "Adapter:"; ++i){
-							item = new PopupMenu.PopupMenuItem(r[i].match(/[^:]+/)[0], {reactive: false});
-							this.thermal.container.push(new St.BoxLayout());
-							this.thermal.container[this.thermal.container.length - 1].add_actor(new St.Label({width: 80, style: "text-align: right", margin_left: 180}));
-							item.addActor(this.thermal.container[this.thermal.container.length - 1]);
-							this.thermal.submenu.menu.addMenuItem(item);
-							this.thermal.sensors.push(i);
-							this.history.thermal.push([]);
+							if(r[i].match(/\d+.\d+\xb0C/)){
+								item = new PopupMenu.PopupMenuItem(r[i].match(/[^:]+/)[0], {reactive: false});
+								this.thermal.container.push(new St.BoxLayout());
+								this.thermal.container[this.thermal.container.length - 1].add_actor(new St.Label({width: 80, style: "text-align: right", margin_left: 180}));
+								item.addActor(this.thermal.container[this.thermal.container.length - 1]);
+								this.thermal.submenu.menu.addMenuItem(item);
+								this.thermal.sensors.push(i);
+								this.history.thermal.push([]);
+							}
 						}
 					}
 				}
