@@ -93,7 +93,7 @@
 	},
 	"graphapperance": {
 		"type": "combobox",
-		"default": false,
+		"default": 0,
 		"options": {
 			"Line": 0,
 			"Curve": 1,

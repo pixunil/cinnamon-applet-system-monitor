@@ -211,6 +211,7 @@ MyApplet.prototype = {
 			this.disk.submenu.addActor(this.disk.container[0]);
 			let mountFile = Cinnamon.get_file_contents_utf8_sync('/etc/mtab').split("\n");
 			i = 0;
+			var mount;
 			for(let mountLine in mountFile){
 				mount = mountFile[mountLine].split(" ");
 				if(mount[0].indexOf("/dev/") == 0 && this.data.mounts.indexOf(mount[1]) < 0){
@@ -324,7 +325,7 @@ MyApplet.prototype = {
 	},
 	getData: function(){
 		try {
-			let i, l, r = 0;
+			let i, j, l, r = 0;
 
 			let time = GLib.get_monotonic_time() / 1e6;
 			let delta = time - this.data.time;
@@ -460,7 +461,7 @@ MyApplet.prototype = {
 				this.notifications.thermal = this.settings.thermalwarningtime;
 
 			if(this.menu.isOpen) this.refresh();
-			Mainloop.timeout_add(this.settings.interval, Lang.bind(this, this.getData));
+			this.timeout = Mainloop.timeout_add(this.settings.interval, Lang.bind(this, this.getData));
 		} catch(e){
 			global.logError(e);
 		}
@@ -730,9 +731,12 @@ MyApplet.prototype = {
 	formatpercent: function(part, total){
 		return (100 * part / (total || 1)).toFixed(1) + "%";
 	},
-	on_applet_clicked: function(event){
+	on_applet_clicked: function(){
 		this.menu.toggle();
 		if(this.menu.isOpen) this.refresh();
+	},
+	on_applet_removed_from_panel: function(){
+		Mainloop.source_remove(this.timeout);
 	},
 	on_settings_changed: function(){
 		try {
@@ -748,7 +752,7 @@ MyApplet.prototype = {
 					this.notifications.cpu = this.settings.cpuwarningtime;
 				else {
 					this.notifications.cpu = [];
-					for(i = 0; i < this.cpu.count; ++i)
+					for(var i = 0; i < this.cpu.count; ++i)
 						this.notifications.cpu.push(this.settings.cpuwarningtime);
 				}
 			}
