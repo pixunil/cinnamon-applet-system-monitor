@@ -22,7 +22,7 @@ const NetworkManager = imports.gi.NetworkManager;
 try {
 	const GTop = imports.gi.GTop;
 } catch (e){
-	Util.spawnCommandLine("notify-send -i utilities-system-monitor 'Dependence missing' 'Please install the GTop package \n\
+	Util.spawnCommandLine("notify-send -i utilities-system-monitor 'Dependence missing' 'Please install the GTop package\n\
 \tUbuntu: gir1.2-gtop-2.0\n\
 \tFedora: libgtop2-devel\n\
 \tArch: libgtop'");
