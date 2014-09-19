@@ -145,7 +145,7 @@ MyApplet.prototype = {
 				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, p);
 			}, this);
 			//Settings with callback
-			["graphsize", "thermal", "write", "read", "cpu1", "cpu2", "cpu3", "cpu4", "mem", "swap",
+			["thermalunit", "graphsize", "thermal", "write", "read", "cpu1", "cpu2", "cpu3", "cpu4", "mem", "swap",
 				"cpuwarning", "cpuwarningtime", "cpuwarningmode", "cpuwarningvalue", "thermalwarning", "thermalwarningtime", "thermalwarningvalue"].forEach(function(p){
 				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, p, Lang.bind(this, this.on_settings_changed));
 			}, this);
@@ -456,7 +456,7 @@ MyApplet.prototype = {
 
 			if(this.settings.thermalwarning && this.data.thermal[0] > this.settings.thermalwarningvalue){
 				if(--this.notifications.thermal == 0)
-					this.notify("Warning:", "Temperature was over " + this.settings.thermalwarningvalue + "\u00b0C for " + this.settings.thermalwarningtime * this.settings.interval / 1000 + "sec");
+					this.notify("Warning:", "Temperature was over " + this.formatthermal(this.settings.thermalwarningvalue) + " for " + this.settings.thermalwarningtime * this.settings.interval / 1000 + "sec");
 			} else
 				this.notifications.thermal = this.settings.thermalwarningtime;
 
@@ -700,7 +700,7 @@ MyApplet.prototype = {
 			this.network.container[i].get_children()[this.settings.order? 1 : 0].set_text(this.formatbytes(this.network.down[0]) + " \u25BC");
 
 			for(i = 0, l = this.data.thermal.length; i < l; ++i)
-				this.thermal.container[i].get_children()[0].set_text(this.data.thermal[i].toFixed(1) + "\u00b0C");
+				this.thermal.container[i].get_children()[0].set_text(this.formatthermal(this.data.thermal[i]));
 
 			this.canvas.queue_repaint();
 		} catch(e){
@@ -731,6 +731,9 @@ MyApplet.prototype = {
 	formatpercent: function(part, total){
 		return (100 * part / (total || 1)).toFixed(1) + "%";
 	},
+	formatthermal: function(celsius){
+		return (this.settings.thermalunit? celsius : celsius * 1.8 + 32).toFixed(1) + "\u00b0" + (this.settings.thermalunit? "C" : "F");
+	},
 	on_applet_clicked: function(){
 		this.menu.toggle();
 		if(this.menu.isOpen) this.refresh();
@@ -756,7 +759,10 @@ MyApplet.prototype = {
 						this.notifications.cpu.push(this.settings.cpuwarningtime);
 				}
 			}
-			if(this.settings.thermalwarning) this.notifications.thermal = this.settings.thermalwarningtime;
+			if(this.settings.thermalwarning){
+				this.notifications.thermal = this.settings.thermalwarningtime;
+				if(!this.settings.thermalunit) this.settings.thermalwarningvalue = (this.settings.thermalwarningvalue - 32) * 5 / 9; //Fahrenheit => Celsius
+			}
 		} catch(e){
 			global.logError(e);
 		}

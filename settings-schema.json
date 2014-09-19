@@ -28,6 +28,15 @@
 		},
 		"description": "Rates unit"
 	},
+	"thermalunit": {
+		"type": "combobox",
+		"default": true,
+		"options": {
+			"\u00b0C": true,
+			"\u00b0F": false
+		},
+		"description": "Thermal unit"
+	},
 	"maxsize": {
 		"type": "spinbutton",
 		"default": 2000,
@@ -206,10 +215,10 @@
 	"thermalwarningvalue": {
 		"type": "spinbutton",
 		"min": 25,
-		"max": 100,
+		"max": 200,
 		"default": 50,
 		"step": 0.5,
-		"units": "\u00b0C",
+		"units": "\u00b0",
 		"description": "Warning temperatur",
 		"indent": true,
 		"dependency": "thermalwarning"
