@@ -141,10 +141,11 @@ MyApplet.prototype = {
 			this.colors = {};
 			this.notifications = {};
 			this.settingProvider = new Settings.AppletSettings(this.settings, metadata.uuid, instanceId);
-			["interval", "byteunit", "rateunit", "maxsize", "rateunit", "order", "thermalmode",
+			["interval", "byteunit", "rateunit", "maxsize", "rateunit", "order",
 				"graphapperance", "graphsteps"].forEach(function(p){
 				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, p);
 			}, this);
+			this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "thermalmode", "thermalmode");
 			//Settings with callback
 			["thermalunit", "graphsize", "thermal", "write", "read", "cpu1", "cpu2", "cpu3", "cpu4", "mem", "swap",
 				"cpuwarning", "cpuwarningtime", "cpuwarningmode", "cpuwarningvalue", "thermalwarning", "thermalwarningtime", "thermalwarningvalue"].forEach(function(p){
@@ -293,7 +294,8 @@ MyApplet.prototype = {
 					}
 				}
 			}
-			this.menu.addMenuItem(this.thermal.submenu);
+			if(this.thermal.sensors.length) this.menu.addMenuItem(this.thermal.submenu);
+			else this.settings.thermalmode = 0;
 
 			this.canvas = new St.DrawingArea({height: this.settings.graphsize});
 			this.canvas.connect("repaint", Lang.bind(this, this.draw));
@@ -350,8 +352,13 @@ MyApplet.prototype = {
 				this.history.disk.read.shift();
 				this.history.network.up.shift();
 				this.history.network.down.shift();
-				for(i = 0, l = this.history.thermal.length; i < l; ++i)
-					this.history.thermal[i].shift();
+			}
+
+			if(this.settings.thermalmode){
+				while(this.history.thermal[0].length >= this.settings.graphsteps){
+					for(i = 0, l = this.history.thermal.length; i < l; ++i)
+						this.history.thermal[i].shift();
+				}
 			}
 
 			GTop.glibtop_get_cpu(this.cpu.gtop);
@@ -443,28 +450,30 @@ MyApplet.prototype = {
 			this.network.up = up;
 			this.network.down = down;
 
-			r = GLib.spawn_command_line_sync(this.thermal.path)[1].toString().split("\n");
-			this.data.thermal[0] = 0;
-			for(i = 0, l = this.thermal.sensors.length; i < l; ++i){
-				this.history.thermal[i + 1].push(this.data.thermal[i + 1] = parseFloat(r[this.thermal.sensors[i]].match(/\d+\.\d+/)));
-				if(this.thermal.tmin > this.data.thermal[i + 1] || !this.thermal.tmin) this.thermal.tmin = this.data.thermal[i + 1];
-				if(this.thermal.tmax < this.data.thermal[i + 1] || !this.thermal.tmax) this.thermal.tmax = this.data.thermal[i + 1];
+			if(this.settings.thermalmode){
+				r = GLib.spawn_command_line_sync(this.thermal.path)[1].toString().split("\n");
+				this.data.thermal[0] = 0;
+				for(i = 0, l = this.thermal.sensors.length; i < l; ++i){
+					this.history.thermal[i + 1].push(this.data.thermal[i + 1] = parseFloat(r[this.thermal.sensors[i]].match(/\d+\.\d+/)));
+					if(this.thermal.tmin > this.data.thermal[i + 1] || !this.thermal.tmin) this.thermal.tmin = this.data.thermal[i + 1];
+					if(this.thermal.tmax < this.data.thermal[i + 1] || !this.thermal.tmax) this.thermal.tmax = this.data.thermal[i + 1];
 
-				if(this.settings.thermalmode == 0 && this.data.thermal[0] > this.data.thermal[i + 1] || this.data.thermal[0] == 0) this.data.thermal[0] = this.data.thermal[i + 1];
-				else if(this.settings.thermalmode == 1) this.data.thermal[0] += this.data.thermal[i + 1];
-				else if(this.settings.thermalmode == 2 && this.data.thermal[0] < this.data.thermal[i + 1]) this.data.thermal[0] = this.data.thermal[i + 1];
+					if(this.settings.thermalmode === 1 && this.data.thermal[0] > this.data.thermal[i + 1] || this.data.thermal[0] == 0) this.data.thermal[0] = this.data.thermal[i + 1];
+					else if(this.settings.thermalmode === 2) this.data.thermal[0] += this.data.thermal[i + 1];
+					else if(this.settings.thermalmode === 3 && this.data.thermal[0] < this.data.thermal[i + 1]) this.data.thermal[0] = this.data.thermal[i + 1];
+				}
+				if(this.settings.thermalmode === 2) this.data.thermal[0] /= l;
+				this.history.thermal[0].push(this.data.thermal[0]);
+
+				if(this.thermal.min > this.data.thermal[0] || !this.thermal.min) this.thermal.min = this.data.thermal[0];
+				if(this.thermal.max < this.data.thermal[0] || !this.thermal.max) this.thermal.max = this.data.thermal[0];
+
+				if(this.settings.thermalwarning && this.data.thermal[0] > this.settings.thermalwarningvalue){
+					if(--this.notifications.thermal == 0)
+						this.notify("Warning:", "Temperature was over " + this.formatthermal(this.settings.thermalwarningvalue) + " for " + this.settings.thermalwarningtime * this.settings.interval / 1000 + "sec");
+				} else
+					this.notifications.thermal = this.settings.thermalwarningtime;
 			}
-			if(this.settings.thermalmode == 1) this.data.thermal[0] /= l;
-			this.history.thermal[0].push(this.data.thermal[0]);
-
-			if(this.thermal.min > this.data.thermal[0] || !this.thermal.min) this.thermal.min = this.data.thermal[0];
-			if(this.thermal.max < this.data.thermal[0] || !this.thermal.max) this.thermal.max = this.data.thermal[0];
-
-			if(this.settings.thermalwarning && this.data.thermal[0] > this.settings.thermalwarningvalue){
-				if(--this.notifications.thermal == 0)
-					this.notify("Warning:", "Temperature was over " + this.formatthermal(this.settings.thermalwarningvalue) + " for " + this.settings.thermalwarningtime * this.settings.interval / 1000 + "sec");
-			} else
-				this.notifications.thermal = this.settings.thermalwarningtime;
 
 			if(this.menu.isOpen) this.refresh();
 			this.timeout = Mainloop.timeout_add(this.settings.interval, Lang.bind(this, this.getData));
@@ -489,9 +498,12 @@ MyApplet.prototype = {
 				let dr = h / (this.cpu.count + 4) / 2;
 				var r = dr, a;
 				ctx.setLineWidth(dr);
-				ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
-				ctx.arc(w / 2, h / 2, (this.data.thermal[0] - this.thermal.min) / (this.thermal.max - this.thermal.min) * dr, 0, Math.PI * 2);
-				ctx.fill();
+
+				if(this.settings.thermalmode){
+					ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
+					ctx.arc(w / 2, h / 2, (this.data.thermal[0] - this.thermal.min) / (this.thermal.max - this.thermal.min) * dr, 0, Math.PI * 2);
+					ctx.fill();
+				}
 
 				r += dr / 2;
 				ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
@@ -552,9 +564,11 @@ MyApplet.prototype = {
 
 				ctx.setLineWidth(dr);
 
-				ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
-				ctx.arc(w / 2, h, (this.data.thermal[0] - this.thermal.min) / (this.thermal.max - this.thermal.min) * dr, Math.PI, 0);
-				ctx.fill();
+				if(this.settings.thermalmode){
+					ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
+					ctx.arc(w / 2, h, (this.data.thermal[0] - this.thermal.min) / (this.thermal.max - this.thermal.min) * dr, Math.PI, 0);
+					ctx.fill();
+				}
 
 				r += dr;
 

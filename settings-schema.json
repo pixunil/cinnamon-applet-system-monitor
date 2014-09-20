@@ -59,11 +59,12 @@
 		"type": "combobox",
 		"default": 1,
 		"options": {
-			"Minimum": 0,
-			"Average": 1,
-			"Maximum": 2
+			"Disabled": 0,
+			"Minimum": 1,
+			"Average": 2,
+			"Maximum": 3
 		},
-		"description": "Thermal calculation mode"
+		"description": "Thermal mode"
 	},
 	"graph": {
 		"type": "separator"
