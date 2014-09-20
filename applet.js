@@ -72,6 +72,7 @@ MyApplet.prototype = {
 	},
 	thermal: {
 		sensors: [],
+		colors: [],
 		path: "",
 		min: null,
 		tmin: null,
@@ -132,7 +133,7 @@ MyApplet.prototype = {
 		Applet.IconApplet.prototype._init.call(this, orientation);
 
 		try {
-			let item, i, l, j, r, s, _appSys = Cinnamon.AppSystem.get_default();
+			let item, i, l, j, r, s, t, _appSys = Cinnamon.AppSystem.get_default();
 			this.set_applet_icon_symbolic_name("utilities-system-monitor");
 			this.set_applet_tooltip(_("System monitor"));
 
@@ -275,7 +276,12 @@ MyApplet.prototype = {
 						s = r[i].substr(9);
 						for(++i; r[i] && r[i].substr(0, 8) != "Adapter:"; ++i){
 							if(r[i].match(/\d+.\d+\xb0C/)){
-								item = new PopupMenu.PopupMenuItem(r[i].match(/[^:]+/)[0], {reactive: false});
+								t = r[i].match(/[^:]+/)[0];
+
+								if((j = t.match(/core\s*(\d)/i)) !== null) this.thermal.colors.push(parseInt(j[1]) % 4 + 1);
+								else this.thermal.colors.push(null);
+
+								item = new PopupMenu.PopupMenuItem(t, {reactive: false});
 								this.thermal.container.push(new St.BoxLayout());
 								this.thermal.container[this.thermal.container.length - 1].add_actor(new St.Label({width: 80, style: "text-align: right", margin_left: 180}));
 								item.addActor(this.thermal.container[this.thermal.container.length - 1]);
@@ -646,15 +652,16 @@ MyApplet.prototype = {
 					line(this.history.network.down, this.data.network.max, 0, 1, 2);
 				} else if(this.settings.graphtype == 6){
 					var dw = w / steps, i, l = this.history.thermal.length;
+
+					for(i = 1; i < l; ++i){
+						if(this.thermal.colors[i]) ctx.setSourceRGBA(this.colors["cpu" + this.thermal.colors[i]][0], this.colors["cpu" + this.thermal.colors[i]][1], this.colors["cpu" + this.thermal.colors[i]][2], 1);
+						else ctx.setSourceRGBA(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2], (l - i / 4) / l);
+						line(this.history.thermal[i], this.thermal.tmax, this.thermal.tmin, i, l);
+					}
+
 					ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
 					ctx.setDash([5, 5], 0);
 					line(this.history.thermal[0], this.thermal.tmax, this.thermal.tmin, 0, l);
-
-					ctx.setDash([], 0);
-					for(i = 1; i < l; ++i){
-						ctx.setSourceRGBA(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2], (l - i / 4) / l);
-						line(this.history.thermal[i], this.thermal.tmax, this.thermal.tmin, i, l);
-					}
 				}
 			}
 		} catch(e){
