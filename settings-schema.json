@@ -111,6 +111,15 @@
 		},
 		"description": "Appearance of history graphs"
 	},
+	"graphsmooth": {
+		"type": "spinbutton",
+		"default": 1,
+		"min": 1,
+		"max": 20,
+		"step": 1,
+		"units": " ",
+		"description": "Ammount of draws of history graphs per interval"
+	},
 	"thermal": {
 		"type": "colorchooser",
 		"default": "rgba(238, 80, 29, 1)",
