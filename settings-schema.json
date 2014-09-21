@@ -101,7 +101,7 @@
 		"units": " ",
 		"description": "Ammount of history steps"
 	},
-	"graphapperance": {
+	"graphappearance": {
 		"type": "combobox",
 		"default": 0,
 		"options": {
@@ -109,7 +109,7 @@
 			"Curve": 1,
 			"Bars": 2
 		},
-		"description": "Apperance of history graphs"
+		"description": "Appearance of history graphs"
 	},
 	"thermal": {
 		"type": "colorchooser",

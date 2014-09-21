@@ -142,7 +142,7 @@ MyApplet.prototype = {
 			this.notifications = {};
 			this.settingProvider = new Settings.AppletSettings(this.settings, metadata.uuid, instanceId);
 			["interval", "byteunit", "rateunit", "maxsize", "rateunit", "order",
-				"graphapperance", "graphsteps"].forEach(function(p){
+				"graphappearance", "graphsteps"].forEach(function(p){
 				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, p);
 			}, this);
 			this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "thermalmode", "thermalmode");
@@ -606,7 +606,7 @@ MyApplet.prototype = {
 				ctx.setSourceRGB(this.colors.swap[0], this.colors.swap[1], this.colors.swap[2]);
 				arc(Math.PI * this.data.swap.used / this.data.swap.total);
 			} else {
-				if(this.settings.graphapperance === 0){
+				if(this.settings.graphappearance === 0){
 					function line(history, max, min){
 						var l = history.length, tx = steps - l;
 						ctx.moveTo(dw * tx, h - (history[0] - min) / (max - min) * h);
@@ -614,7 +614,7 @@ MyApplet.prototype = {
 							ctx.lineTo(dw * (i + tx), h - (history[i] - min) / (max - min) * h);
 						ctx.stroke();
 					}
-				} else if(this.settings.graphapperance === 1){
+				} else if(this.settings.graphappearance === 1){
 				function line(history, max, min){
 						var l = history.length, tx = steps - l;
 						ctx.moveTo(dw * tx, h - (history[0] - min) / (max - min) * h);
