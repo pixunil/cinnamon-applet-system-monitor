@@ -19,11 +19,12 @@ const Util = imports.misc.util;
 
 const NMClient = imports.gi.NMClient;
 const NetworkManager = imports.gi.NetworkManager;
+
 try {
 	const GTop = imports.gi.GTop;
 } catch (e){
 	Util.spawnCommandLine("notify-send -i utilities-system-monitor 'Dependence missing' 'Please install the GTop package\n\
-\tUbuntu: gir1.2-gtop-2.0\n\
+\tUbuntu / Mint: gir1.2-gtop-2.0\n\
 \tFedora: libgtop2-devel\n\
 \tArch: libgtop'");
 }
@@ -137,6 +138,8 @@ MyApplet.prototype = {
 			let item, i, l, j, r, s, t, _appSys = Cinnamon.AppSystem.get_default();
 			this.set_applet_icon_symbolic_name("utilities-system-monitor");
 			this.set_applet_tooltip(_("System monitor"));
+
+			this.Terminal = imports.ui.appletManager.applets[metadata.uuid].terminal;
 
 			this.settings = {};
 			this.colors = {};
@@ -451,36 +454,48 @@ MyApplet.prototype = {
 			this.network.up = up;
 			this.network.down = down;
 
-			if(this.settings.thermalmode){
-				r = GLib.spawn_command_line_sync(this.thermal.path)[1].toString().split("\n");
-				this.data.thermal[0] = 0;
-				for(i = 0, l = this.thermal.sensors.length; i < l; ++i){
-					this.history.thermal[i + 1].push(this.data.thermal[i + 1] = parseFloat(r[this.thermal.sensors[i]].match(/\d+\.\d+/)));
-					if(this.thermal.tmin > this.data.thermal[i + 1] || !this.thermal.tmin) this.thermal.tmin = this.data.thermal[i + 1];
-					if(this.thermal.tmax < this.data.thermal[i + 1] || !this.thermal.tmax) this.thermal.tmax = this.data.thermal[i + 1];
-
-					if(this.settings.thermalmode === 1 && this.data.thermal[0] > this.data.thermal[i + 1] || this.data.thermal[0] == 0) this.data.thermal[0] = this.data.thermal[i + 1];
-					else if(this.settings.thermalmode === 2) this.data.thermal[0] += this.data.thermal[i + 1];
-					else if(this.settings.thermalmode === 3 && this.data.thermal[0] < this.data.thermal[i + 1]) this.data.thermal[0] = this.data.thermal[i + 1];
-				}
-				if(this.settings.thermalmode === 2) this.data.thermal[0] /= l;
-				this.history.thermal[0].push(this.data.thermal[0]);
-
-				if(this.thermal.min > this.data.thermal[0] || !this.thermal.min) this.thermal.min = this.data.thermal[0];
-				if(this.thermal.max < this.data.thermal[0] || !this.thermal.max) this.thermal.max = this.data.thermal[0];
-
-				if(this.settings.thermalwarning && this.data.thermal[0] > this.settings.thermalwarningvalue){
-					if(--this.notifications.thermal == 0)
-						this.notify("Warning:", "Temperature was over " + this.formatthermal(this.settings.thermalwarningvalue) + " for " + this.settings.thermalwarningtime * this.settings.interval / 1000 + "sec");
-				} else
-					this.notifications.thermal = this.settings.thermalwarningtime;
-			}
+			if(this.settings.thermalmode)
+				this.trySpawnAsyncPipe(this.thermal.path, this.getThermalData.bind(this));
 
 			if(this.menu.isOpen) this.refresh();
 			this.timeout = Mainloop.timeout_add(this.settings.interval, this.getData.bind(this));
 		} catch(e){
 			global.logError(e);
 		}
+	},
+	getThermalData: function(command, sucess, result){
+		try {
+			let r = result.split("\n");
+
+			this.data.thermal[0] = 0;
+			for(i = 0, l = this.thermal.sensors.length; i < l; ++i){
+				this.history.thermal[i + 1].push(this.data.thermal[i + 1] = parseFloat(r[this.thermal.sensors[i]].match(/\d+\.\d+/)));
+				if(this.thermal.tmin > this.data.thermal[i + 1] || !this.thermal.tmin) this.thermal.tmin = this.data.thermal[i + 1];
+				if(this.thermal.tmax < this.data.thermal[i + 1] || !this.thermal.tmax) this.thermal.tmax = this.data.thermal[i + 1];
+
+				if(this.settings.thermalmode === 1 && this.data.thermal[0] > this.data.thermal[i + 1] || this.data.thermal[0] == 0) this.data.thermal[0] = this.data.thermal[i + 1];
+				else if(this.settings.thermalmode === 2) this.data.thermal[0] += this.data.thermal[i + 1];
+				else if(this.settings.thermalmode === 3 && this.data.thermal[0] < this.data.thermal[i + 1]) this.data.thermal[0] = this.data.thermal[i + 1];
+			}
+			if(this.settings.thermalmode === 2) this.data.thermal[0] /= l;
+			this.history.thermal[0].push(this.data.thermal[0]);
+
+			if(this.thermal.min > this.data.thermal[0] || !this.thermal.min) this.thermal.min = this.data.thermal[0];
+			if(this.thermal.max < this.data.thermal[0] || !this.thermal.max) this.thermal.max = this.data.thermal[0];
+
+			if(this.settings.thermalwarning && this.data.thermal[0] > this.settings.thermalwarningvalue){
+				if(--this.notifications.thermal == 0)
+					this.notify("Warning:", "Temperature was over " + this.formatthermal(this.settings.thermalwarningvalue) + " for " + this.settings.thermalwarningtime * this.settings.interval / 1000 + "sec");
+			} else
+				this.notifications.thermal = this.settings.thermalwarningtime;
+		} catch(e){
+			global.logError(e);
+		}
+	},
+	trySpawnAsyncPipe: function(command, callback){
+		let terminal = new this.Terminal.TerminalReader(command, callback);
+		terminal.executeReader();
+		return terminal;
 	},
 	draw: function(){
 		try {

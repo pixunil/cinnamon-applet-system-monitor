@@ -19,8 +19,8 @@ Install the latest version via Cinnamon Applet Settings, or:
 
 - **Interval**: the interval the applet refreshes data in milliseconds
 - **Bytes unit**: the bytes unit for memory, swap etc.
- * Bytes with binary prefix: B, KiB, MiB, GiB... (1B = 1024KiB)
- * Bytes with decimal prefix: B, KB, MB, GB... (1B = 1000KB)
+ * Bytes with binary prefix: B, KiB, MiB, GiB... (1024B = 1KiB)
+ * Bytes with decimal prefix: B, KB, MB, GB... (1000B = 1KB)
 - **Rates unit**: the rates unit for disk and network
 - **Thermal unit**: the temperature unit: °C or °F
 - **Maximal size**: the highest value of a byte or rate before the prefix is incremented
