@@ -93,11 +93,15 @@ MyApplet.prototype = {
 		mem: {},
 		swap: {},
 		mounts: [],
-		disk: {max: 1},
+		disk: {
+			max: 1,
+			maxIndex: 0
+		},
 		network: {
 			up: [],
 			down: [],
-			max: 1
+			max: 1,
+			maxIndex: 0
 		},
 		thermal: []
 	},
@@ -425,8 +429,30 @@ MyApplet.prototype = {
 				this.history.disk.write.push(this.data.disk.write);
 				this.history.disk.read.push(this.data.disk.read);
 
-				if(this.data.disk.max < this.data.disk.write) this.data.disk.max = this.data.disk.write;
-				if(this.data.disk.max < this.data.disk.read) this.data.disk.max = this.data.disk.read;
+				if(this.data.disk.max <= this.data.disk.write){
+					this.data.disk.max = this.data.disk.write;
+					this.data.disk.maxIndex = 0;
+				}
+
+				if(this.data.disk.max <= this.data.disk.read){
+					this.data.disk.max = this.data.disk.read;
+					this.data.disk.maxIndex = 0;
+				}
+
+				if(++this.data.disk.maxIndex > this.settings.graphsteps + 2){
+					this.data.disk.max = Math.max(this.data.disk.write, this.data.disk.read, 1);
+					this.data.disk.maxIndex = 0;
+					for(i = 1, l = this.history.disk.write.length; i < l; ++i){
+						if(this.data.disk.max < this.history.disk.write[i]){
+							this.data.disk.max = this.history.disk.write[i];
+							this.data.disk.maxIndex = i;
+						}
+						if(this.data.disk.max < this.history.disk.read[i]){
+							this.data.disk.max = this.history.disk.read[i];
+							this.data.disk.maxIndex = i;
+						}
+					}
+				}
 			}
 
 			this.disk.write = write;
@@ -448,8 +474,30 @@ MyApplet.prototype = {
 				this.history.network.up.push(this.data.network.up[0]);
 				this.history.network.down.push(this.data.network.down[0]);
 
-				if(this.data.network.max < this.data.network.up[0]) this.data.network.max = this.data.network.up[0];
-				if(this.data.network.max < this.data.network.down[0]) this.data.network.max = this.data.network.down[0];
+				if(this.data.network.max <= this.data.network.up[0]){
+					this.data.network.max = this.data.network.up[0];
+					this.data.network.maxIndex = 0;
+				}
+
+				if(this.data.network.max <= this.data.network.down[0]){
+					this.data.network.max = this.data.network.down[0];
+					this.data.network.maxIndex = 0;
+				}
+
+				if(++this.data.network.maxIndex > this.settings.graphsteps + 2){
+					this.data.network.max = Math.max(this.data.network.up[0], this.data.network.down[0], 1);
+					this.data.network.maxIndex = 0;
+					for(i = 1, l = this.history.network.up.length; i < l; ++i){
+						if(this.data.network.max < this.history.network.up[i]){
+							this.data.network.max = this.history.network.up[i];
+							this.data.network.maxIndex = i;
+						}
+						if(this.data.network.max < this.history.network.down[i]){
+							this.data.network.max = this.history.network.down[i];
+							this.data.network.maxIndex = i;
+						}
+					}
+				}
 			}
 			this.network.up = up;
 			this.network.down = down;
@@ -647,7 +695,7 @@ MyApplet.prototype = {
 					}
 				}
 
-				var dw = w / steps, tx = steps - this.history.swap.length + 2 - this.graph.current / this.settings.graphsmooth;
+				var dw = w / steps, tx = steps - this.history.swap.length + (this.settings.graphappearance === 2? 2 : 3) - this.graph.current / this.settings.graphsmooth;
 
 				if(this.settings.graphtype == 2){
 					for(let i = 0; i < this.cpu.count; ++i){
