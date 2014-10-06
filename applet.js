@@ -160,13 +160,7 @@ MyApplet.prototype = {
 				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, p, this.on_settings_changed.bind(this));
 			}, this);
 
-			this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graphtype", "graphtype", Lang.bind(this, function(){
-				this.graph.items.forEach(function(item){
-					item.setShowDot(false);
-				});
-				this.graph.items[this.settings.graphtype].setShowDot(true);
-				this.canvas.queue_repaint();
-			}));
+			this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graphtype", "graphtype", this.onGraphTypeChanged.bind(this));
 
 			this.menuManager = new PopupMenu.PopupMenuManager(this);
 			this.menu = new Applet.AppletPopupMenu(this, orientation);
@@ -307,18 +301,16 @@ MyApplet.prototype = {
 
 			this.canvas = new St.DrawingArea({height: this.settings.graphsize});
 			this.canvas.connect("repaint", this.draw.bind(this));
-			item = new PopupMenu.PopupBaseMenuItem({reactive: false});
-			item.addActor(this.canvas, {span: -1, expand: true});
-			this.menu.addMenuItem(item);
+			this.canvasHolder = new PopupMenu.PopupBaseMenuItem({reactive: false});
+			this.canvasHolder.addActor(this.canvas, {span: -1, expand: true});
+			this.menu.addMenuItem(this.canvasHolder);
 
-			this.graph.items[this.settings.graphtype].setShowDot(true);
+			this.onGraphTypeChanged();
 			this.graph.items.forEach(function(item, i){
 				//To supress menu from closing
 				item.activate = Lang.bind(this, function(){
-					this.graph.items[this.settings.graphtype].setShowDot(false);
 					this.settings.graphtype = i;
-					item.setShowDot(true);
-					this.canvas.queue_repaint();
+					this.onGraphTypeChanged();
 				});
 				this.graph.submenu.menu.addMenuItem(item);
 			}, this);
@@ -792,7 +784,7 @@ MyApplet.prototype = {
 			for(i = 0, l = this.data.thermal.length; i < l; ++i)
 				this.thermal.container[i].get_children()[0].set_text(this.formatthermal(this.data.thermal[i]));
 
-			if(!this.graph.current) this.canvas.queue_repaint();
+			if(!this.graph.current && this.settings.graphtype !== -1) this.canvas.queue_repaint();
 			this.graph.current = 0;
 		} catch(e){
 			global.logError(e);
@@ -853,6 +845,25 @@ MyApplet.prototype = {
 			if(this.settings.thermalwarning){
 				this.notifications.thermal = this.settings.thermalwarningtime;
 				if(!this.settings.thermalunit) this.settings.thermalwarningvalue = (this.settings.thermalwarningvalue - 32) * 5 / 9; //Fahrenheit => Celsius
+			}
+		} catch(e){
+			global.logError(e);
+		}
+	},
+	onGraphTypeChanged: function(){
+		try {
+			this.graph.items.forEach(function(item){
+				item.setShowDot(false);
+			});
+
+			if(this.settings.graphtype === -1){
+				this.graph.submenu.actor.hide();
+				this.canvasHolder.actor.hide();
+			} else {
+				this.graph.submenu.actor.show();
+				this.canvasHolder.actor.show();
+				this.graph.items[this.settings.graphtype].setShowDot(true);
+				this.canvas.queue_repaint();
 			}
 		} catch(e){
 			global.logError(e);

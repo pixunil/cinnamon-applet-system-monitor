@@ -73,6 +73,7 @@
 		"type": "combobox",
 		"default": 0,
 		"options": {
+			"None": -1,
 			"Pie": 0,
 			"Arc": 1,
 			"CPU History": 2,
