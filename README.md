@@ -26,11 +26,19 @@ Install the latest version via Cinnamon Applet Settings, or:
 - **Maximal size**: the highest value of a byte or rate before the prefix is incremented
 - **Order of Disk and Network items**: Write - Read versus Read - Write
 - **Thermal calculation mode**: how the thermal value is calculated
+ * Disabled: disables thermal submenu and thermal graphs
  * Maximum: the highest value
  * Average: the average value
  * Minimum: the minimum value
 - **Type of graph**
+	* None: no chart, also disables the graphs menu in the applet
  * Pie and Arc: a chart showing you the current status of cpu, memory, swap, disk and network rates and thermal value
  * History: a chart showing you only one modul, but as a history
 - **Height of graph**: How big the chart is
 - **Amount of history steps**: How many steps will be saved for history graphs
+- **Appearance of history graphs**
+	* Line: all points are connected by a normal line
+	* Curve: all points are connected by a bézier curve
+	* Bars: every point is represented by a bar
+- **Amount of draws of history graphs per interval**: The higher this value is, the graph will become "smoother"
+- The colors inputs: The colors, that are used by the graphs
