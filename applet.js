@@ -17,6 +17,9 @@ const Gettext = imports.gettext;
 const Mainloop = imports.mainloop;
 const Util = imports.misc.util;
 
+const MessageTray = imports.ui.messageTray;
+let messageTray = new MessageTray.MessageTray;
+
 const NMClient = imports.gi.NMClient;
 const NetworkManager = imports.gi.NetworkManager;
 
@@ -791,7 +794,23 @@ MyApplet.prototype = {
 		}
 	},
 	notify: function(summary, body){
-		Util.spawnCommandLine("notify-send -i utilities-system-monitor " + summary + " '" + body + "'");
+		let source = new MessageTray.SystemNotificationSource();
+		messageTray.add(source);
+
+		let icon = new St.Icon({
+			icon_name: "utilities-system-monitor",
+			icon_type: St.IconType.FULLCOLOR,
+			icon_size: 24
+		});
+
+		//don't save the notification and open menu on click
+		let notification = new MessageTray.Notification(source, summary, body, {icon: icon});
+		notification.setTransient(true);
+		notification.connect("clicked", Lang.bind(this, function(){
+			this.menu.open();
+		}));
+
+		source.notify(notification);
 	},
 	formatbytes: function(bytes){
 		let prefix = " KMGTPEZY";
