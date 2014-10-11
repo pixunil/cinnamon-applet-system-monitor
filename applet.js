@@ -132,7 +132,7 @@ MyApplet.prototype = {
 	},
 
 	graph: {
-		current: 0,
+		draw: false,
 		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Graph")),
 		items: [new PopupMenu.PopupMenuItem(_("Pie")), new PopupMenu.PopupMenuItem(_("Arc")), new PopupMenu.PopupMenuItem(_("CPU History")), new PopupMenu.PopupMenuItem(_("Memory History")),
 			new PopupMenu.PopupMenuItem(_("Disk History")), new PopupMenu.PopupMenuItem(_("Network History")), new PopupMenu.PopupMenuItem(_("Thermal History"))]
@@ -690,7 +690,9 @@ MyApplet.prototype = {
 					}
 				}
 
-				var dw = w / steps, tx = steps - this.history.swap.length + (this.settings.graphappearance === 2? 2 : 3) - this.graph.current / this.settings.graphsmooth;
+				var dw = w / steps,
+					deltaT = (GLib.get_monotonic_time() / 1e3 - this.data.time * 1e3) / this.settings.interval,
+					tx = steps - this.history.swap.length + (this.settings.graphappearance === 2? 2 : 3) - deltaT;
 
 				if(this.settings.graphtype == 2){
 					for(let i = 0; i < this.cpu.count; ++i){
@@ -736,15 +738,28 @@ MyApplet.prototype = {
 					ctx.setDash([5, 5], 0);
 					line(this.history.thermal[0], this.thermal.tmax, this.thermal.tmin, 0, l);
 				}
-				if(++this.graph.current < this.settings.graphsmooth && this.menu.isOpen)
-					Mainloop.timeout_add(this.settings.interval / this.settings.graphsmooth, Lang.bind(this, function(){
-						this.canvas.queue_repaint();
-					}));
-				else this.graph.current = 0;
+
+				if(this.graph.draw){
+					if(this.menu.isOpen){
+						 Mainloop.timeout_add(this.settings.interval / this.settings.graphsmooth, Lang.bind(this, function(){
+							this.canvas.queue_repaint();
+						}));
+					} else
+						this.graph.draw = false;
+				}
 			}
 		} catch(e){
 			global.logError(e);
 		}
+	},
+	startDraw: function(){
+		if(this.settings.graphtype === -1) return;
+		if(this.settings.graphtype >= 2){ //history graphs
+			if(this.graph.draw) return;
+			this.graph.draw = true;
+		} else
+			this.graph.draw = false;
+		this.canvas.queue_repaint();
 	},
 	refresh: function(){
 		try {
@@ -787,8 +802,7 @@ MyApplet.prototype = {
 			for(i = 0, l = this.data.thermal.length; i < l; ++i)
 				this.thermal.container[i].get_children()[0].set_text(this.formatthermal(this.data.thermal[i]));
 
-			if(!this.graph.current && this.settings.graphtype !== -1) this.canvas.queue_repaint();
-			this.graph.current = 0;
+			this.startDraw();
 		} catch(e){
 			global.logError(e);
 		}
@@ -882,7 +896,7 @@ MyApplet.prototype = {
 				this.graph.submenu.actor.show();
 				this.canvasHolder.actor.show();
 				this.graph.items[this.settings.graphtype].setShowDot(true);
-				this.canvas.queue_repaint();
+				this.startDraw();
 			}
 		} catch(e){
 			global.logError(e);
