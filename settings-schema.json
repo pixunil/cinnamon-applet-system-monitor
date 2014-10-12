@@ -107,10 +107,20 @@
 		"default": 0,
 		"options": {
 			"Line": 0,
-			"Curve": 1,
-			"Bars": 2
+			"Area": 1,
+			"Bar": 2
 		},
 		"description": "Appearance of history graphs"
+	},
+	"graphconnection": {
+		"type": "combobox",
+		"default": 0,
+		"options": {
+			"Line": 0,
+			"Straight": 1,
+			"Curve": 2
+		},
+		"description": "Connection type for Line or Area"
 	},
 	"graphinterval": {
 		"type": "spinbutton",

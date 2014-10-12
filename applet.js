@@ -153,7 +153,7 @@ MyApplet.prototype = {
 			this.notifications = {};
 			this.settingProvider = new Settings.AppletSettings(this.settings, metadata.uuid, instanceId);
 			["interval", "byteunit", "rateunit", "maxsize", "rateunit", "order",
-				"graphappearance", "graphinterval", "graphsteps"].forEach(function(p){
+				"graphappearance", "graphconnection", "graphinterval", "graphsteps"].forEach(function(p){
 				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, p);
 			}, this);
 			this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "thermalmode", "thermalmode");
@@ -671,23 +671,26 @@ MyApplet.prototype = {
 				arc(Math.PI * this.data.swap.used / this.data.swap.total);
 			} else {
 				if(this.settings.graphappearance === 0){
-					function line(history, max, min){
-						var l = history.length;
+					function line(history){
 						ctx.moveTo(dw * tx, h - (history[0] - min) / (max - min) * h);
-						for(var i = 1; i < l; ++i)
-							ctx.lineTo(dw * (i + tx), h - (history[i] - min) / (max - min) * h);
+						connection(history, 1);
 						ctx.stroke();
 					}
 				} else if(this.settings.graphappearance === 1){
-				function line(history, max, min){
-						var l = history.length;
-						ctx.moveTo(dw * tx, h - (history[0] - min) / (max - min) * h);
-						for(var i = 1; i < l; ++i)
-							ctx.curveTo(dw * (i + tx - .5), h - (history[i - 1] - min) / (max - min) * h, dw * (i + tx - .5), h - (history[i] - min) / (max - min) * h, dw * (i + tx), h - (history[i] - min) / (max - min) * h);
-						ctx.stroke();
+					function line(history, num, total){
+						ctx.translate(0, h * num / total);
+						ctx.scale(1, 1 / total);
+
+						ctx.moveTo(dw * tx, h);
+						ctx.lineTo(dw * tx, h - (history[0] - min) / (max - min) * h);
+						connection(history, 1);
+						ctx.lineTo(dw * (history.length - 1 + tx), h);
+						ctx.fill();
+
+						ctx.identityMatrix();
 					}
-				} else {
-					function line(history, max, min, num, total){
+				} else if(this.settings.graphappearance === 2){
+					function line(history, num, total){
 						var l = history.length;
 						for(var i = 0; i < l; ++i)
 							ctx.rectangle(dw * (i + tx) + dw * num / total, h, dw / total, -(history[i] - min) / (max - min) * h);
@@ -695,59 +698,85 @@ MyApplet.prototype = {
 					}
 				}
 
+				if(this.settings.graphconnection === 0){
+					function connection(history, i){
+						for(var l = history.length; i < l; ++i)
+						 ctx.lineTo(dw * (i + tx), h - (history[i] - min) / (max - min) * h);
+					}
+				} else if(this.settings.graphconnection === 1){
+					function connection(history, i){
+						for(var l = history.length; i < l; ++i){
+							ctx.lineTo(dw * (i + tx - .5), h - (history[i - 1] - min) / (max - min) * h);
+							ctx.lineTo(dw * (i + tx - .5), h - (history[i] - min) / (max - min) * h);
+							ctx.lineTo(dw * (i + tx), h - (history[i] - min) / (max - min) * h);
+						}
+					}
+				} else {
+					function connection(history, i){
+						for(var l = history.length; i < l; ++i)
+						 ctx.curveTo(dw * (i + tx - .5), h - (history[i - 1] - min) / (max - min) * h, dw * (i + tx - .5), h - (history[i] - min) / (max - min) * h, dw * (i + tx), h - (history[i] - min) / (max - min) * h);
+					}
+				}
+
 				var dw = w / steps,
 					deltaT = (GLib.get_monotonic_time() / 1e3 - this.data.time * 1e3) / this.settings.interval,
-					tx = steps + 2 - deltaT;
+					tx = steps + 2 - deltaT,
+					min = 0,
+					max = 1;
 
 				if(this.settings.graphtype == 2){
 					tx -= this.history.cpu.user[0].length;
 
 					for(let i = 0; i < this.cpu.count; ++i){
 						ctx.setSourceRGB(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2]);
-						line(this.history.cpu.user[i], 1, 0, i, this.cpu.count);
+						line(this.history.cpu.user[i], i, this.cpu.count);
 						ctx.setSourceRGBA(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2], .75);
-						line(this.history.cpu.system[i], 1, 0, i, this.cpu.count);
+						line(this.history.cpu.system[i], i, this.cpu.count);
 					}
 				} else if(this.settings.graphtype == 3){
 					tx -= this.history.mem.usedup.length;
 
 					ctx.setSourceRGB(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2]);
-					line(this.history.mem.usedup, 1, 0, 0, 2);
+					line(this.history.mem.usedup, 0, 2);
 					ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .75);
-					line(this.history.mem.cached, 1, 0, 0, 2);
+					line(this.history.mem.cached, 0, 2);
 					ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .5);
-					line(this.history.mem.buffer, 1, 0, 0, 2);
+					line(this.history.mem.buffer, 0, 2);
 
 					ctx.setSourceRGB(this.colors.swap[0], this.colors.swap[1], this.colors.swap[2]);
-					line(this.history.swap, 1, 0, 1, 2);
+					line(this.history.swap, 1, 2);
 				} else if(this.settings.graphtype == 4){
 					tx -= this.history.disk.write.length;
+					max = this.data.disk.max;
 
 					ctx.setSourceRGB(this.colors.write[0], this.colors.write[1], this.colors.write[2]);
-					line(this.history.disk.write, this.data.disk.max, 0, 0, 2);
+					line(this.history.disk.write, 0, 2);
 
 					ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
-					line(this.history.disk.read, this.data.disk.max, 0, 1, 2);
+					line(this.history.disk.read, 1, 2);
 				} else if(this.settings.graphtype == 5){
 					tx -= this.history.network.up.length;
+					max = this.data.network.max;
 
 					ctx.setSourceRGB(this.colors.write[0], this.colors.write[1], this.colors.write[2]);
-					line(this.history.network.up, this.data.network.max, 0, 0, 2);
+					line(this.history.network.up, 0, 2);
 
 					ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
-					line(this.history.network.down, this.data.network.max, 0, 1, 2);
+					line(this.history.network.down, 1, 2);
 				} else if(this.settings.graphtype == 6){
 					tx -= this.history.thermal[0].length;
+					min = this.thermal.tmin;
+					max = this.thermal.tmax;
 
 					for(var i = 1, l = this.history.thermal.length; i < l; ++i){
 						if(this.thermal.colors[i]) ctx.setSourceRGBA(this.colors["cpu" + this.thermal.colors[i]][0], this.colors["cpu" + this.thermal.colors[i]][1], this.colors["cpu" + this.thermal.colors[i]][2], 1);
 						else ctx.setSourceRGBA(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2], (l - i / 4) / l);
-						line(this.history.thermal[i], this.thermal.tmax, this.thermal.tmin, i, l);
+						line(this.history.thermal[i], i, l);
 					}
 
 					ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
 					ctx.setDash([5, 5], 0);
-					line(this.history.thermal[0], this.thermal.tmax, this.thermal.tmin, 0, l);
+					line(this.history.thermal[0], 0, l);
 				}
 
 				this.graph.timeout = Mainloop.timeout_add(this.settings.graphinterval, Lang.bind(this, function(){
