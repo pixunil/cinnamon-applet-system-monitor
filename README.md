@@ -40,5 +40,5 @@ Install the latest version via Cinnamon Applet Settings, or:
 	* Line: all points are connected by a normal line
 	* Curve: all points are connected by a bézier curve
 	* Bars: every point is represented by a bar
-- **Amount of draws of history graphs per interval**: The higher this value is, the graph will become "smoother"
+- **History graphs draw interval**: The interval, in which the history graphs refreshes
 - The colors inputs: The colors, that are used by the graphs

@@ -132,7 +132,7 @@ MyApplet.prototype = {
 	},
 
 	graph: {
-		draw: false,
+		timeout: null,
 		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Graph")),
 		items: [new PopupMenu.PopupMenuItem(_("Pie")), new PopupMenu.PopupMenuItem(_("Arc")), new PopupMenu.PopupMenuItem(_("CPU History")), new PopupMenu.PopupMenuItem(_("Memory History")),
 			new PopupMenu.PopupMenuItem(_("Disk History")), new PopupMenu.PopupMenuItem(_("Network History")), new PopupMenu.PopupMenuItem(_("Thermal History"))]
@@ -153,7 +153,7 @@ MyApplet.prototype = {
 			this.notifications = {};
 			this.settingProvider = new Settings.AppletSettings(this.settings, metadata.uuid, instanceId);
 			["interval", "byteunit", "rateunit", "maxsize", "rateunit", "order",
-				"graphappearance", "graphsmooth", "graphsteps"].forEach(function(p){
+				"graphappearance", "graphinterval", "graphsteps"].forEach(function(p){
 				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, p);
 			}, this);
 			this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "thermalmode", "thermalmode");
@@ -342,7 +342,7 @@ MyApplet.prototype = {
 			let delta = time - this.data.time;
 			this.data.time = time;
 
-			while(this.history.swap.length > this.settings.graphsteps + 2){
+			while(this.history.swap.length > this.settings.graphsteps + 1){
 				for(i = 0; i < this.cpu.count; ++i){
 					this.history.cpu.user[i].shift();
 					this.history.cpu.system[i].shift();
@@ -351,14 +351,19 @@ MyApplet.prototype = {
 				this.history.mem.cached.shift();
 				this.history.mem.buffer.shift();
 				this.history.swap.shift();
+			}
+
+			while(this.history.disk.write.length > this.settings.graphsteps + 1){
 				this.history.disk.write.shift();
 				this.history.disk.read.shift();
+			}
+			while(this.history.network.up.length > this.settings.graphsteps + 1){
 				this.history.network.up.shift();
 				this.history.network.down.shift();
 			}
 
 			if(this.settings.thermalmode){
-				while(this.history.thermal[0].length > this.settings.graphsteps + 2){
+				while(this.history.thermal[0].length > this.settings.graphsteps + 1){
 					for(i = 0, l = this.history.thermal.length; i < l; ++i)
 						this.history.thermal[i].shift();
 				}
@@ -434,7 +439,7 @@ MyApplet.prototype = {
 					this.data.disk.maxIndex = 0;
 				}
 
-				if(++this.data.disk.maxIndex > this.settings.graphsteps + 2){
+				if(++this.data.disk.maxIndex > this.settings.graphsteps + 1){
 					this.data.disk.max = Math.max(this.data.disk.write, this.data.disk.read, 1);
 					this.data.disk.maxIndex = 0;
 					for(i = 1, l = this.history.disk.write.length; i < l; ++i){
@@ -479,7 +484,7 @@ MyApplet.prototype = {
 					this.data.network.maxIndex = 0;
 				}
 
-				if(++this.data.network.maxIndex > this.settings.graphsteps + 2){
+				if(++this.data.network.maxIndex > this.settings.graphsteps + 1){
 					this.data.network.max = Math.max(this.data.network.up[0], this.data.network.down[0], 1);
 					this.data.network.maxIndex = 0;
 					for(i = 1, l = this.history.network.up.length; i < l; ++i){
@@ -684,7 +689,7 @@ MyApplet.prototype = {
 				} else {
 					function line(history, max, min, num, total){
 						var l = history.length;
-						for(var i = 1; i < l; ++i)
+						for(var i = 0; i < l; ++i)
 							ctx.rectangle(dw * (i + tx) + dw * num / total, h, dw / total, -(history[i] - min) / (max - min) * h);
 						ctx.fill();
 					}
@@ -692,9 +697,11 @@ MyApplet.prototype = {
 
 				var dw = w / steps,
 					deltaT = (GLib.get_monotonic_time() / 1e3 - this.data.time * 1e3) / this.settings.interval,
-					tx = steps - this.history.swap.length + (this.settings.graphappearance === 2? 2 : 3) - deltaT;
+					tx = steps + 2 - deltaT;
 
 				if(this.settings.graphtype == 2){
+					tx -= this.history.cpu.user[0].length;
+
 					for(let i = 0; i < this.cpu.count; ++i){
 						ctx.setSourceRGB(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2]);
 						line(this.history.cpu.user[i], 1, 0, i, this.cpu.count);
@@ -702,6 +709,8 @@ MyApplet.prototype = {
 						line(this.history.cpu.system[i], 1, 0, i, this.cpu.count);
 					}
 				} else if(this.settings.graphtype == 3){
+					tx -= this.history.mem.usedup.length;
+
 					ctx.setSourceRGB(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2]);
 					line(this.history.mem.usedup, 1, 0, 0, 2);
 					ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .75);
@@ -712,23 +721,25 @@ MyApplet.prototype = {
 					ctx.setSourceRGB(this.colors.swap[0], this.colors.swap[1], this.colors.swap[2]);
 					line(this.history.swap, 1, 0, 1, 2);
 				} else if(this.settings.graphtype == 4){
-					var dw = w / steps;
+					tx -= this.history.disk.write.length;
+
 					ctx.setSourceRGB(this.colors.write[0], this.colors.write[1], this.colors.write[2]);
 					line(this.history.disk.write, this.data.disk.max, 0, 0, 2);
 
 					ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
 					line(this.history.disk.read, this.data.disk.max, 0, 1, 2);
 				} else if(this.settings.graphtype == 5){
-					var dw = w / steps;
+					tx -= this.history.network.up.length;
+
 					ctx.setSourceRGB(this.colors.write[0], this.colors.write[1], this.colors.write[2]);
 					line(this.history.network.up, this.data.network.max, 0, 0, 2);
 
 					ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
 					line(this.history.network.down, this.data.network.max, 0, 1, 2);
 				} else if(this.settings.graphtype == 6){
-					var dw = w / steps, i, l = this.history.thermal.length;
+					tx -= this.history.thermal[0].length;
 
-					for(i = 1; i < l; ++i){
+					for(var i = 1, l = this.history.thermal.length; i < l; ++i){
 						if(this.thermal.colors[i]) ctx.setSourceRGBA(this.colors["cpu" + this.thermal.colors[i]][0], this.colors["cpu" + this.thermal.colors[i]][1], this.colors["cpu" + this.thermal.colors[i]][2], 1);
 						else ctx.setSourceRGBA(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2], (l - i / 4) / l);
 						line(this.history.thermal[i], this.thermal.tmax, this.thermal.tmin, i, l);
@@ -739,27 +750,23 @@ MyApplet.prototype = {
 					line(this.history.thermal[0], this.thermal.tmax, this.thermal.tmin, 0, l);
 				}
 
-				if(this.graph.draw){
-					if(this.menu.isOpen){
-						 Mainloop.timeout_add(this.settings.interval / this.settings.graphsmooth, Lang.bind(this, function(){
-							this.canvas.queue_repaint();
-						}));
-					} else
-						this.graph.draw = false;
-				}
+				this.graph.timeout = Mainloop.timeout_add(this.settings.graphinterval, Lang.bind(this, function(){
+					this.canvas.queue_repaint();
+				}));
 			}
 		} catch(e){
 			global.logError(e);
 		}
 	},
 	startDraw: function(){
-		if(this.settings.graphtype === -1) return;
-		if(this.settings.graphtype >= 2){ //history graphs
-			if(this.graph.draw) return;
-			this.graph.draw = true;
-		} else
-			this.graph.draw = false;
+		if(this.settings.graphtype === -1 || (this.settings.graphtype > 1 && this.graph.timeout)) return;
+		if(this.graph.timeout)
+			this.graph.timeout = null;
 		this.canvas.queue_repaint();
+	},
+	endDraw: function(){
+		if(this.graph.timeout) Mainloop.source_remove(this.graph.timeout);
+		this.graph.timeout = null;
 	},
 	refresh: function(){
 		try {
@@ -853,6 +860,7 @@ MyApplet.prototype = {
 	on_applet_clicked: function(){
 		this.menu.toggle();
 		if(this.menu.isOpen) this.refresh();
+		else this.endDraw();
 	},
 	on_applet_removed_from_panel: function(){
 		Mainloop.source_remove(this.timeout);
