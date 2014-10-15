@@ -79,9 +79,7 @@ MyApplet.prototype = {
 		colors: [],
 		path: "",
 		min: null,
-		tmin: null,
 		max: null,
-		tmax: null,
 		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Thermal")),
 		container: [new St.BoxLayout()]
 	},
@@ -106,6 +104,7 @@ MyApplet.prototype = {
 			max: 1,
 			maxIndex: 0
 		},
+		thermaltime: 0,
 		thermal: []
 	},
 
@@ -518,8 +517,8 @@ MyApplet.prototype = {
 			this.data.thermal[0] = 0;
 			for(i = 0, l = this.thermal.sensors.length; i < l; ++i){
 				this.history.thermal[i + 1].push(this.data.thermal[i + 1] = parseFloat(r[this.thermal.sensors[i]].match(/\d+\.\d+/)));
-				if(this.thermal.tmin > this.data.thermal[i + 1] || !this.thermal.tmin) this.thermal.tmin = this.data.thermal[i + 1];
-				if(this.thermal.tmax < this.data.thermal[i + 1] || !this.thermal.tmax) this.thermal.tmax = this.data.thermal[i + 1];
+				if(this.thermal.min > this.data.thermal[i + 1] || !this.thermal.min) this.thermal.min = this.data.thermal[i + 1];
+				if(this.thermal.max < this.data.thermal[i + 1] || !this.thermal.max) this.thermal.max = this.data.thermal[i + 1];
 
 				if(this.settings.thermalmode === 1 && this.data.thermal[0] > this.data.thermal[i + 1] || this.data.thermal[0] == 0) this.data.thermal[0] = this.data.thermal[i + 1];
 				else if(this.settings.thermalmode === 2) this.data.thermal[0] += this.data.thermal[i + 1];
@@ -528,14 +527,13 @@ MyApplet.prototype = {
 			if(this.settings.thermalmode === 2) this.data.thermal[0] /= l;
 			this.history.thermal[0].push(this.data.thermal[0]);
 
-			if(this.thermal.min > this.data.thermal[0] || !this.thermal.min) this.thermal.min = this.data.thermal[0];
-			if(this.thermal.max < this.data.thermal[0] || !this.thermal.max) this.thermal.max = this.data.thermal[0];
-
 			if(this.settings.thermalwarning && this.data.thermal[0] > this.settings.thermalwarningvalue){
 				if(--this.notifications.thermal == 0)
 					this.notify("Warning:", "Temperature was over " + this.formatthermal(this.settings.thermalwarningvalue) + " for " + this.settings.thermalwarningtime * this.settings.interval / 1000 + "sec");
 			} else
 				this.notifications.thermal = this.settings.thermalwarningtime;
+
+			this.data.thermaltime = GLib.get_monotonic_time() / 1e6;
 		} catch(e){
 			global.logError(e);
 		}
@@ -764,9 +762,10 @@ MyApplet.prototype = {
 					ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
 					line(this.history.network.down, 1, 2);
 				} else if(this.settings.graphtype == 6){
-					tx -= this.history.thermal[0].length;
-					min = this.thermal.tmin;
-					max = this.thermal.tmax;
+					deltaT = (GLib.get_monotonic_time() / 1e3 - this.data.thermaltime * 1e3) / this.settings.interval;
+					tx = steps + 2 - deltaT - this.history.thermal[0].length;
+					min = this.thermal.min;
+					max = this.thermal.max;
 
 					for(var i = 1, l = this.history.thermal.length; i < l; ++i){
 						if(this.thermal.colors[i]) ctx.setSourceRGBA(this.colors["cpu" + this.thermal.colors[i]][0], this.colors["cpu" + this.thermal.colors[i]][1], this.colors["cpu" + this.thermal.colors[i]][2], 1);
