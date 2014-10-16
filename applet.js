@@ -461,8 +461,8 @@ MyApplet.prototype = {
 			j = 1;
 			for(i in this.network.dev){
 				GTop.glibtop_get_netload(this.network.gtop, i);
-				up[0] += up[j] = this.network.gtop.bytes_out * 8;
-				down[0] += down[j] = this.network.gtop.bytes_in * 8;
+				up[0] += up[j] = this.network.gtop.bytes_out;
+				down[0] += down[j] = this.network.gtop.bytes_in;
 				++j;
 			}
 			if(delta > 0 && this.network.up && this.network.down){
