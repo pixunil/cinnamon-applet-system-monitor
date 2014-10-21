@@ -8,7 +8,7 @@
 		"units": "ms",
 		"description": "Interval"
 	},
-	"byteunit": {
+	"byte-unit": {
 		"type": "combobox",
 		"default": true,
 		"options": {
@@ -17,7 +17,7 @@
 		},
 		"description": "Bytes unit"
 	},
-	"rateunit": {
+	"rate-unit": {
 		"type": "combobox",
 		"default": 1,
 		"options": {
@@ -28,7 +28,7 @@
 		},
 		"description": "Rates unit"
 	},
-	"thermalunit": {
+	"thermal-unit": {
 		"type": "combobox",
 		"default": true,
 		"options": {
@@ -55,7 +55,7 @@
 		},
 		"description": "Order of Disk and Network items"
 	},
-	"thermalmode": {
+	"thermal-mode": {
 		"type": "combobox",
 		"default": 1,
 		"options": {
@@ -69,7 +69,7 @@
 	"graph": {
 		"type": "separator"
 	},
-	"graphtype": {
+	"graph-type": {
 		"type": "combobox",
 		"default": 0,
 		"options": {
@@ -84,7 +84,7 @@
 		},
 		"description": "Type of graph"
 	},
-	"graphsize": {
+	"graph-size": {
 		"type": "spinbutton",
 		"default": 100,
 		"min": 100,
@@ -93,7 +93,7 @@
 		"units": "px",
 		"description": "Height of graph"
 	},
-	"graphsteps": {
+	"graph-steps": {
 		"type": "spinbutton",
 		"default": 60,
 		"min": 5,
@@ -102,7 +102,7 @@
 		"units": " ",
 		"description": "Ammount of history steps"
 	},
-	"graphappearance": {
+	"graph-appearance": {
 		"type": "combobox",
 		"default": 0,
 		"options": {
@@ -112,7 +112,7 @@
 		},
 		"description": "Appearance of history graphs"
 	},
-	"graphconnection": {
+	"graph-connection": {
 		"type": "combobox",
 		"default": 0,
 		"options": {
@@ -122,7 +122,7 @@
 		},
 		"description": "Connection type for Line or Area"
 	},
-	"graphinterval": {
+	"graph-interval": {
 		"type": "spinbutton",
 		"default": 1000,
 		"min": 50,
@@ -183,12 +183,12 @@
 		"type": "header",
 		"description": "The unit int equals one interval"
 	},
-	"cpuwarning": {
+	"cpu-warning": {
 		"type": "checkbox",
 		"default": false,
 		"description": "enable CPU warning"
 	},
-	"cpuwarningtime": {
+	"cpu-warning-time": {
 		"type": "spinbutton",
 		"min": 1,
 		"max": 40,
@@ -197,16 +197,16 @@
 		"units": "int",
 		"description": "Warning time",
 		"indent": true,
-		"dependency": "cpuwarning"
+		"dependency": "cpu-warning"
 	},
-	"cpuwarningmode": {
+	"cpu-warning-mode": {
 		"type": "checkbox",
 		"default": true,
 		"description": "Use average CPU usage",
 		"indent": true,
-		"dependency": "cpuwarning"
+		"dependency": "cpu-warning"
 	},
-	"cpuwarningvalue": {
+	"cpu-warning-value": {
 		"type": "spinbutton",
 		"min": 50,
 		"max": 100,
@@ -215,14 +215,14 @@
 		"units": "%",
 		"description": "Warning CPU usage",
 		"indent": true,
-		"dependency": "cpuwarning"
+		"dependency": "cpu-warning"
 	},
-	"thermalwarning": {
+	"thermal-warning": {
 		"type": "checkbox",
 		"default": false,
 		"description": "enable thermal warning"
 	},
-	"thermalwarningtime": {
+	"thermal-warning-time": {
 		"type": "spinbutton",
 		"min": 1,
 		"max": 40,
@@ -231,9 +231,9 @@
 		"units": "int",
 		"description": "Warning time",
 		"indent": true,
-		"dependency": "thermalwarning"
+		"dependency": "thermal-warning"
 	},
-	"thermalwarningvalue": {
+	"thermal-warning-value": {
 		"type": "spinbutton",
 		"min": 25,
 		"max": 200,
@@ -242,6 +242,6 @@
 		"units": "\u00b0",
 		"description": "Warning temperatur",
 		"indent": true,
-		"dependency": "thermalwarning"
+		"dependency": "thermal-warning"
 	}
 }
