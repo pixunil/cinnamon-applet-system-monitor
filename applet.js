@@ -25,6 +25,379 @@ try {
 \tArch: libgtop'");
 }
 
+
+function Graph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+Graph.prototype = {
+	_init: function(canvas, modules, settings, colors){
+		this.canvas = canvas;
+		this.modules = modules;
+		this.settings = settings;
+		this.colors = colors;
+	},
+
+	begin: function(){
+		this.ctx = this.canvas.get_context();
+		this.w = this.canvas.get_width();
+		this.h = this.canvas.get_height();
+	},
+
+	setColor: function(c){
+		this.color = c;
+		c = this.colors[c];
+		this.ctx.setSourceRGB(c[0], c[1], c[2]);
+	},
+	setAlpha: function(a){
+		var c = this.colors[this.color];
+		this.ctx.setSourceRGBA(c[0], c[1], c[2], a);
+	}
+};
+
+function PieGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+
+PieGraph.prototype = {
+	__proto__: Graph.prototype,
+
+	begin: function(n){
+		Graph.prototype.begin.call(this);
+
+		this.dr = this.h / n / 2;
+		this.r = this.dr * 1.5;
+		this.ctx.setLineWidth(this.dr);
+	},
+
+	draw: function(){
+		let m = this.modules;
+		this.begin(m.cpu.count + 4);
+
+		if(this.settings.thermalMode){
+			this.setColor("thermal");
+			this.halfCircle((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
+		}
+
+		this.setColor("read");
+		this.quarterArc(m.disk.data.read / m.disk.max, false, false);
+		this.quarterArc(m.network.data.down[0] / m.network.max, true, true);
+
+		this.setColor("write");
+		this.quarterArc(m.disk.data.write / m.disk.max, false, true);
+		this.quarterArc(m.network.data.up[0] / m.network.max, true, false);
+
+		for(let i = 0; i < m.cpu.count; ++i){
+			this.next("cpu" + (i % 4 + 1));
+			this.arc(m.cpu.data.user[i], true);
+			this.setAlpha(.75);
+			this.arc(m.cpu.data.system[i], true);
+		}
+
+		this.next("mem");
+		this.arc(m.mem.data.usedup / m.mem.data.total, false);
+		this.setAlpha(.75);
+		this.arc(m.mem.data.cached / m.mem.data.total, false);
+		this.setAlpha(.5);
+		this.arc(m.mem.data.buffer / m.mem.data.total, false);
+
+		this.next("swap");
+		this.arc(m.swap.data.used / m.swap.data.total, false);
+	},
+
+	next: function(color){
+		this.a = -Math.PI / 2;
+		this.r += this.dr;
+		this.setColor(color);
+	},
+
+	arc: function(angle, dir){
+		angle *= Math.PI * 2;
+		if(dir)
+			this.ctx.arc(this.w / 2, this.h / 2, this.r, this.a, this.a += angle);
+		else
+			this.ctx.arcNegative(this.w / 2, this.h / 2, this.r, this.a, this.a -= angle);
+		this.ctx.stroke();
+	},
+	quarterArc: function(angle, side, dir){
+		var a = side? 0 : -Math.PI;
+		angle *= Math.PI / 2;
+
+		if(dir)
+			this.ctx.arc(this.w / 2, this.h / 2, this.r, a, a + angle);
+		else
+			this.ctx.arcNegative(this.w / 2, this.h / 2, this.r, a, a - angle);
+		this.ctx.stroke();
+	},
+	circle: function(radius){
+		this.ctx.arc(this.w / 2, this.h / 2, radius * this.r, 0, Math.PI * 2);
+		this.ctx.fill();
+	}
+};
+
+function ArcGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+
+ArcGraph.prototype = {
+	__proto__: Graph.prototype,
+
+	begin: function(n){
+		Graph.prototype.begin.call(this);
+
+		this.dr = Math.min(this.w / n / 2, this.h / n);
+		this.r = this.dr;
+		this.ctx.setLineWidth(this.dr);
+	},
+
+	draw: function(){
+		let m = this.modules;
+		this.begin(m.cpu.count + 5);
+
+		if(this.settings.thermalMode){
+			this.setColor("thermal");
+			this.halfCircle((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
+		}
+
+		this.r -= this.dr / 2;
+
+		this.next("read");
+		this.quarterArc(m.disk.data.read / m.disk.max, this.settings.order);
+		this.setColor("write");
+		this.quarterArc(m.disk.data.write / m.disk.max, !this.settings.order);
+
+		this.next("read");
+		this.quarterArc(m.network.data.down[0] / m.network.max, this.settings.order);
+		this.setColor("write");
+		this.quarterArc(m.network.data.up[0] / m.network.max, !this.settings.order);
+
+		for(let i = 0; i < m.cpu.count; ++i){
+			this.next("cpu" + (i % 4 + 1));
+			this.arc(m.cpu.data.user[i]);
+			this.setAlpha(.75);
+			this.arc(m.cpu.data.system[i]);
+		}
+
+		this.next("mem");
+		this.arc(m.mem.data.usedup / m.mem.data.total);
+		this.setAlpha(.75);
+		this.arc(m.mem.data.cached / m.mem.data.total);
+		this.setAlpha(.5);
+		this.arc(m.mem.data.buffer / m.mem.data.total);
+
+		this.next("swap");
+		this.arc(m.swap.data.used / m.swap.data.total);
+	},
+
+	next: function(color){
+		this.a = 0;
+		this.r += this.dr;
+		this.setColor(color);
+	},
+
+	arc: function(angle){
+		angle *= Math.PI / 2;
+		if(this.a === 0){
+			this.a = angle;
+			this.ctx.arc(this.w / 2, this.h, this.r, -this.a - Math.PI / 2, this.a - Math.PI / 2);
+		} else {
+			this.ctx.arc(this.w / 2, this.h, this.r, this.a - Math.PI / 2, this.a + angle - Math.PI / 2);
+			this.ctx.stroke();
+			this.ctx.arcNegative(this.w / 2, this.h, this.r, -this.a - Math.PI / 2, -this.a - angle - Math.PI / 2);
+			this.a += angle;
+		}
+		this.ctx.stroke();
+	},
+	quarterArc: function(angle, dir){
+		angle *= Math.PI / 2;
+
+		if(dir)
+			this.ctx.arc(this.w / 2, this.h, this.r, -Math.PI / 2, angle - Math.PI / 2);
+		else
+			this.ctx.arcNegative(this.w / 2, this.h, this.r, -Math.PI / 2, -angle - Math.PI / 2);
+		this.ctx.stroke();
+	},
+	halfCircle: function(radius){
+		this.ctx.arc(this.w / 2, this.h, radius * this.r, -Math.PI, Math.PI);
+		this.ctx.fill();
+	}
+};
+
+function HistoryGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+
+HistoryGraph.prototype = {
+	__proto__: Graph.prototype,
+
+	_line: {
+		line: function(history){
+			this.ctx.moveTo(this.dw * this.tx, this.h - (history[0] - this.min) / (this.max - this.min) * this.h);
+			this.connection(history, 1);
+			this.ctx.stroke();
+		},
+		area:	function(history, num, total){
+			this.ctx.translate(0, this.h * num / total);
+			this.ctx.scale(1, 1 / total);
+
+			this.ctx.moveTo(this.dw * this.tx, this.h);
+			this.ctx.lineTo(this.dw * this.tx, this.h - (history[0] - this.min) / (this.max - this.min) * this.h);
+			this.connection(history, 1);
+			this.ctx.lineTo(this.dw * (history.length - 1 + this.tx), this.h);
+			this.ctx.fill();
+
+			this.ctx.identityMatrix();
+		},
+		bar:	function(history, num, total){
+			var l = history.length;
+			for(var i = 0; i < l; ++i)
+				this.ctx.rectangle(this.dw * (i + this.tx) + this.dw * num / total, this.h, this.dw / total, -(history[i] - this.min) / (this.max - this.min) * this.h);
+			this.ctx.fill();
+		}
+	},
+	_connection: {
+		line:	function(history, i){
+			for(var l = history.length; i < l; ++i)
+				this.ctx.lineTo(this.dw * (i + this.tx), this.h - (history[i] - this.min) / (this.max - this.min) * this.h);
+		},
+		straight:	function(history, i){
+			for(var l = history.length; i < l; ++i){
+				this.ctx.lineTo(this.dw * (i + this.tx - .5), this.h - (history[i - 1] - this.min) / (this.max - this.min) * this.h);
+				this.ctx.lineTo(this.dw * (i + this.tx - .5), this.h - (history[i] - this.min) / (this.max - this.min) * this.h);
+				this.ctx.lineTo(this.dw * (i + this.tx), this.h - (history[i] - this.min) / (this.max - this.min) * this.h);
+			}
+		},
+		curve:	function(history, i){
+			for(var l = history.length; i < l; ++i)
+				this.ctx.curveTo(this.dw * (i + this.tx - .5), this.h - (history[i - 1] - this.min) / (this.max - this.min) * this.h, this.dw * (i + this.tx - .5), this.h - (history[i] - this.min) / (this.max - this.min) * this.h, this.dw * (i + this.tx), this.h - (history[i] - this.min) / (this.max - this.min) * this.h);
+		}
+	},
+
+	begin: function(t, n, max, min){
+		Graph.prototype.begin.call(this);
+
+		this.dw = this.w / this.settings.graphSteps;
+		var deltaT = (GLib.get_monotonic_time() / 1e3 - t * 1e3) / this.settings.interval;
+		this.tx = this.settings.graphSteps + 2 - deltaT - n;
+
+		this.min = min || 0;
+		this.max = max || 1;
+
+		this.line = this._line[this.settings.graphAppearance];
+		if(!this.line) this.line = this._line.line;
+		this.connection = this._connection[this.settings.graphConnection];
+		if(!this.connection) this.connection = this._connection.line;
+	}
+};
+
+function CPUHistoryGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+
+CPUHistoryGraph.prototype = {
+	__proto__: HistoryGraph.prototype,
+
+	draw: function(t){
+		let m = this.modules;
+		this.begin(t, m.cpu.history.user[0].length);
+
+		for(let i = 0; i < m.cpu.count; ++i){
+			this.setColor("cpu" + (i % 4 + 1));
+			this.line(m.cpu.history.user[i], i, m.cpu.count);
+			this.setAlpha(.75);
+			this.line(m.cpu.history.system[i], i, m.cpu.count);
+		}
+	}
+};
+
+function MemoryHistoryGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+
+MemoryHistoryGraph.prototype = {
+	__proto__: HistoryGraph.prototype,
+
+	draw: function(t){
+		let m = this.modules;
+		this.begin(t, m.mem.history.usedup.length);
+
+		this.setColor("mem");
+		this.line(m.mem.history.usedup, 0, 2);
+		this.setAlpha(.75);
+		this.line(m.mem.history.cached, 0, 2);
+		this.setAlpha(.5);
+		this.line(m.mem.history.buffer, 0, 2);
+
+		this.setColor("swap");
+		this.line(m.swap.history, 1, 2);
+	}
+};
+
+function DiskHistoryGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+
+DiskHistoryGraph.prototype = {
+	__proto__: HistoryGraph.prototype,
+
+	draw: function(t){
+		let m = this.modules;
+		this.begin(t, m.disk.history.write.length, m.disk.max);
+
+		this.setColor("write");
+		this.line(m.disk.history.write, 0, 2);
+
+		this.setColor("read");
+		this.line(m.disk.history.read, 1, 2);
+	}
+};
+
+function NetworkHistoryGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+
+NetworkHistoryGraph.prototype = {
+	__proto__: HistoryGraph.prototype,
+
+	draw: function(t){
+		let m = this.modules;
+		this.begin(t, m.network.history.up.length, m.network.max);
+
+		this.setColor("write");
+		this.line(m.network.history.up, 0, 2);
+
+		this.setColor("read");
+		this.line(m.network.history.down, 1, 2);
+	}
+};
+
+function ThermalHistoryGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+
+ThermalHistoryGraph.prototype = {
+	__proto__: HistoryGraph.prototype,
+
+	draw: function(t){
+		let m = this.modules;
+		this.begin(t, m.thermal.history[0].length, m.thermal.max, m.thermal.min);
+
+		for(var i = 1, l = m.thermal.history.length; i < l; ++i){
+			if(m.thermal.colors[i])
+			 this.setColor("cpu" + m.thermal.colors[i]);
+			else {
+				this.setColor("thermal");
+				this.setAlpha((l - i / 4) / l);
+			}
+			this.line(m.thermal.history[i], i, l);
+		}
+
+		this.setColor("thermal");
+		this.ctx.setDash([5, 5], 0);
+		this.line(m.thermal.history[0], 0, l);
+	}
+};
+
+
 function SystemMonitorApplet(metadata, orientation, instanceId){
 	this._init(metadata, orientation, instanceId);
 }
@@ -147,6 +520,7 @@ SystemMonitorApplet.prototype = {
 		items: [new PopupMenu.PopupMenuItem(_("Pie")), new PopupMenu.PopupMenuItem(_("Arc")), new PopupMenu.PopupMenuItem(_("CPU History")), new PopupMenu.PopupMenuItem(_("Memory History")),
 			new PopupMenu.PopupMenuItem(_("Disk History")), new PopupMenu.PopupMenuItem(_("Network History")), new PopupMenu.PopupMenuItem(_("Thermal History"))]
 	},
+	graphs: [],
 
 	_init: function(metadata, orientation, instanceId){
 		Applet.IconApplet.prototype._init.call(this, orientation);
@@ -158,6 +532,14 @@ SystemMonitorApplet.prototype = {
 
 			this.Terminal = imports.ui.appletManager.applets[metadata.uuid].terminal;
 
+			this.modules = {
+				cpu: this.cpu,
+				mem: this.mem,
+				swap: this.swap,
+				disk: this.disk,
+				network: this.network,
+				thermal: this.thermal
+			};
 			this.settings = {};
 			this.colors = {};
 			this.notifications = {};
@@ -180,7 +562,7 @@ SystemMonitorApplet.prototype = {
 					return c.toUpperCase();
 				});
 
-				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, q, this.on_settings_changed.bind(this));
+				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, q, this.onSettingsChanged.bind(this));
 			}, this);
 
 			this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", this.onGraphTypeChanged.bind(this));
@@ -322,11 +704,7 @@ SystemMonitorApplet.prototype = {
 			if(this.thermal.sensors.length) this.menu.addMenuItem(this.thermal.submenu);
 			else this.settings.thermalMode = 0;
 
-			this.canvas = new St.DrawingArea({height: this.settings.graphSize});
-			this.canvas.connect("repaint", this.draw.bind(this));
-			this.canvasHolder = new PopupMenu.PopupBaseMenuItem({reactive: false});
-			this.canvasHolder.addActor(this.canvas, {span: -1, expand: true});
-			this.menu.addMenuItem(this.canvasHolder);
+			this._initGraphs();
 
 			this.onGraphTypeChanged();
 			this.graph.items.forEach(function(item, i){
@@ -347,12 +725,29 @@ SystemMonitorApplet.prototype = {
 			});
 			this.menu.addMenuItem(item);
 
-			this.on_settings_changed();
+			this.onSettingsChanged();
 			this.getData();
 
 		} catch(e){
 			global.logError(e);
 		}
+	},
+	_initGraphs: function(){
+		this.canvas = new St.DrawingArea({height: this.settings.graphSize});
+		this.canvas.connect("repaint", this.draw.bind(this));
+		this.canvasHolder = new PopupMenu.PopupBaseMenuItem({reactive: false});
+		this.canvasHolder.addActor(this.canvas, {span: -1, expand: true});
+		this.menu.addMenuItem(this.canvasHolder);
+
+		this.graphs = [
+			new PieGraph(this.canvas, this.modules, this.settings, this.colors),
+			new ArcGraph(this.canvas, this.modules, this.settings, this.colors),
+			new CPUHistoryGraph(this.canvas, this.modules, this.settings, this.colors),
+			new MemoryHistoryGraph(this.canvas, this.modules, this.settings, this.colors),
+			new DiskHistoryGraph(this.canvas, this.modules, this.settings, this.colors),
+			new NetworkHistoryGraph(this.canvas, this.modules, this.settings, this.colors),
+			new ThermalHistoryGraph(this.canvas, this.modules, this.settings, this.colors)
+		];
 	},
 	getData: function(){
 		try {
@@ -588,238 +983,13 @@ SystemMonitorApplet.prototype = {
 	},
 	draw: function(){
 		try {
-			let ctx = this.canvas.get_context();
-			let w = this.canvas.get_width();
-			let h = this.canvas.get_height();
-			var steps = this.settings.graphSteps;
-
-			if(this.settings.graphType == 0){
-				function arc(angle, dir){
-					if(dir) ctx.arc(w / 2, h / 2, r, a, a += angle);
-					else ctx.arcNegative(w / 2, h / 2, r, a, a -= angle);
-					ctx.stroke();
-				}
-
-				let dr = h / (this.cpu.count + 4) / 2;
-				var r = dr, a;
-				ctx.setLineWidth(dr);
-
-				if(this.settings.thermalMode){
-					ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
-					ctx.arc(w / 2, h / 2, (this.thermal.data[0] - this.thermal.min) / (this.thermal.max - this.thermal.min) * dr, 0, Math.PI * 2);
-					ctx.fill();
-				}
-
-				r += dr / 2;
-				ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
-				a = -Math.PI;
-				arc(Math.PI * this.disk.data.read / this.disk.max / 2, false);
-				a = 0;
-				arc(Math.PI * this.network.data.down[0] / this.network.max / 2, true);
-				ctx.setSourceRGB(this.colors.write[0], this.colors.write[1], this.colors.write[2]);
-				a = -Math.PI;
-				arc(Math.PI * this.disk.data.write / this.disk.max / 2, true);
-				a = 0;
-				arc(Math.PI * this.network.data.up[0] / this.network.max / 2, false);
-
-				r += dr;
-				a = -Math.PI / 2;
-				for(let i = 0; i < this.cpu.count; ++i){
-					ctx.setSourceRGB(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2]);
-					arc(Math.PI * this.cpu.data.user[i] * 2, true);
-					ctx.setSourceRGBA(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2], .75);
-					arc(Math.PI * this.cpu.data.system[i] * 2, true);
-					r += dr;
-					a = -Math.PI / 2;
-				}
-
-				ctx.setSourceRGB(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2]);
-				arc(Math.PI * this.mem.data.usedup / this.mem.data.total * 2, false);
-				ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .75);
-				arc(Math.PI * this.mem.data.cached / this.mem.data.total * 2, false);
-				ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .5);
-				arc(Math.PI * this.mem.data.buffer / this.mem.data.total * 2, false);
-
-				r += dr;
-				a = -Math.PI / 2;
-				ctx.setSourceRGB(this.colors.swap[0], this.colors.swap[1], this.colors.swap[2]);
-				arc(Math.PI * this.swap.data.used / this.swap.data.total * 2, false);
-			} else if(this.settings.graphType == 1){
-				function arc(angle){
-					if(a === 0){
-						a = angle /= 2;
-						ctx.arc(w / 2, h, r, -a - Math.PI / 2, a - Math.PI / 2);
-					} else {
-						angle /= 2;
-						ctx.arc(w / 2, h, r, a - Math.PI / 2, a + angle - Math.PI / 2);
-						ctx.stroke();
-						ctx.arcNegative(w / 2, h, r, -a - Math.PI / 2, -a - angle - Math.PI / 2);
-						a += angle;
-					}
-					ctx.stroke();
-				}
-				function quarterArc(angle, dir){
-					if(dir) ctx.arc(w / 2, h, r, -Math.PI / 2, angle - Math.PI / 2);
-					else ctx.arcNegative(w / 2, h, r, -Math.PI / 2, -angle - Math.PI / 2);
-					ctx.stroke();
-				}
-
-				var dr = Math.min(w / (this.cpu.count + 5.5) / 2, h / (this.cpu.count + 5.5));
-				var r = dr, a = 0;
-
-				ctx.setLineWidth(dr);
-
-				if(this.settings.thermalMode){
-					ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
-					ctx.arc(w / 2, h, (this.thermal.data[0] - this.thermal.min) / (this.thermal.max - this.thermal.min) * dr, Math.PI, 0);
-					ctx.fill();
-				}
-
-				r += dr;
-
-				ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
-				quarterArc(Math.PI * this.network.data.down[0] / this.network.max / 2, this.settings.order);
-				r += dr;
-				quarterArc(Math.PI * this.disk.data.read / this.disk.max / 2, this.settings.order);
-
-				ctx.setSourceRGB(this.colors.write[0], this.colors.write[1], this.colors.write[2]);
-				r -= dr;
-				quarterArc(Math.PI * this.network.data.up[0] / this.network.max / 2, !this.settings.order);
-				r += dr;
-				quarterArc(Math.PI * this.disk.data.write / this.disk.max / 2, !this.settings.order);
-
-				r += dr;
-
-				for(let i = 0; i < this.cpu.count; ++i){
-					ctx.setSourceRGB(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2]);
-					arc(Math.PI * this.cpu.data.user[i]);
-					ctx.setSourceRGBA(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2], .75);
-					arc(Math.PI * this.cpu.data.system[i]);
-					r += dr;
-					a = 0;
-				}
-
-				ctx.setSourceRGB(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2]);
-				arc(Math.PI * this.mem.data.usedup / this.mem.data.total);
-				ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .75);
-				arc(Math.PI * this.mem.data.cached / this.mem.data.total);
-				ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .5);
-				arc(Math.PI * this.mem.data.buffer / this.mem.data.total);
-
-				r += dr;
-				a = 0;
-				ctx.setSourceRGB(this.colors.swap[0], this.colors.swap[1], this.colors.swap[2]);
-				arc(Math.PI * this.swap.data.used / this.swap.data.total);
-			} else {
-				if(this.settings.graphAppearance === 0){
-					function line(history){
-						ctx.moveTo(dw * tx, h - (history[0] - min) / (max - min) * h);
-						connection(history, 1);
-						ctx.stroke();
-					}
-				} else if(this.settings.graphAppearance === 1){
-					function line(history, num, total){
-						ctx.translate(0, h * num / total);
-						ctx.scale(1, 1 / total);
-
-						ctx.moveTo(dw * tx, h);
-						ctx.lineTo(dw * tx, h - (history[0] - min) / (max - min) * h);
-						connection(history, 1);
-						ctx.lineTo(dw * (history.length - 1 + tx), h);
-						ctx.fill();
-
-						ctx.identityMatrix();
-					}
-				} else if(this.settings.graphAppearance === 2){
-					function line(history, num, total){
-						var l = history.length;
-						for(var i = 0; i < l; ++i)
-							ctx.rectangle(dw * (i + tx) + dw * num / total, h, dw / total, -(history[i] - min) / (max - min) * h);
-						ctx.fill();
-					}
-				}
-
-				if(this.settings.graphConnection === 0){
-					function connection(history, i){
-						for(var l = history.length; i < l; ++i)
-							ctx.lineTo(dw * (i + tx), h - (history[i] - min) / (max - min) * h);
-					}
-				} else if(this.settings.graphConnection === 1){
-					function connection(history, i){
-						for(var l = history.length; i < l; ++i){
-							ctx.lineTo(dw * (i + tx - .5), h - (history[i - 1] - min) / (max - min) * h);
-							ctx.lineTo(dw * (i + tx - .5), h - (history[i] - min) / (max - min) * h);
-							ctx.lineTo(dw * (i + tx), h - (history[i] - min) / (max - min) * h);
-						}
-					}
-				} else {
-					function connection(history, i){
-						for(var l = history.length; i < l; ++i)
-							ctx.curveTo(dw * (i + tx - .5), h - (history[i - 1] - min) / (max - min) * h, dw * (i + tx - .5), h - (history[i] - min) / (max - min) * h, dw * (i + tx), h - (history[i] - min) / (max - min) * h);
-					}
-				}
-
-				var dw = w / steps,
-					deltaT = (GLib.get_monotonic_time() / 1e3 - this.time * 1e3) / this.settings.interval,
-					tx = steps + 2 - deltaT,
-					min = 0,
-					max = 1;
-
-				if(this.settings.graphType == 2){
-					tx -= this.cpu.history.user[0].length;
-
-					for(let i = 0; i < this.cpu.count; ++i){
-						ctx.setSourceRGB(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2]);
-						line(this.cpu.history.user[i], i, this.cpu.count);
-						ctx.setSourceRGBA(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2], .75);
-						line(this.cpu.history.system[i], i, this.cpu.count);
-					}
-				} else if(this.settings.graphType == 3){
-					tx -= this.mem.history.usedup.length;
-
-					ctx.setSourceRGB(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2]);
-					line(this.mem.history.usedup, 0, 2);
-					ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .75);
-					line(this.mem.history.cached, 0, 2);
-					ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .5);
-					line(this.mem.history.buffer, 0, 2);
-
-					ctx.setSourceRGB(this.colors.swap[0], this.colors.swap[1], this.colors.swap[2]);
-					line(this.swap.history, 1, 2);
-				} else if(this.settings.graphType == 4){
-					tx -= this.disk.history.write.length;
-					max = this.disk.max;
-
-					ctx.setSourceRGB(this.colors.write[0], this.colors.write[1], this.colors.write[2]);
-					line(this.disk.history.write, 0, 2);
-
-					ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
-					line(this.disk.history.read, 1, 2);
-				} else if(this.settings.graphType == 5){
-					tx -= this.network.history.up.length;
-					max = this.network.max;
-
-					ctx.setSourceRGB(this.colors.write[0], this.colors.write[1], this.colors.write[2]);
-					line(this.network.history.up, 0, 2);
-
-					ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
-					line(this.network.history.down, 1, 2);
-				} else if(this.settings.graphType == 6){
-					deltaT = (GLib.get_monotonic_time() / 1e3 - this.thermaltime * 1e3) / this.settings.interval;
-					tx = steps + 2 - deltaT - this.thermal.history[0].length;
-					min = this.thermal.min;
-					max = this.thermal.max;
-
-					for(var i = 1, l = this.thermal.history.length; i < l; ++i){
-						if(this.thermal.colors[i]) ctx.setSourceRGBA(this.colors["cpu" + this.thermal.colors[i]][0], this.colors["cpu" + this.thermal.colors[i]][1], this.colors["cpu" + this.thermal.colors[i]][2], 1);
-						else ctx.setSourceRGBA(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2], (l - i / 4) / l);
-						line(this.thermal.history[i], i, l);
-					}
-
-					ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
-					ctx.setDash([5, 5], 0);
-					line(this.thermal.history[0], 0, l);
-				}
+			if(this.settings.graphType < 2)
+				this.graphs[this.settings.graphType].draw();
+			else {
+				if(this.settings.graphType === 6)
+					this.graphs[this.settings.graphType].draw(this.thermaltime);
+				else
+					this.graphs[this.settings.graphType].draw(this.time);
 
 				this.graph.timeout = Mainloop.timeout_add(this.settings.graphInterval, Lang.bind(this, function(){
 					this.canvas.queue_repaint();
@@ -936,7 +1106,7 @@ SystemMonitorApplet.prototype = {
 	on_applet_removed_from_panel: function(){
 		Mainloop.source_remove(this.timeout);
 	},
-	on_settings_changed: function(){
+	onSettingsChanged: function(){
 		try {
 			["thermal", "write", "read", "cpu1", "cpu2", "cpu3", "cpu4", "mem", "swap"].forEach(function(p){
 				let c = this.settings[p].split(","), i;
