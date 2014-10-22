@@ -1,27 +1,20 @@
 const Applet = imports.ui.applet;
 
-const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
-const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Cinnamon = imports.gi.Cinnamon;
 const St = imports.gi.St;
-const Tooltips = imports.ui.tooltips;
 const Settings = imports.ui.settings;
 
 const Main = imports.ui.main;
 const Panel = imports.ui.panel;
 const PopupMenu = imports.ui.popupMenu;
 
-const Gettext = imports.gettext;
 const Mainloop = imports.mainloop;
 const Util = imports.misc.util;
 
 const MessageTray = imports.ui.messageTray;
 let messageTray = new MessageTray.MessageTray;
-
-const NMClient = imports.gi.NMClient;
-const NetworkManager = imports.gi.NetworkManager;
 
 try {
 	const GTop = imports.gi.GTop;
@@ -32,44 +25,101 @@ try {
 \tArch: libgtop'");
 }
 
-function MyApplet(metadata, orientation, instanceId){
+function SystemMonitorApplet(metadata, orientation, instanceId){
 	this._init(metadata, orientation, instanceId);
 }
 
-MyApplet.prototype = {
+SystemMonitorApplet.prototype = {
 	__proto__: Applet.IconApplet.prototype,
 
 	cpu: {
 		gtop: new GTop.glibtop_cpu(),
+
+		raw: {
+			total: [],
+			user: [],
+			system: []
+		},
+		data: {
+			usage: [],
+			user: [],
+			system: []
+		},
+		history: {
+			user: [],
+			system: []
+		},
+
 		count: GTop.glibtop_get_sysinfo().ncpu,
-		total: [],
-		user: [],
-		system: [],
+
 		submenu: new PopupMenu.PopupSubMenuMenuItem(_("CPU")),
 		container: [new St.BoxLayout()]
 	},
 	mem: {
 		gtop: new GTop.glibtop_mem(),
+
+		data: {},
+		history: {
+			usedup: [],
+			cached: [],
+			buffer: []
+		},
+
 		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Memory")),
 		container: [new St.BoxLayout()]
 	},
 	swap: {
 		gtop: new GTop.glibtop_swap(),
+
+		data: {},
+		history: [],
+
 		submenu: new PopupMenu.PopupMenuItem(_("Swap"), {reactive: false}),
 		container: [new St.BoxLayout()]
 	},
 	disk: {
 		gtop: new GTop.glibtop_fsusage(),
-		write: null,
-		read: null,
+
+		raw: {
+			write: null,
+			read: null
+		},
+		data: {
+			write: null,
+			read: null
+		},
+		history: {
+			write: [],
+			read: []
+		},
+		dev: [],
+
+		max: 1,
+		maxIndex: 0,
+
 		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Disk")),
 		container: [new St.BoxLayout()]
 	},
 	network: {
 		gtop: new GTop.glibtop_netload(),
-		up: null,
-		down: null,
+
+		raw: {
+			up: [],
+			down: []
+		},
+		data: {
+			up: [],
+			down: []
+		},
+		history: {
+			up: [],
+			down: []
+		},
 		dev: {},
+
+		max: 1,
+		maxIndex: 0,
+
 		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Network")),
 		menuitem: [],
 		container: [new St.BoxLayout()]
@@ -78,57 +128,18 @@ MyApplet.prototype = {
 		sensors: [],
 		colors: [],
 		path: "",
+
+		data: [],
+		history: [[]],
+
 		min: null,
 		max: null,
+
 		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Thermal")),
 		container: [new St.BoxLayout()]
 	},
 
-	data: {
-		time: 0,
-		cpu: {
-			usage: [],
-			system: [],
-			user: []
-		},
-		mem: {},
-		swap: {},
-		mounts: [],
-		disk: {
-			max: 1,
-			maxIndex: 0
-		},
-		network: {
-			up: [],
-			down: [],
-			max: 1,
-			maxIndex: 0
-		},
-		thermaltime: 0,
-		thermal: []
-	},
-
-	history: {
-		cpu: {
-			system: [],
-			user: []
-		},
-		mem: {
-			usedup: [],
-			cached: [],
-			buffer: []
-		},
-		swap: [],
-		disk: {
-			read: [],
-			write: []
-		},
-		network: {
-			up: [],
-			down: []
-		},
-		thermal: [[]]
-	},
+	time: 0,
 
 	graph: {
 		timeout: null,
@@ -179,12 +190,12 @@ MyApplet.prototype = {
 			this.menuManager.addMenu(this.menu);
 
 			for(i = 0; i < this.cpu.count; ++i){
-				this.cpu.total.push(0);
-				this.cpu.user.push(0);
-				this.cpu.system.push(0);
+				this.cpu.raw.total.push(0);
+				this.cpu.raw.user.push(0);
+				this.cpu.raw.system.push(0);
 
-				this.history.cpu.user.push([]);
-				this.history.cpu.system.push([]);
+				this.cpu.history.user.push([]);
+				this.cpu.history.system.push([]);
 
 				this.cpu.container[0].add_actor(new St.Label({width: 60, style: "text-align: right"}));
 			}
@@ -230,9 +241,9 @@ MyApplet.prototype = {
 			var mount;
 			for(let mountLine in mountFile){
 				mount = mountFile[mountLine].split(" ");
-				if(mount[0].indexOf("/dev/") == 0 && this.data.mounts.indexOf(mount[1]) < 0){
+				if(mount[0].indexOf("/dev/") == 0){
 					GTop.glibtop_get_fsusage(this.disk.gtop, mount[1]);
-					this.data.mounts.push({
+					this.disk.dev.push({
 						path: mount[1],
 						size: this.disk.gtop.block_size,
 						free: this.disk.gtop.bfree,
@@ -302,7 +313,7 @@ MyApplet.prototype = {
 								item.addActor(this.thermal.container[this.thermal.container.length - 1]);
 								this.thermal.submenu.menu.addMenuItem(item);
 								this.thermal.sensors.push(i);
-								this.history.thermal.push([]);
+								this.thermal.history.push([]);
 							}
 						}
 					}
@@ -348,55 +359,58 @@ MyApplet.prototype = {
 			let i, j, l, r = 0;
 
 			let time = GLib.get_monotonic_time() / 1e6;
-			let delta = time - this.data.time;
-			this.data.time = time;
+			let delta = time - this.time;
+			this.time = time;
 
-			while(this.history.swap.length > this.settings.graphSteps + 1){
+			while(this.swap.history.length > this.settings.graphSteps + 1){
 				for(i = 0; i < this.cpu.count; ++i){
-					this.history.cpu.user[i].shift();
-					this.history.cpu.system[i].shift();
+					this.cpu.history.user[i].shift();
+					this.cpu.history.system[i].shift();
 				}
-				this.history.mem.usedup.shift();
-				this.history.mem.cached.shift();
-				this.history.mem.buffer.shift();
-				this.history.swap.shift();
+				this.mem.history.usedup.shift();
+				this.mem.history.cached.shift();
+				this.mem.history.buffer.shift();
+				this.swap.history.shift();
 			}
 
-			while(this.history.disk.write.length > this.settings.graphSteps + 1){
-				this.history.disk.write.shift();
-				this.history.disk.read.shift();
+			while(this.disk.history.write.length > this.settings.graphSteps + 1){
+				this.disk.history.write.shift();
+				this.disk.history.read.shift();
 			}
-			while(this.history.network.up.length > this.settings.graphSteps + 1){
-				this.history.network.up.shift();
-				this.history.network.down.shift();
+			while(this.network.history.up.length > this.settings.graphSteps + 1){
+				this.network.history.up.shift();
+				this.network.history.down.shift();
 			}
 
 			if(this.settings.thermalMode){
-				while(this.history.thermal[0].length > this.settings.graphSteps + 1){
-					for(i = 0, l = this.history.thermal.length; i < l; ++i)
-						this.history.thermal[i].shift();
+				while(this.thermal.history[0].length > this.settings.graphSteps + 1){
+					for(i = 0, l = this.thermal.history.length; i < l; ++i)
+						this.thermal.history[i].shift();
 				}
 			}
 
 			GTop.glibtop_get_cpu(this.cpu.gtop);
 			for(i = 0; i < this.cpu.count; ++i){
-				var dtotal = this.cpu.gtop.xcpu_total[i] - this.cpu.total[i];
-				var duser = this.cpu.gtop.xcpu_user[i] - this.cpu.user[i];
-				var dsystem = this.cpu.gtop.xcpu_sys[i] - this.cpu.system[i];
+				var dtotal = this.cpu.gtop.xcpu_total[i] - this.cpu.raw.total[i];
+				var duser = this.cpu.gtop.xcpu_user[i] - this.cpu.raw.user[i];
+				var dsystem = this.cpu.gtop.xcpu_sys[i] - this.cpu.raw.system[i];
 
-				this.cpu.total[i] = this.cpu.gtop.xcpu_total[i];
-				this.cpu.user[i] = this.cpu.gtop.xcpu_user[i];
-				this.cpu.system[i] = this.cpu.gtop.xcpu_sys[i];
+				this.cpu.raw.total[i] = this.cpu.gtop.xcpu_total[i];
+				this.cpu.raw.user[i] = this.cpu.gtop.xcpu_user[i];
+				this.cpu.raw.system[i] = this.cpu.gtop.xcpu_sys[i];
 
-				this.history.cpu.user[i].push(this.data.cpu.user[i] = duser / dtotal);
-				this.history.cpu.system[i].push((this.data.cpu.system[i] = dsystem / dtotal) + this.data.cpu.user[i]);
-				this.data.cpu.usage[i] = this.data.cpu.user[i] + this.data.cpu.system[i];
+				this.cpu.data.user[i] = duser / dtotal;
+				this.cpu.data.system[i] = dsystem / dtotal;
+				this.cpu.data.usage[i] = this.cpu.data.user[i] + this.cpu.data.system[i];
+
+				this.cpu.history.user[i].push(this.cpu.data.user[i]);
+				this.cpu.history.system[i].push(this.cpu.data.user[i] + this.cpu.data.system[i]);
 
 				if(this.settings.cpuWarning){
 					if(this.settings.cpuWarningMode)
-						r += this.data.cpu.usage[i];
+						r += this.cpu.data.usage[i];
 					else {
-						if(this.data.cpu.usage[i] >= this.settings.cpuWarningValue / 100){
+						if(this.cpu.data.usage[i] >= this.settings.cpuWarningValue / 100){
 							if(--this.notifications.cpu[i] == 0)
 								this.notify("Warning:", "CPU core " + (i + 1) + " usage was over " + this.settings.cpuWarningValue + "% for " + this.settings.cpuWarningTime * this.settings.interval / 1000 + "sec");
 						} else
@@ -413,59 +427,76 @@ MyApplet.prototype = {
 					this.notifications.cpu = this.settings.cpuWarningTime;
 			}
 
+
 			GTop.glibtop_get_mem(this.mem.gtop);
-			this.data.mem.total = this.mem.gtop.total;
-			this.data.mem.used = this.mem.gtop.used;
-			this.data.mem.buffer = this.mem.gtop.buffer;
-			this.data.mem.cached = this.mem.gtop.cached;
-			this.history.mem.usedup.push((this.data.mem.usedup = this.data.mem.used - this.data.mem.buffer - this.data.mem.cached) / this.data.mem.total);
-			this.history.mem.cached.push((this.data.mem.usedup + this.data.mem.cached) / this.data.mem.total);
-			this.history.mem.buffer.push((this.data.mem.usedup + this.data.mem.cached + this.data.mem.buffer) / this.data.mem.total);
+
+			this.mem.data.total = this.mem.gtop.total;
+			this.mem.data.used = this.mem.gtop.used;
+			this.mem.data.buffer = this.mem.gtop.buffer;
+			this.mem.data.cached = this.mem.gtop.cached;
+			this.mem.data.usedup = this.mem.data.used - this.mem.data.buffer - this.mem.data.cached;
+
+			this.mem.history.usedup.push(this.mem.data.usedup / this.mem.data.total);
+			this.mem.history.cached.push((this.mem.data.usedup + this.mem.data.cached) / this.mem.data.total);
+			this.mem.history.buffer.push((this.mem.data.usedup + this.mem.data.cached + this.mem.data.buffer) / this.mem.data.total);
+
 
 			GTop.glibtop_get_swap(this.swap.gtop);
-			this.data.swap.total = this.swap.gtop.total;
-			this.history.swap.push((this.data.swap.used = this.swap.gtop.used) / this.data.swap.total);
+
+			this.swap.data.total = this.swap.gtop.total;
+			this.swap.data.used = this.swap.gtop.used;
+
+			this.swap.history.push(this.swap.data.used / this.swap.data.total);
+
 
 			let write = 0, read = 0;
-			for(i = 0; i < this.data.mounts.length; ++i){
-				GTop.glibtop_get_fsusage(this.disk.gtop, this.data.mounts[i].path);
-				write += this.disk.gtop.write * this.disk.gtop.block_size;
-				read += this.disk.gtop.read * this.disk.gtop.block_size;
+			for(i = 0; i < this.disk.dev.length; ++i){
+				GTop.glibtop_get_fsusage(this.disk.gtop, this.disk.dev[i].path);
+
+				this.disk.dev[i].size = this.disk.gtop.block_size;
+				this.disk.dev[i].free = this.disk.gtop.bfree;
+				this.disk.dev[i].blocks = this.disk.gtop.blocks;
+
+				write += this.disk.gtop.write * this.disk.dev[i].size;
+				read += this.disk.gtop.read * this.disk.dev[i].size;
 			}
-			if(delta > 0 && this.disk.write && this.disk.read){
-				this.data.disk.write = (write - this.disk.write) / delta;
-				this.data.disk.read = (read - this.disk.read) / delta;
-				this.history.disk.write.push(this.data.disk.write);
-				this.history.disk.read.push(this.data.disk.read);
 
-				if(this.data.disk.max <= this.data.disk.write){
-					this.data.disk.max = this.data.disk.write;
-					this.data.disk.maxIndex = 0;
+			if(delta > 0 && this.disk.raw.write && this.disk.raw.read){
+				this.disk.data.write = (write - this.disk.raw.write) / delta;
+				this.disk.data.read = (read - this.disk.raw.read) / delta;
+
+				this.disk.history.write.push(this.disk.data.write);
+				this.disk.history.read.push(this.disk.data.read);
+
+				if(this.disk.max <= this.disk.data.write){
+					this.disk.max = this.disk.data.write;
+					this.disk.maxIndex = 0;
 				}
 
-				if(this.data.disk.max <= this.data.disk.read){
-					this.data.disk.max = this.data.disk.read;
-					this.data.disk.maxIndex = 0;
+				if(this.disk.max <= this.disk.data.read){
+					this.disk.max = this.disk.data.read;
+					this.disk.maxIndex = 0;
 				}
 
-				if(++this.data.disk.maxIndex > this.settings.graphSteps + 1){
-					this.data.disk.max = Math.max(this.data.disk.write, this.data.disk.read, 1);
-					this.data.disk.maxIndex = 0;
-					for(i = 1, l = this.history.disk.write.length; i < l; ++i){
-						if(this.data.disk.max < this.history.disk.write[i]){
-							this.data.disk.max = this.history.disk.write[i];
-							this.data.disk.maxIndex = i;
+				if(++this.disk.maxIndex > this.settings.graphSteps + 1){
+					this.disk.max = Math.max(this.disk.data.write, this.disk.data.read, 1);
+					this.disk.maxIndex = 0;
+					for(i = 1, l = this.disk.history.write.length; i < l; ++i){
+						if(this.disk.max < this.disk.history.write[i]){
+							this.disk.max = this.disk.history.write[i];
+							this.disk.maxIndex = i;
 						}
-						if(this.data.disk.max < this.history.disk.read[i]){
-							this.data.disk.max = this.history.disk.read[i];
-							this.data.disk.maxIndex = i;
+						if(this.disk.max < this.disk.history.read[i]){
+							this.disk.max = this.disk.history.read[i];
+							this.disk.maxIndex = i;
 						}
 					}
 				}
 			}
 
-			this.disk.write = write;
-			this.disk.read = read;
+			this.disk.raw.write = write;
+			this.disk.raw.read = read;
+
 
 			let up = [0], down = [0];
 			j = 1;
@@ -475,41 +506,43 @@ MyApplet.prototype = {
 				down[0] += down[j] = this.network.gtop.bytes_in;
 				++j;
 			}
-			if(delta > 0 && this.network.up && this.network.down){
+
+			if(delta > 0 && this.network.raw.up && this.network.raw.down){
 				for(i = 0, l = up.length; i < l; ++i){
-					this.data.network.up[i] = this.network.up[i]? (up[i] - this.network.up[i]) / delta : 0;
-					this.data.network.down[i] = this.network.down[i]? (down[i] - this.network.down[i]) / delta : 0;
+					this.network.data.up[i] = this.network.raw.up[i]? (up[i] - this.network.raw.up[i]) / delta : 0;
+					this.network.data.down[i] = this.network.raw.down[i]? (down[i] - this.network.raw.down[i]) / delta : 0;
 				}
-				this.history.network.up.push(this.data.network.up[0]);
-				this.history.network.down.push(this.data.network.down[0]);
+				this.network.history.up.push(this.network.data.up[0]);
+				this.network.history.down.push(this.network.data.down[0]);
 
-				if(this.data.network.max <= this.data.network.up[0]){
-					this.data.network.max = this.data.network.up[0];
-					this.data.network.maxIndex = 0;
-				}
-
-				if(this.data.network.max <= this.data.network.down[0]){
-					this.data.network.max = this.data.network.down[0];
-					this.data.network.maxIndex = 0;
+				if(this.network.max <= this.network.data.up[0]){
+					this.network.max = this.network.data.up[0];
+					this.network.maxIndex = 0;
 				}
 
-				if(++this.data.network.maxIndex > this.settings.graphSteps + 1){
-					this.data.network.max = Math.max(this.data.network.up[0], this.data.network.down[0], 1);
-					this.data.network.maxIndex = 0;
-					for(i = 1, l = this.history.network.up.length; i < l; ++i){
-						if(this.data.network.max < this.history.network.up[i]){
-							this.data.network.max = this.history.network.up[i];
-							this.data.network.maxIndex = i;
+				if(this.network.max <= this.network.data.down[0]){
+					this.network.max = this.network.data.down[0];
+					this.network.maxIndex = 0;
+				}
+
+				if(++this.network.maxIndex > this.settings.graphSteps + 1){
+					this.network.max = Math.max(this.network.data.up[0], this.network.data.down[0], 1);
+					this.network.maxIndex = 0;
+					for(i = 1, l = this.network.history.up.length; i < l; ++i){
+						if(this.network.max < this.network.history.up[i]){
+							this.network.max = this.network.history.up[i];
+							this.network.maxIndex = i;
 						}
-						if(this.data.network.max < this.history.network.down[i]){
-							this.data.network.max = this.history.network.down[i];
-							this.data.network.maxIndex = i;
+						if(this.network.max < this.network.history.down[i]){
+							this.network.max = this.network.history.down[i];
+							this.network.maxIndex = i;
 						}
 					}
 				}
 			}
-			this.network.up = up;
-			this.network.down = down;
+
+			this.network.raw.up = up;
+			this.network.raw.down = down;
 
 			if(this.settings.thermalMode)
 				this.trySpawnAsyncPipe(this.thermal.path, this.getThermalData.bind(this));
@@ -524,26 +557,26 @@ MyApplet.prototype = {
 		try {
 			let r = result.split("\n");
 
-			this.data.thermal[0] = 0;
+			this.thermal.data[0] = 0;
 			for(i = 0, l = this.thermal.sensors.length; i < l; ++i){
-				this.history.thermal[i + 1].push(this.data.thermal[i + 1] = parseFloat(r[this.thermal.sensors[i]].match(/\d+\.\d+/)));
-				if(this.thermal.min > this.data.thermal[i + 1] || !this.thermal.min) this.thermal.min = this.data.thermal[i + 1];
-				if(this.thermal.max < this.data.thermal[i + 1] || !this.thermal.max) this.thermal.max = this.data.thermal[i + 1];
+				this.thermal.history[i + 1].push(this.thermal.data[i + 1] = parseFloat(r[this.thermal.sensors[i]].match(/\d+\.\d+/)));
+				if(this.thermal.min > this.thermal.data[i + 1] || !this.thermal.min) this.thermal.min = this.thermal.data[i + 1];
+				if(this.thermal.max < this.thermal.data[i + 1] || !this.thermal.max) this.thermal.max = this.thermal.data[i + 1];
 
-				if(this.settings.thermalMode === 1 && this.data.thermal[0] > this.data.thermal[i + 1] || this.data.thermal[0] == 0) this.data.thermal[0] = this.data.thermal[i + 1];
-				else if(this.settings.thermalMode === 2) this.data.thermal[0] += this.data.thermal[i + 1];
-				else if(this.settings.thermalMode === 3 && this.data.thermal[0] < this.data.thermal[i + 1]) this.data.thermal[0] = this.data.thermal[i + 1];
+				if(this.settings.thermalMode === 1 && this.thermal.data[0] > this.thermal.data[i + 1] || this.thermal.data[0] == 0) this.thermal.data[0] = this.thermal.data[i + 1];
+				else if(this.settings.thermalMode === 2) this.thermal.data[0] += this.thermal.data[i + 1];
+				else if(this.settings.thermalMode === 3 && this.thermal.data[0] < this.thermal.data[i + 1]) this.thermal.data[0] = this.thermal.data[i + 1];
 			}
-			if(this.settings.thermalMode === 2) this.data.thermal[0] /= l;
-			this.history.thermal[0].push(this.data.thermal[0]);
+			if(this.settings.thermalMode === 2) this.thermal.data[0] /= l;
+			this.thermal.history[0].push(this.thermal.data[0]);
 
-			if(this.settings.thermalWarning && this.data.thermal[0] > this.settings.thermalWarningValue){
+			if(this.settings.thermalWarning && this.thermal.data[0] > this.settings.thermalWarningValue){
 				if(--this.notifications.thermal == 0)
 					this.notify("Warning:", "Temperature was over " + this.formatthermal(this.settings.thermalWarningValue) + " for " + this.settings.thermalWarningTime * this.settings.interval / 1000 + "sec");
 			} else
 				this.notifications.thermal = this.settings.thermalWarningTime;
 
-			this.data.thermaltime = GLib.get_monotonic_time() / 1e6;
+			this.thermaltime = GLib.get_monotonic_time() / 1e6;
 		} catch(e){
 			global.logError(e);
 		}
@@ -573,44 +606,44 @@ MyApplet.prototype = {
 
 				if(this.settings.thermalMode){
 					ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
-					ctx.arc(w / 2, h / 2, (this.data.thermal[0] - this.thermal.min) / (this.thermal.max - this.thermal.min) * dr, 0, Math.PI * 2);
+					ctx.arc(w / 2, h / 2, (this.thermal.data[0] - this.thermal.min) / (this.thermal.max - this.thermal.min) * dr, 0, Math.PI * 2);
 					ctx.fill();
 				}
 
 				r += dr / 2;
 				ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
 				a = -Math.PI;
-				arc(Math.PI * this.data.disk.read / this.data.disk.max / 2, false);
+				arc(Math.PI * this.disk.data.read / this.disk.max / 2, false);
 				a = 0;
-				arc(Math.PI * this.data.network.down[0] / this.data.network.max / 2, true);
+				arc(Math.PI * this.network.data.down[0] / this.network.max / 2, true);
 				ctx.setSourceRGB(this.colors.write[0], this.colors.write[1], this.colors.write[2]);
 				a = -Math.PI;
-				arc(Math.PI * this.data.disk.write / this.data.disk.max / 2, true);
+				arc(Math.PI * this.disk.data.write / this.disk.max / 2, true);
 				a = 0;
-				arc(Math.PI * this.data.network.up[0] / this.data.network.max / 2, false);
+				arc(Math.PI * this.network.data.up[0] / this.network.max / 2, false);
 
 				r += dr;
 				a = -Math.PI / 2;
 				for(let i = 0; i < this.cpu.count; ++i){
 					ctx.setSourceRGB(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2]);
-					arc(Math.PI * this.data.cpu.user[i] * 2, true);
+					arc(Math.PI * this.cpu.data.user[i] * 2, true);
 					ctx.setSourceRGBA(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2], .75);
-					arc(Math.PI * this.data.cpu.system[i] * 2, true);
+					arc(Math.PI * this.cpu.data.system[i] * 2, true);
 					r += dr;
 					a = -Math.PI / 2;
 				}
 
 				ctx.setSourceRGB(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2]);
-				arc(Math.PI * this.data.mem.usedup / this.data.mem.total * 2, false);
+				arc(Math.PI * this.mem.data.usedup / this.mem.data.total * 2, false);
 				ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .75);
-				arc(Math.PI * this.data.mem.cached / this.data.mem.total * 2, false);
+				arc(Math.PI * this.mem.data.cached / this.mem.data.total * 2, false);
 				ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .5);
-				arc(Math.PI * this.data.mem.buffer / this.data.mem.total * 2, false);
+				arc(Math.PI * this.mem.data.buffer / this.mem.data.total * 2, false);
 
 				r += dr;
 				a = -Math.PI / 2;
 				ctx.setSourceRGB(this.colors.swap[0], this.colors.swap[1], this.colors.swap[2]);
-				arc(Math.PI * this.data.swap.used / this.data.swap.total * 2, false);
+				arc(Math.PI * this.swap.data.used / this.swap.data.total * 2, false);
 			} else if(this.settings.graphType == 1){
 				function arc(angle){
 					if(a === 0){
@@ -638,45 +671,45 @@ MyApplet.prototype = {
 
 				if(this.settings.thermalMode){
 					ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
-					ctx.arc(w / 2, h, (this.data.thermal[0] - this.thermal.min) / (this.thermal.max - this.thermal.min) * dr, Math.PI, 0);
+					ctx.arc(w / 2, h, (this.thermal.data[0] - this.thermal.min) / (this.thermal.max - this.thermal.min) * dr, Math.PI, 0);
 					ctx.fill();
 				}
 
 				r += dr;
 
 				ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
-				quarterArc(Math.PI * this.data.network.down[0] / this.data.network.max / 2, this.settings.order);
+				quarterArc(Math.PI * this.network.data.down[0] / this.network.max / 2, this.settings.order);
 				r += dr;
-				quarterArc(Math.PI * this.data.disk.read / this.data.disk.max / 2, this.settings.order);
+				quarterArc(Math.PI * this.disk.data.read / this.disk.max / 2, this.settings.order);
 
 				ctx.setSourceRGB(this.colors.write[0], this.colors.write[1], this.colors.write[2]);
 				r -= dr;
-				quarterArc(Math.PI * this.data.network.up[0] / this.data.network.max / 2, !this.settings.order);
+				quarterArc(Math.PI * this.network.data.up[0] / this.network.max / 2, !this.settings.order);
 				r += dr;
-				quarterArc(Math.PI * this.data.disk.write / this.data.disk.max / 2, !this.settings.order);
+				quarterArc(Math.PI * this.disk.data.write / this.disk.max / 2, !this.settings.order);
 
 				r += dr;
 
 				for(let i = 0; i < this.cpu.count; ++i){
 					ctx.setSourceRGB(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2]);
-					arc(Math.PI * this.data.cpu.user[i]);
+					arc(Math.PI * this.cpu.data.user[i]);
 					ctx.setSourceRGBA(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2], .75);
-					arc(Math.PI * this.data.cpu.system[i]);
+					arc(Math.PI * this.cpu.data.system[i]);
 					r += dr;
 					a = 0;
 				}
 
 				ctx.setSourceRGB(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2]);
-				arc(Math.PI * this.data.mem.usedup / this.data.mem.total);
+				arc(Math.PI * this.mem.data.usedup / this.mem.data.total);
 				ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .75);
-				arc(Math.PI * this.data.mem.cached / this.data.mem.total);
+				arc(Math.PI * this.mem.data.cached / this.mem.data.total);
 				ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .5);
-				arc(Math.PI * this.data.mem.buffer / this.data.mem.total);
+				arc(Math.PI * this.mem.data.buffer / this.mem.data.total);
 
 				r += dr;
 				a = 0;
 				ctx.setSourceRGB(this.colors.swap[0], this.colors.swap[1], this.colors.swap[2]);
-				arc(Math.PI * this.data.swap.used / this.data.swap.total);
+				arc(Math.PI * this.swap.data.used / this.swap.data.total);
 			} else {
 				if(this.settings.graphAppearance === 0){
 					function line(history){
@@ -709,7 +742,7 @@ MyApplet.prototype = {
 				if(this.settings.graphConnection === 0){
 					function connection(history, i){
 						for(var l = history.length; i < l; ++i)
-						 ctx.lineTo(dw * (i + tx), h - (history[i] - min) / (max - min) * h);
+							ctx.lineTo(dw * (i + tx), h - (history[i] - min) / (max - min) * h);
 					}
 				} else if(this.settings.graphConnection === 1){
 					function connection(history, i){
@@ -722,70 +755,70 @@ MyApplet.prototype = {
 				} else {
 					function connection(history, i){
 						for(var l = history.length; i < l; ++i)
-						 ctx.curveTo(dw * (i + tx - .5), h - (history[i - 1] - min) / (max - min) * h, dw * (i + tx - .5), h - (history[i] - min) / (max - min) * h, dw * (i + tx), h - (history[i] - min) / (max - min) * h);
+							ctx.curveTo(dw * (i + tx - .5), h - (history[i - 1] - min) / (max - min) * h, dw * (i + tx - .5), h - (history[i] - min) / (max - min) * h, dw * (i + tx), h - (history[i] - min) / (max - min) * h);
 					}
 				}
 
 				var dw = w / steps,
-					deltaT = (GLib.get_monotonic_time() / 1e3 - this.data.time * 1e3) / this.settings.interval,
+					deltaT = (GLib.get_monotonic_time() / 1e3 - this.time * 1e3) / this.settings.interval,
 					tx = steps + 2 - deltaT,
 					min = 0,
 					max = 1;
 
 				if(this.settings.graphType == 2){
-					tx -= this.history.cpu.user[0].length;
+					tx -= this.cpu.history.user[0].length;
 
 					for(let i = 0; i < this.cpu.count; ++i){
 						ctx.setSourceRGB(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2]);
-						line(this.history.cpu.user[i], i, this.cpu.count);
+						line(this.cpu.history.user[i], i, this.cpu.count);
 						ctx.setSourceRGBA(this.colors["cpu" + (i % 4 + 1)][0], this.colors["cpu" + (i % 4 + 1)][1], this.colors["cpu" + (i % 4 + 1)][2], .75);
-						line(this.history.cpu.system[i], i, this.cpu.count);
+						line(this.cpu.history.system[i], i, this.cpu.count);
 					}
 				} else if(this.settings.graphType == 3){
-					tx -= this.history.mem.usedup.length;
+					tx -= this.mem.history.usedup.length;
 
 					ctx.setSourceRGB(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2]);
-					line(this.history.mem.usedup, 0, 2);
+					line(this.mem.history.usedup, 0, 2);
 					ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .75);
-					line(this.history.mem.cached, 0, 2);
+					line(this.mem.history.cached, 0, 2);
 					ctx.setSourceRGBA(this.colors.mem[0], this.colors.mem[1], this.colors.mem[2], .5);
-					line(this.history.mem.buffer, 0, 2);
+					line(this.mem.history.buffer, 0, 2);
 
 					ctx.setSourceRGB(this.colors.swap[0], this.colors.swap[1], this.colors.swap[2]);
-					line(this.history.swap, 1, 2);
+					line(this.swap.history, 1, 2);
 				} else if(this.settings.graphType == 4){
-					tx -= this.history.disk.write.length;
-					max = this.data.disk.max;
+					tx -= this.disk.history.write.length;
+					max = this.disk.max;
 
 					ctx.setSourceRGB(this.colors.write[0], this.colors.write[1], this.colors.write[2]);
-					line(this.history.disk.write, 0, 2);
+					line(this.disk.history.write, 0, 2);
 
 					ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
-					line(this.history.disk.read, 1, 2);
+					line(this.disk.history.read, 1, 2);
 				} else if(this.settings.graphType == 5){
-					tx -= this.history.network.up.length;
-					max = this.data.network.max;
+					tx -= this.network.history.up.length;
+					max = this.network.max;
 
 					ctx.setSourceRGB(this.colors.write[0], this.colors.write[1], this.colors.write[2]);
-					line(this.history.network.up, 0, 2);
+					line(this.network.history.up, 0, 2);
 
 					ctx.setSourceRGB(this.colors.read[0], this.colors.read[1], this.colors.read[2]);
-					line(this.history.network.down, 1, 2);
+					line(this.network.history.down, 1, 2);
 				} else if(this.settings.graphType == 6){
-					deltaT = (GLib.get_monotonic_time() / 1e3 - this.data.thermaltime * 1e3) / this.settings.interval;
-					tx = steps + 2 - deltaT - this.history.thermal[0].length;
+					deltaT = (GLib.get_monotonic_time() / 1e3 - this.thermaltime * 1e3) / this.settings.interval;
+					tx = steps + 2 - deltaT - this.thermal.history[0].length;
 					min = this.thermal.min;
 					max = this.thermal.max;
 
-					for(var i = 1, l = this.history.thermal.length; i < l; ++i){
+					for(var i = 1, l = this.thermal.history.length; i < l; ++i){
 						if(this.thermal.colors[i]) ctx.setSourceRGBA(this.colors["cpu" + this.thermal.colors[i]][0], this.colors["cpu" + this.thermal.colors[i]][1], this.colors["cpu" + this.thermal.colors[i]][2], 1);
 						else ctx.setSourceRGBA(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2], (l - i / 4) / l);
-						line(this.history.thermal[i], i, l);
+						line(this.thermal.history[i], i, l);
 					}
 
 					ctx.setSourceRGB(this.colors.thermal[0], this.colors.thermal[1], this.colors.thermal[2]);
 					ctx.setDash([5, 5], 0);
-					line(this.history.thermal[0], 0, l);
+					line(this.thermal.history[0], 0, l);
 				}
 
 				this.graph.timeout = Mainloop.timeout_add(this.settings.graphInterval, Lang.bind(this, function(){
@@ -810,42 +843,42 @@ MyApplet.prototype = {
 		try {
 			let i, l;
 			for(i = 0; i < this.cpu.count; ++i){
-				this.cpu.container[0].get_children()[i].set_text(this.formatpercent(this.data.cpu.usage[i]));
-				this.cpu.container[1].get_children()[i].set_text(this.formatpercent(this.data.cpu.user[i]));
-				this.cpu.container[2].get_children()[i].set_text(this.formatpercent(this.data.cpu.system[i]));
+				this.cpu.container[0].get_children()[i].set_text(this.formatpercent(this.cpu.data.usage[i]));
+				this.cpu.container[1].get_children()[i].set_text(this.formatpercent(this.cpu.data.user[i]));
+				this.cpu.container[2].get_children()[i].set_text(this.formatpercent(this.cpu.data.system[i]));
 			}
 
-			this.mem.container[0].get_children()[0].set_text(this.formatbytes(this.data.mem.used));
-			this.mem.container[0].get_children()[1].set_text(this.formatbytes(this.data.mem.total));
-			this.mem.container[0].get_children()[2].set_text(this.formatpercent(this.data.mem.used, this.data.mem.total));
-			this.mem.container[1].get_children()[0].set_text(this.formatbytes(this.data.mem.usedup));
-			this.mem.container[1].get_children()[1].set_text(this.formatpercent(this.data.mem.usedup, this.data.mem.total));
-			this.mem.container[2].get_children()[0].set_text(this.formatbytes(this.data.mem.cached));
-			this.mem.container[2].get_children()[1].set_text(this.formatpercent(this.data.mem.cached, this.data.mem.total));
-			this.mem.container[3].get_children()[0].set_text(this.formatbytes(this.data.mem.buffer));
-			this.mem.container[3].get_children()[1].set_text(this.formatpercent(this.data.mem.buffer, this.data.mem.total));
+			this.mem.container[0].get_children()[0].set_text(this.formatbytes(this.mem.data.used));
+			this.mem.container[0].get_children()[1].set_text(this.formatbytes(this.mem.data.total));
+			this.mem.container[0].get_children()[2].set_text(this.formatpercent(this.mem.data.used, this.mem.data.total));
+			this.mem.container[1].get_children()[0].set_text(this.formatbytes(this.mem.data.usedup));
+			this.mem.container[1].get_children()[1].set_text(this.formatpercent(this.mem.data.usedup, this.mem.data.total));
+			this.mem.container[2].get_children()[0].set_text(this.formatbytes(this.mem.data.cached));
+			this.mem.container[2].get_children()[1].set_text(this.formatpercent(this.mem.data.cached, this.mem.data.total));
+			this.mem.container[3].get_children()[0].set_text(this.formatbytes(this.mem.data.buffer));
+			this.mem.container[3].get_children()[1].set_text(this.formatpercent(this.mem.data.buffer, this.mem.data.total));
 
-			this.swap.container[0].get_children()[0].set_text(this.formatbytes(this.data.swap.used));
-			this.swap.container[0].get_children()[1].set_text(this.formatbytes(this.data.swap.total));
-			this.swap.container[0].get_children()[2].set_text(this.formatpercent(this.data.swap.used, this.data.swap.total));
+			this.swap.container[0].get_children()[0].set_text(this.formatbytes(this.swap.data.used));
+			this.swap.container[0].get_children()[1].set_text(this.formatbytes(this.swap.data.total));
+			this.swap.container[0].get_children()[2].set_text(this.formatpercent(this.swap.data.used, this.swap.data.total));
 
-			this.disk.container[0].get_children()[this.settings.order? 0 : 1].set_text(this.formatrate(this.data.disk.write) + " \u25B2");
-			this.disk.container[0].get_children()[this.settings.order? 1 : 0].set_text(this.formatrate(this.data.disk.read) + " \u25BC");
-			for(i = 0; i < this.data.mounts.length; ++i){
-				this.disk.container[i + 1].get_children()[0].set_text(this.formatbytes((this.data.mounts[i].blocks - this.data.mounts[i].free) * this.data.mounts[i].size));
-				this.disk.container[i + 1].get_children()[1].set_text(this.formatbytes(this.data.mounts[i].blocks * this.data.mounts[i].size));
-				this.disk.container[i + 1].get_children()[2].set_text(this.formatpercent(this.data.mounts[i].blocks - this.data.mounts[i].free, this.data.mounts[i].blocks));
+			this.disk.container[0].get_children()[this.settings.order? 0 : 1].set_text(this.formatrate(this.disk.data.write) + " \u25B2");
+			this.disk.container[0].get_children()[this.settings.order? 1 : 0].set_text(this.formatrate(this.disk.data.read) + " \u25BC");
+			for(i = 0; i < this.disk.dev.length; ++i){
+				this.disk.container[i + 1].get_children()[0].set_text(this.formatbytes((this.disk.dev[i].blocks - this.disk.dev[i].free) * this.disk.dev[i].size));
+				this.disk.container[i + 1].get_children()[1].set_text(this.formatbytes(this.disk.dev[i].blocks * this.disk.dev[i].size));
+				this.disk.container[i + 1].get_children()[2].set_text(this.formatpercent(this.disk.dev[i].blocks - this.disk.dev[i].free, this.disk.dev[i].blocks));
 			}
 
-			for(i = 0, l = this.data.network.up.length; i < l; ++i){
-				this.network.container[i].get_children()[this.settings.order? 0 : 1].set_text(this.formatrate(this.data.network.up[i]) + " \u25B2");
-				this.network.container[i].get_children()[this.settings.order? 1 : 0].set_text(this.formatrate(this.data.network.down[i]) + " \u25BC");
+			for(i = 0, l = this.network.data.up.length; i < l; ++i){
+				this.network.container[i].get_children()[this.settings.order? 0 : 1].set_text(this.formatrate(this.network.data.up[i]) + " \u25B2");
+				this.network.container[i].get_children()[this.settings.order? 1 : 0].set_text(this.formatrate(this.network.data.down[i]) + " \u25BC");
 			}
-			this.network.container[i].get_children()[this.settings.order? 0 : 1].set_text(this.formatbytes(this.network.up[0]) + " \u25B2");
-			this.network.container[i].get_children()[this.settings.order? 1 : 0].set_text(this.formatbytes(this.network.down[0]) + " \u25BC");
+			this.network.container[i].get_children()[this.settings.order? 0 : 1].set_text(this.formatbytes(this.network.raw.up[0]) + " \u25B2");
+			this.network.container[i].get_children()[this.settings.order? 1 : 0].set_text(this.formatbytes(this.network.raw.down[0]) + " \u25BC");
 
-			for(i = 0, l = this.data.thermal.length; i < l; ++i)
-				this.thermal.container[i].get_children()[0].set_text(this.formatthermal(this.data.thermal[i]));
+			for(i = 0, l = this.thermal.data.length; i < l; ++i)
+				this.thermal.container[i].get_children()[0].set_text(this.formatthermal(this.thermal.data[i]));
 
 			this.startDraw();
 		} catch(e){
@@ -951,6 +984,6 @@ MyApplet.prototype = {
 };
 
 function main(metadata, orientation, panelHeight, instanceId){
-	let myApplet = new MyApplet(metadata, orientation, instanceId);
-	return myApplet;
+	let systemMonitorApplet = new SystemMonitorApplet(metadata, orientation, instanceId);
+	return systemMonitorApplet;
 }
