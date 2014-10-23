@@ -25,7 +25,6 @@ try {
 \tArch: libgtop'");
 }
 
-
 function Graph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
@@ -403,7 +402,7 @@ function SystemMonitorApplet(metadata, orientation, instanceId){
 }
 
 SystemMonitorApplet.prototype = {
-	__proto__: Applet.IconApplet.prototype,
+	__proto__: Applet.Applet.prototype,
 
 	cpu: {
 		gtop: new GTop.glibtop_cpu(),
@@ -522,13 +521,12 @@ SystemMonitorApplet.prototype = {
 	},
 	graphs: [],
 
-	_init: function(metadata, orientation, instanceId){
-		Applet.IconApplet.prototype._init.call(this, orientation);
-
+	_init: function(metadata, orientation, panelHeight, instanceId){
 		try {
+			Applet.Applet.prototype._init.call(this, orientation, panelHeight);
+
 			let item, i, l, j, r, s, t, _appSys = Cinnamon.AppSystem.get_default();
-			this.set_applet_icon_symbolic_name("utilities-system-monitor");
-			this.set_applet_tooltip(_("System monitor"));
+			this.setPanelItems();
 
 			this.Terminal = imports.ui.appletManager.applets[metadata.uuid].terminal;
 
@@ -748,6 +746,14 @@ SystemMonitorApplet.prototype = {
 			new NetworkHistoryGraph(this.canvas, this.modules, this.settings, this.colors),
 			new ThermalHistoryGraph(this.canvas, this.modules, this.settings, this.colors)
 		];
+	},
+	setPanelItems: function(){
+		this.set_applet_tooltip(_("System monitor"));
+
+		let iconBox = new St.Bin();
+		let icon = new St.Icon({icon_name: "utilities-system-monitor", icon_type: St.IconType.SYMBOLIC, reactive: true, track_hover: true, style_class: "system-status-icon"});
+		iconBox.child = icon;
+		this.actor.add(iconBox, {y_align: St.Align.MIDDLE, y_fill: false});
 	},
 	getData: function(){
 		try {
@@ -1154,6 +1160,6 @@ SystemMonitorApplet.prototype = {
 };
 
 function main(metadata, orientation, panelHeight, instanceId){
-	let systemMonitorApplet = new SystemMonitorApplet(metadata, orientation, instanceId);
+	let systemMonitorApplet = new SystemMonitorApplet(metadata, orientation, panelHeight, instanceId);
 	return systemMonitorApplet;
 }
