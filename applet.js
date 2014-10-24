@@ -295,9 +295,10 @@ function CPUHistoryGraph(canvas, modules, settings, colors){
 CPUHistoryGraph.prototype = {
 	__proto__: HistoryGraph.prototype,
 
-	draw: function(t){
+	draw: function(){
 		let m = this.modules;
-		this.begin(t, m.cpu.history.user[0].length);
+
+		this.begin(m.time[0], m.cpu.history.user[0].length);
 
 		for(let i = 0; i < m.cpu.count; ++i){
 			this.setColor("cpu" + (i % 4 + 1));
@@ -315,9 +316,29 @@ function MemoryHistoryGraph(canvas, modules, settings, colors){
 MemoryHistoryGraph.prototype = {
 	__proto__: HistoryGraph.prototype,
 
-	draw: function(t){
+	draw: function(){
 		let m = this.modules;
-		this.begin(t, m.mem.history.usedup.length);
+		this.begin(m.time[0], m.mem.history.usedup.length);
+
+		this.setColor("mem");
+		this.line(m.mem.history.usedup, 0, 1);
+		this.setAlpha(.75);
+		this.line(m.mem.history.cached, 0, 1);
+		this.setAlpha(.5);
+		this.line(m.mem.history.buffer, 0, 1);
+	}
+};
+
+function MemorySwapHistoryGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+
+MemorySwapHistoryGraph.prototype = {
+	__proto__: HistoryGraph.prototype,
+
+	draw: function(){
+		let m = this.modules;
+		this.begin(m.time[0], m.mem.history.usedup.length);
 
 		this.setColor("mem");
 		this.line(m.mem.history.usedup, 0, 2);
@@ -338,9 +359,9 @@ function DiskHistoryGraph(canvas, modules, settings, colors){
 DiskHistoryGraph.prototype = {
 	__proto__: HistoryGraph.prototype,
 
-	draw: function(t){
+	draw: function(){
 		let m = this.modules;
-		this.begin(t, m.disk.history.write.length, m.disk.max);
+		this.begin(m.time[0], m.disk.history.write.length, m.disk.max);
 
 		this.setColor("write");
 		this.line(m.disk.history.write, 0, 2);
@@ -357,9 +378,9 @@ function NetworkHistoryGraph(canvas, modules, settings, colors){
 NetworkHistoryGraph.prototype = {
 	__proto__: HistoryGraph.prototype,
 
-	draw: function(t){
+	draw: function(){
 		let m = this.modules;
-		this.begin(t, m.network.history.up.length, m.network.max);
+		this.begin(m.time[0], m.network.history.up.length, m.network.max);
 
 		this.setColor("write");
 		this.line(m.network.history.up, 0, 2);
@@ -376,13 +397,13 @@ function ThermalHistoryGraph(canvas, modules, settings, colors){
 ThermalHistoryGraph.prototype = {
 	__proto__: HistoryGraph.prototype,
 
-	draw: function(t){
+	draw: function(){
 		let m = this.modules;
-		this.begin(t, m.thermal.history[0].length, m.thermal.max, m.thermal.min);
+		this.begin(m.time[1], m.thermal.history[0].length, m.thermal.max, m.thermal.min);
 
 		for(var i = 1, l = m.thermal.history.length; i < l; ++i){
 			if(m.thermal.colors[i])
-			 this.setColor("cpu" + m.thermal.colors[i]);
+				this.setColor("cpu" + m.thermal.colors[i]);
 			else {
 				this.setColor("thermal");
 				this.setAlpha((l - i / 4) / l);
@@ -397,8 +418,44 @@ ThermalHistoryGraph.prototype = {
 };
 
 
-function SystemMonitorApplet(metadata, orientation, instanceId){
-	this._init(metadata, orientation, instanceId);
+function PanelWidget(panelHeight, modules, settings, colors, name){
+	this._init(panelHeight, modules, settings, colors, name);
+}
+
+PanelWidget.prototype = {
+	_init: function(panelHeight, modules, settings, colors, name){
+		this.name = name;
+		this.canvas = new St.DrawingArea({width: settings["panel" + name + "Width"], height: panelHeight, margin_left: 2});
+		this.canvas.connect("repaint", this.draw.bind(this));
+		if(settings["panel" + name + "Graph"] === -1)
+			this.canvas.hide();
+		this.graphs = [];
+
+		this.modules = modules;
+		this.settings = settings;
+		this.colors = colors;
+	},
+	update: function(){
+		this.canvas.set_width(this.settings["panel" + this.name + "Width"]);
+		if(this.settings["panel" + this.name + "Graph"] !== -1)
+			this.canvas.show();
+		else
+			this.canvas.hide();
+	},
+	addGraph: function(graph){
+		this.graphs.push(new graph(this.canvas, this.modules, this.settings, this.colors));
+	},
+	draw: function(){
+		this.graphs[this.settings["panel" + this.name + "Graph"]].draw();
+	},
+	paint: function(){
+		this.canvas.queue_repaint();
+	}
+};
+
+
+function SystemMonitorApplet(metadata, orientation, panelHeight, instanceId){
+	this._init(metadata, orientation, panelHeight, instanceId);
 }
 
 SystemMonitorApplet.prototype = {
@@ -511,10 +568,9 @@ SystemMonitorApplet.prototype = {
 		container: [new St.BoxLayout()]
 	},
 
-	time: 0,
+	time: [],
 
 	graph: {
-		timeout: null,
 		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Graph")),
 		items: [new PopupMenu.PopupMenuItem(_("Pie")), new PopupMenu.PopupMenuItem(_("Arc")), new PopupMenu.PopupMenuItem(_("CPU History")), new PopupMenu.PopupMenuItem(_("Memory History")),
 			new PopupMenu.PopupMenuItem(_("Disk History")), new PopupMenu.PopupMenuItem(_("Network History")), new PopupMenu.PopupMenuItem(_("Thermal History"))]
@@ -525,8 +581,9 @@ SystemMonitorApplet.prototype = {
 		try {
 			Applet.Applet.prototype._init.call(this, orientation, panelHeight);
 
+			this.panelHeight = panelHeight;
+
 			let item, i, l, j, r, s, t, _appSys = Cinnamon.AppSystem.get_default();
-			this.setPanelItems();
 
 			this.Terminal = imports.ui.appletManager.applets[metadata.uuid].terminal;
 
@@ -536,7 +593,8 @@ SystemMonitorApplet.prototype = {
 				swap: this.swap,
 				disk: this.disk,
 				network: this.network,
-				thermal: this.thermal
+				thermal: this.thermal,
+				time: this.time
 			};
 			this.settings = {};
 			this.colors = {};
@@ -564,6 +622,15 @@ SystemMonitorApplet.prototype = {
 			}, this);
 
 			this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", this.onGraphTypeChanged.bind(this));
+
+			//Panel settings
+			["panel-cpu-graph", "panel-cpu-width", "panel-mem-graph", "panel-mem-width"].forEach(function(p){
+				var q = p.replace(/-(.)/g, function(m, c){
+					return c.toUpperCase();
+				});
+
+				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, q, this.updatePanelWidgets.bind(this));
+			}, this);
 
 			this.menuManager = new PopupMenu.PopupMenuManager(this);
 			this.menu = new Applet.AppletPopupMenu(this, orientation);
@@ -702,7 +769,8 @@ SystemMonitorApplet.prototype = {
 			if(this.thermal.sensors.length) this.menu.addMenuItem(this.thermal.submenu);
 			else this.settings.thermalMode = 0;
 
-			this._initGraphs();
+			this.initPanelWidgets();
+			this.initGraphs();
 
 			this.onGraphTypeChanged();
 			this.graph.items.forEach(function(item, i){
@@ -725,12 +793,12 @@ SystemMonitorApplet.prototype = {
 
 			this.onSettingsChanged();
 			this.getData();
-
+			this.paint();
 		} catch(e){
 			global.logError(e);
 		}
 	},
-	_initGraphs: function(){
+	initGraphs: function(){
 		this.canvas = new St.DrawingArea({height: this.settings.graphSize});
 		this.canvas.connect("repaint", this.draw.bind(this));
 		this.canvasHolder = new PopupMenu.PopupBaseMenuItem({reactive: false});
@@ -741,27 +809,46 @@ SystemMonitorApplet.prototype = {
 			new PieGraph(this.canvas, this.modules, this.settings, this.colors),
 			new ArcGraph(this.canvas, this.modules, this.settings, this.colors),
 			new CPUHistoryGraph(this.canvas, this.modules, this.settings, this.colors),
-			new MemoryHistoryGraph(this.canvas, this.modules, this.settings, this.colors),
+			new MemorySwapHistoryGraph(this.canvas, this.modules, this.settings, this.colors),
 			new DiskHistoryGraph(this.canvas, this.modules, this.settings, this.colors),
 			new NetworkHistoryGraph(this.canvas, this.modules, this.settings, this.colors),
 			new ThermalHistoryGraph(this.canvas, this.modules, this.settings, this.colors)
 		];
 	},
-	setPanelItems: function(){
+
+	initPanelWidgets: function(){
 		this.set_applet_tooltip(_("System monitor"));
 
 		let iconBox = new St.Bin();
 		let icon = new St.Icon({icon_name: "utilities-system-monitor", icon_type: St.IconType.SYMBOLIC, reactive: true, track_hover: true, style_class: "system-status-icon"});
 		iconBox.child = icon;
 		this.actor.add(iconBox, {y_align: St.Align.MIDDLE, y_fill: false});
+
+		this.panelWidgets = [];
+
+		this.addPanelWidget([CPUHistoryGraph], "Cpu");
+		this.addPanelWidget([MemoryHistoryGraph, MemorySwapHistoryGraph], "Mem");
 	},
+	addPanelWidget: function(graphs, name){
+		let widget = new PanelWidget(this.panelHeight, this.modules, this.settings, this.colors, name);
+		for(var i = 0, l = graphs.length; i < l; ++i)
+			widget.addGraph(graphs[i]);
+		this.panelWidgets.push(widget);
+		widget.canvas.set
+		this.actor.add(widget.canvas);
+	},
+	updatePanelWidgets: function(){
+		for(var i = 0, l = this.panelWidgets.length; i < l; ++i)
+			this.panelWidgets[i].update();
+	},
+
 	getData: function(){
 		try {
 			let i, j, l, r = 0;
 
 			let time = GLib.get_monotonic_time() / 1e6;
-			let delta = time - this.time;
-			this.time = time;
+			let delta = time - this.time[0];
+			this.time[0] = time;
 
 			while(this.swap.history.length > this.settings.graphSteps + 1){
 				for(i = 0; i < this.cpu.count; ++i){
@@ -948,7 +1035,8 @@ SystemMonitorApplet.prototype = {
 			if(this.settings.thermalMode)
 				this.trySpawnAsyncPipe(this.thermal.path, this.getThermalData.bind(this));
 
-			if(this.menu.isOpen) this.refresh();
+			if(this.menu.isOpen) this.updateMenuItems();
+
 			this.timeout = Mainloop.timeout_add(this.settings.interval, this.getData.bind(this));
 		} catch(e){
 			global.logError(e);
@@ -977,7 +1065,7 @@ SystemMonitorApplet.prototype = {
 			} else
 				this.notifications.thermal = this.settings.thermalWarningTime;
 
-			this.thermaltime = GLib.get_monotonic_time() / 1e6;
+			this.time[1] = GLib.get_monotonic_time() / 1e6;
 		} catch(e){
 			global.logError(e);
 		}
@@ -987,35 +1075,21 @@ SystemMonitorApplet.prototype = {
 		terminal.executeReader();
 		return terminal;
 	},
-	draw: function(){
-		try {
-			if(this.settings.graphType < 2)
-				this.graphs[this.settings.graphType].draw();
-			else {
-				if(this.settings.graphType === 6)
-					this.graphs[this.settings.graphType].draw(this.thermaltime);
-				else
-					this.graphs[this.settings.graphType].draw(this.time);
+	paint: function(){
+		if(this.menu.isOpen)
+			this.canvas.queue_repaint();
 
-				this.graph.timeout = Mainloop.timeout_add(this.settings.graphInterval, Lang.bind(this, function(){
-					this.canvas.queue_repaint();
-				}));
-			}
-		} catch(e){
-			global.logError(e);
+		for(var i = 0, l = this.panelWidgets.length; i < l; ++i){
+			if(this.settings["panel" + this.panelWidgets[i].name + "Graph"] !== -1)
+				this.panelWidgets[i].paint();
 		}
+
+		this.paintTimeout = Mainloop.timeout_add(this.settings.graphInterval, this.paint.bind(this));
 	},
-	startDraw: function(){
-		if(this.settings.graphType === -1 || (this.settings.graphType > 1 && this.graph.timeout)) return;
-		if(this.graph.timeout)
-			this.graph.timeout = null;
-		this.canvas.queue_repaint();
+	draw: function(){
+		this.graphs[this.settings.graphType].draw();
 	},
-	endDraw: function(){
-		if(this.graph.timeout) Mainloop.source_remove(this.graph.timeout);
-		this.graph.timeout = null;
-	},
-	refresh: function(){
+	updateMenuItems: function(){
 		try {
 			let i, l;
 			for(i = 0; i < this.cpu.count; ++i){
@@ -1055,8 +1129,6 @@ SystemMonitorApplet.prototype = {
 
 			for(i = 0, l = this.thermal.data.length; i < l; ++i)
 				this.thermal.container[i].get_children()[0].set_text(this.formatthermal(this.thermal.data[i]));
-
-			this.startDraw();
 		} catch(e){
 			global.logError(e);
 		}
@@ -1106,11 +1178,11 @@ SystemMonitorApplet.prototype = {
 	},
 	on_applet_clicked: function(){
 		this.menu.toggle();
-		if(this.menu.isOpen) this.refresh();
-		else this.endDraw();
+		if(this.menu.isOpen) this.updateMenuItems();
 	},
 	on_applet_removed_from_panel: function(){
 		Mainloop.source_remove(this.timeout);
+		Mainloop.source_remove(this.paintTimeout);
 	},
 	onSettingsChanged: function(){
 		try {
@@ -1151,7 +1223,6 @@ SystemMonitorApplet.prototype = {
 				this.graph.submenu.actor.show();
 				this.canvasHolder.actor.show();
 				this.graph.items[this.settings.graphType].setShowDot(true);
-				this.startDraw();
 			}
 		} catch(e){
 			global.logError(e);

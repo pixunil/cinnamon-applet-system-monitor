@@ -2,9 +2,9 @@
 	"interval": {
 		"type": "spinbutton",
 		"default": 1000,
-		"min": 750,
+		"min": 720,
 		"max": 5000,
-		"step": 50,
+		"step": 20,
 		"units": "ms",
 		"description": "Interval"
 	},
@@ -125,11 +125,56 @@
 	"graph-interval": {
 		"type": "spinbutton",
 		"default": 1000,
-		"min": 50,
+		"min": 20,
 		"max": 5000,
-		"step": 50,
+		"step": 20,
 		"units": "ms",
 		"description": "History graphs draw interval"
+	},
+	"panel": {
+		"type": "separator"
+	},
+	"panel-cpu-graph": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"History": 0
+		},
+		"description": "Type of CPU graph in the panel"
+	},
+	"panel-cpu-width": {
+		"type": "spinbutton",
+		"default": 50,
+		"min": 20,
+		"max": 400,
+		"step": 5,
+		"units": "px",
+		"description": "Width of CPU graph in the panel",
+		"indent": true
+	},
+	"panel-mem-graph": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"Memory history": 0,
+			"Memory and Swap history": 1
+		},
+		"description": "Type of memory graph in the panel"
+	},
+	"panel-mem-width": {
+		"type": "spinbutton",
+		"default": 50,
+		"min": 20,
+		"max": 400,
+		"step": 5,
+		"units": "px",
+		"description": "Width of memory graph in the panel",
+		"indent": true
+	},
+	"color": {
+		"type": "separator"
 	},
 	"thermal": {
 		"type": "colorchooser",
