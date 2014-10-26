@@ -56,7 +56,6 @@ Graph.prototype = {
 function PieGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
-
 PieGraph.prototype = {
 	__proto__: Graph.prototype,
 
@@ -136,7 +135,6 @@ PieGraph.prototype = {
 function ArcGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
-
 ArcGraph.prototype = {
 	__proto__: Graph.prototype,
 
@@ -224,7 +222,6 @@ ArcGraph.prototype = {
 function HistoryGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
-
 HistoryGraph.prototype = {
 	__proto__: Graph.prototype,
 
@@ -235,8 +232,15 @@ HistoryGraph.prototype = {
 			this.ctx.stroke();
 		},
 		area:	function(history, num, total){
-			this.ctx.translate(0, this.h * num / total);
-			this.ctx.scale(1, 1 / total);
+			if(this.packDir){
+				this.ctx.translate(0, this.h * num / total);
+				this.ctx.scale(1, 1 / total);
+			} else {
+				this.ctx.translate(this.w * num / total, 0);
+				this.ctx.scale(1 / total, 1);
+				this.ctx.rectangle(0, 0, this.w, this.h);
+				this.ctx.clip();
+			}
 
 			this.ctx.moveTo(this.dw * this.tx, this.h);
 			this.ctx.lineTo(this.dw * this.tx, this.h - (history[0] - this.min) / (this.max - this.min) * this.h);
@@ -271,6 +275,8 @@ HistoryGraph.prototype = {
 		}
 	},
 
+	packDir: true,
+
 	begin: function(t, n, max, min){
 		Graph.prototype.begin.call(this);
 
@@ -291,7 +297,6 @@ HistoryGraph.prototype = {
 function CPUHistoryGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
-
 CPUHistoryGraph.prototype = {
 	__proto__: HistoryGraph.prototype,
 
@@ -312,7 +317,6 @@ CPUHistoryGraph.prototype = {
 function MemoryHistoryGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
-
 MemoryHistoryGraph.prototype = {
 	__proto__: HistoryGraph.prototype,
 
@@ -332,7 +336,6 @@ MemoryHistoryGraph.prototype = {
 function MemorySwapHistoryGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
-
 MemorySwapHistoryGraph.prototype = {
 	__proto__: HistoryGraph.prototype,
 
@@ -355,7 +358,6 @@ MemorySwapHistoryGraph.prototype = {
 function DiskHistoryGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
-
 DiskHistoryGraph.prototype = {
 	__proto__: HistoryGraph.prototype,
 
@@ -374,7 +376,6 @@ DiskHistoryGraph.prototype = {
 function NetworkHistoryGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
-
 NetworkHistoryGraph.prototype = {
 	__proto__: HistoryGraph.prototype,
 
@@ -393,7 +394,6 @@ NetworkHistoryGraph.prototype = {
 function ThermalHistoryGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
-
 ThermalHistoryGraph.prototype = {
 	__proto__: HistoryGraph.prototype,
 
@@ -417,11 +417,9 @@ ThermalHistoryGraph.prototype = {
 	}
 };
 
-
 function PanelWidget(panelHeight, modules, settings, colors, name){
 	this._init(panelHeight, modules, settings, colors, name);
 }
-
 PanelWidget.prototype = {
 	_init: function(panelHeight, modules, settings, colors, name){
 		this.name = name;
@@ -442,8 +440,10 @@ PanelWidget.prototype = {
 		else
 			this.canvas.hide();
 	},
-	addGraph: function(graph){
-		this.graphs.push(new graph(this.canvas, this.modules, this.settings, this.colors));
+	addGraph: function(graphClass){
+		let graph = new graphClass(this.canvas, this.modules, this.settings, this.colors);
+		graph.packDir = false;
+		this.graphs.push(graph);
 	},
 	draw: function(){
 		this.graphs[this.settings["panel" + this.name + "Graph"]].draw();
@@ -457,7 +457,6 @@ PanelWidget.prototype = {
 function SystemMonitorApplet(metadata, orientation, panelHeight, instanceId){
 	this._init(metadata, orientation, panelHeight, instanceId);
 }
-
 SystemMonitorApplet.prototype = {
 	__proto__: Applet.Applet.prototype,
 
