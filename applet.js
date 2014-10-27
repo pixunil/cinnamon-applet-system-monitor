@@ -623,12 +623,11 @@ SystemMonitorApplet.prototype = {
 			this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", this.onGraphTypeChanged.bind(this));
 
 			//Panel settings
-			["panel-cpu-graph", "panel-cpu-width", "panel-mem-graph", "panel-mem-width"].forEach(function(p){
-				var q = p.replace(/-(.)/g, function(m, c){
-					return c.toUpperCase();
-				});
+			["cpu", "mem", "disk", "network", "thermal"].forEach(function(p){
+				var q = p[0].toUpperCase() + p.substr(1);
 
-				this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, q, this.updatePanelWidgets.bind(this));
+				this.settingProvider.bindProperty(Settings.BindingDirection.IN, "panel-" + p + "-graph", "panel" + q + "Graph", this.updatePanelWidgets.bind(this));
+				this.settingProvider.bindProperty(Settings.BindingDirection.IN, "panel-" + p + "-width", "panel" + q + "Width", this.updatePanelWidgets.bind(this));
 			}, this);
 
 			this.menuManager = new PopupMenu.PopupMenuManager(this);
@@ -827,6 +826,9 @@ SystemMonitorApplet.prototype = {
 
 		this.addPanelWidget([CPUHistoryGraph], "Cpu");
 		this.addPanelWidget([MemoryHistoryGraph, MemorySwapHistoryGraph], "Mem");
+		this.addPanelWidget([DiskHistoryGraph], "Disk");
+		this.addPanelWidget([NetworkHistoryGraph], "Network");
+		this.addPanelWidget([ThermalHistoryGraph], "Thermal");
 	},
 	addPanelWidget: function(graphs, name){
 		let widget = new PanelWidget(this.panelHeight, this.modules, this.settings, this.colors, name);

@@ -173,6 +173,63 @@
 		"description": "Width of memory graph in the panel",
 		"indent": true
 	},
+	"panel-disk-graph": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"History": 0
+		},
+		"description": "Type of disk graph in the panel"
+	},
+	"panel-disk-width": {
+		"type": "spinbutton",
+		"default": 50,
+		"min": 20,
+		"max": 400,
+		"step": 5,
+		"units": "px",
+		"description": "Width of disk graph in the panel",
+		"indent": true
+	},
+	"panel-network-graph": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"History": 0
+		},
+		"description": "Type of network graph in the panel"
+	},
+	"panel-network-width": {
+		"type": "spinbutton",
+		"default": 50,
+		"min": 20,
+		"max": 400,
+		"step": 5,
+		"units": "px",
+		"description": "Width of network graph in the panel",
+		"indent": true
+	},
+	"panel-thermal-graph": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"History": 0
+		},
+		"description": "Type of thermal graph in the panel"
+	},
+	"panel-thermal-width": {
+		"type": "spinbutton",
+		"default": 50,
+		"min": 20,
+		"max": 400,
+		"step": 5,
+		"units": "px",
+		"description": "Width of thermal graph in the panel",
+		"indent": true
+	},
 	"color": {
 		"type": "separator"
 	},
