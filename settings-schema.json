@@ -139,14 +139,15 @@
 		"default": -1,
 		"options": {
 			"None": -1,
-			"History": 0
+			"Bar": 0,
+			"History": 1
 		},
 		"description": "Type of CPU graph in the panel"
 	},
 	"panel-cpu-width": {
 		"type": "spinbutton",
 		"default": 50,
-		"min": 20,
+		"min": 5,
 		"max": 400,
 		"step": 5,
 		"units": "px",
@@ -158,15 +159,25 @@
 		"default": -1,
 		"options": {
 			"None": -1,
-			"Memory history": 0,
-			"Memory and Swap history": 1
+			"Bar": 0,
+			"History": 1
 		},
 		"description": "Type of memory graph in the panel"
+	},
+	"panel-mem-mode": {
+		"type": "combobox",
+		"default": 0,
+		"options": {
+			"only Memory": 0,
+			"Memory and Swap": 2
+		},
+		"description": "Mode of memory graph in the panel",
+		"indent": true
 	},
 	"panel-mem-width": {
 		"type": "spinbutton",
 		"default": 50,
-		"min": 20,
+		"min": 5,
 		"max": 400,
 		"step": 5,
 		"units": "px",
@@ -178,14 +189,15 @@
 		"default": -1,
 		"options": {
 			"None": -1,
-			"History": 0
+			"Bar": 0,
+			"History": 1
 		},
 		"description": "Type of disk graph in the panel"
 	},
 	"panel-disk-width": {
 		"type": "spinbutton",
 		"default": 50,
-		"min": 20,
+		"min": 5,
 		"max": 400,
 		"step": 5,
 		"units": "px",
@@ -197,14 +209,15 @@
 		"default": -1,
 		"options": {
 			"None": -1,
-			"History": 0
+			"Bar": 0,
+			"History": 1
 		},
 		"description": "Type of network graph in the panel"
 	},
 	"panel-network-width": {
 		"type": "spinbutton",
 		"default": 50,
-		"min": 20,
+		"min": 5,
 		"max": 400,
 		"step": 5,
 		"units": "px",
@@ -216,14 +229,15 @@
 		"default": -1,
 		"options": {
 			"None": -1,
-			"History": 0
+			"Bar": 0,
+			"History": 1
 		},
 		"description": "Type of thermal graph in the panel"
 	},
 	"panel-thermal-width": {
 		"type": "spinbutton",
 		"default": 50,
-		"min": 20,
+		"min": 5,
 		"max": 400,
 		"step": 5,
 		"units": "px",

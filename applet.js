@@ -219,6 +219,31 @@ ArcGraph.prototype = {
 	}
 };
 
+function BarGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+BarGraph.prototype = {
+	__proto__: Graph.prototype,
+
+	begin: function(n){
+		Graph.prototype.begin.call(this);
+
+		this.dx = this.w / n;
+		this.x = -this.dx;
+	},
+	next: function(color){
+		this.x += this.dx;
+		this.y = this.h;
+		this.setColor(color);
+	},
+
+	bar: function(size){
+		this.ctx.rectangle(this.x, this.y, this.dx, -size * this.h);
+		this.ctx.fill();
+		this.y -= size * this.h;
+	}
+};
+
 function HistoryGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
@@ -294,6 +319,26 @@ HistoryGraph.prototype = {
 	}
 };
 
+function CPUBarGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+CPUBarGraph.prototype = {
+	__proto__: BarGraph.prototype,
+
+	draw: function(){
+		let m = this.modules;
+
+		this.begin(m.cpu.count);
+
+		for(let i = 0; i < m.cpu.count; ++i){
+			this.next("cpu" + (i % 4 + 1));
+			this.bar(m.cpu.data.user[i]);
+			this.setAlpha(.75);
+			this.bar(m.cpu.data.system[i]);
+		}
+	}
+};
+
 function CPUHistoryGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
@@ -314,6 +359,26 @@ CPUHistoryGraph.prototype = {
 	}
 };
 
+function MemoryBarGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+MemoryBarGraph.prototype = {
+	__proto__: BarGraph.prototype,
+
+	draw: function(){
+		let m = this.modules;
+
+		this.begin(1);
+
+		this.next("mem");
+		this.bar(m.mem.data.usedup / m.mem.data.total);
+		this.setAlpha(.75);
+		this.bar(m.mem.data.cached / m.mem.data.total);
+		this.setAlpha(.5);
+		this.bar(m.mem.data.buffer / m.mem.data.total);
+	}
+};
+
 function MemoryHistoryGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
@@ -330,6 +395,29 @@ MemoryHistoryGraph.prototype = {
 		this.line(m.mem.history.cached, 0, 1);
 		this.setAlpha(.5);
 		this.line(m.mem.history.buffer, 0, 1);
+	}
+};
+
+function MemorySwapBarGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+MemorySwapBarGraph.prototype = {
+	__proto__: BarGraph.prototype,
+
+	draw: function(){
+		let m = this.modules;
+
+		this.begin(2);
+
+		this.next("mem");
+		this.bar(m.mem.data.usedup / m.mem.data.total);
+		this.setAlpha(.75);
+		this.bar(m.mem.data.cached / m.mem.data.total);
+		this.setAlpha(.5);
+		this.bar(m.mem.data.buffer / m.mem.data.total);
+
+		this.next("swap");
+		this.bar(m.swap.data.used / m.swap.data.total);
 	}
 };
 
@@ -355,6 +443,25 @@ MemorySwapHistoryGraph.prototype = {
 	}
 };
 
+function DiskBarGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+DiskBarGraph.prototype = {
+	__proto__: BarGraph.prototype,
+
+	draw: function(){
+		let m = this.modules;
+
+		this.begin(2);
+
+		this.next("read");
+		this.bar(m.disk.data.read / m.disk.max);
+
+		this.next("write");
+		this.bar(m.disk.data.write / m.disk.max);
+	}
+};
+
 function DiskHistoryGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
@@ -373,6 +480,25 @@ DiskHistoryGraph.prototype = {
 	}
 };
 
+function NetworkBarGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+NetworkBarGraph.prototype = {
+	__proto__: BarGraph.prototype,
+
+	draw: function(){
+		let m = this.modules;
+
+		this.begin(2);
+
+		this.next("read");
+		this.bar(m.network.data.down[0] / m.network.max);
+
+		this.next("write");
+		this.bar(m.network.data.up[0] / m.network.max);
+	}
+};
+
 function NetworkHistoryGraph(canvas, modules, settings, colors){
 	this._init(canvas, modules, settings, colors);
 }
@@ -388,6 +514,22 @@ NetworkHistoryGraph.prototype = {
 
 		this.setColor("read");
 		this.line(m.network.history.down, 1, 2);
+	}
+};
+
+function ThermalBarGraph(canvas, modules, settings, colors){
+	this._init(canvas, modules, settings, colors);
+}
+ThermalBarGraph.prototype = {
+	__proto__: BarGraph.prototype,
+
+	draw: function(){
+		let m = this.modules;
+
+		this.begin(1);
+
+		this.setColor("thermal");
+		this.bar((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
 	}
 };
 
@@ -446,7 +588,10 @@ PanelWidget.prototype = {
 		this.graphs.push(graph);
 	},
 	draw: function(){
-		this.graphs[this.settings["panel" + this.name + "Graph"]].draw();
+		let graph = this.settings["panel" + this.name + "Graph"];
+		if(this.settings["panel" + this.name + "Mode"])
+			graph += this.settings["panel" + this.name + "Mode"];
+		this.graphs[graph].draw();
 	},
 	paint: function(){
 		this.canvas.queue_repaint();
@@ -629,6 +774,7 @@ SystemMonitorApplet.prototype = {
 				this.settingProvider.bindProperty(Settings.BindingDirection.IN, "panel-" + p + "-graph", "panel" + q + "Graph", this.updatePanelWidgets.bind(this));
 				this.settingProvider.bindProperty(Settings.BindingDirection.IN, "panel-" + p + "-width", "panel" + q + "Width", this.updatePanelWidgets.bind(this));
 			}, this);
+			this.settingProvider.bindProperty(Settings.BindingDirection.IN, "panel-mem-mode", "panelMemMode", this.updatePanelWidgets.bind(this));
 
 			this.menuManager = new PopupMenu.PopupMenuManager(this);
 			this.menu = new Applet.AppletPopupMenu(this, orientation);
@@ -824,11 +970,11 @@ SystemMonitorApplet.prototype = {
 
 		this.panelWidgets = [];
 
-		this.addPanelWidget([CPUHistoryGraph], "Cpu");
-		this.addPanelWidget([MemoryHistoryGraph, MemorySwapHistoryGraph], "Mem");
-		this.addPanelWidget([DiskHistoryGraph], "Disk");
-		this.addPanelWidget([NetworkHistoryGraph], "Network");
-		this.addPanelWidget([ThermalHistoryGraph], "Thermal");
+		this.addPanelWidget([CPUBarGraph, CPUHistoryGraph], "Cpu");
+		this.addPanelWidget([MemoryBarGraph, MemoryHistoryGraph, MemorySwapBarGraph, MemorySwapHistoryGraph], "Mem");
+		this.addPanelWidget([DiskBarGraph, DiskHistoryGraph], "Disk");
+		this.addPanelWidget([NetworkBarGraph, NetworkHistoryGraph], "Network");
+		this.addPanelWidget([ThermalBarGraph, ThermalHistoryGraph], "Thermal");
 	},
 	addPanelWidget: function(graphs, name){
 		let widget = new PanelWidget(this.panelHeight, this.modules, this.settings, this.colors, name);
