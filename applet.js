@@ -73,7 +73,7 @@ PieGraph.prototype = {
 
 		if(this.settings.thermalMode){
 			this.setColor("thermal");
-			this.halfCircle((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
+			this.circle((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
 		}
 
 		this.setColor("read");
@@ -127,7 +127,7 @@ PieGraph.prototype = {
 		this.ctx.stroke();
 	},
 	circle: function(radius){
-		this.ctx.arc(this.w / 2, this.h / 2, radius * this.r, 0, Math.PI * 2);
+		this.ctx.arc(this.w / 2, this.h / 2, radius * this.dr, 0, Math.PI * 2);
 		this.ctx.fill();
 	}
 };
@@ -1194,7 +1194,7 @@ SystemMonitorApplet.prototype = {
 			let r = result.split("\n");
 
 			this.thermal.data[0] = 0;
-			for(i = 0, l = this.thermal.sensors.length; i < l; ++i){
+			for(var i = 0, l = this.thermal.sensors.length; i < l; ++i){
 				this.thermal.history[i + 1].push(this.thermal.data[i + 1] = parseFloat(r[this.thermal.sensors[i]].match(/\d+\.\d+/)));
 				if(this.thermal.min > this.thermal.data[i + 1] || !this.thermal.min) this.thermal.min = this.thermal.data[i + 1];
 				if(this.thermal.max < this.thermal.data[i + 1] || !this.thermal.max) this.thermal.max = this.thermal.data[i + 1];
