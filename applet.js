@@ -1223,7 +1223,7 @@ SystemMonitorApplet.prototype = {
 		terminal.executeReader();
 		return terminal;
 	},
-	paint: function(){
+	paint: function(once){
 		if(this.menu.isOpen)
 			this.canvas.queue_repaint();
 
@@ -1232,7 +1232,8 @@ SystemMonitorApplet.prototype = {
 				this.panelWidgets[i].paint();
 		}
 
-		this.paintTimeout = Mainloop.timeout_add(this.settings.graphInterval, this.paint.bind(this));
+		if(!once)
+			this.paintTimeout = Mainloop.timeout_add(this.settings.graphInterval, this.paint.bind(this));
 	},
 	draw: function(){
 		this.graphs[this.settings.graphType].draw();
@@ -1372,6 +1373,7 @@ SystemMonitorApplet.prototype = {
 				this.canvasHolder.actor.show();
 				this.graph.items[this.settings.graphType].setShowDot(true);
 			}
+			this.paint(true);
 		} catch(e){
 			global.logError(e);
 		}
