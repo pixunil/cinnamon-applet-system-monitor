@@ -1,5 +1,5 @@
 const Applet = imports.ui.applet;
-
+const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const Cinnamon = imports.gi.Cinnamon;
@@ -945,7 +945,8 @@ SystemMonitorApplet.prototype = {
 	initGraphs: function(){
 		this.canvas = new St.DrawingArea({height: this.settings.graphSize});
 		this.canvas.connect("repaint", this.draw.bind(this));
-		this.canvasHolder = new PopupMenu.PopupBaseMenuItem({reactive: false});
+		this.canvasHolder = new PopupMenu.PopupBaseMenuItem({activate: false});
+		this.canvasHolder.actor.connect("scroll-event", this.onScroll.bind(this));
 		this.canvasHolder.addActor(this.canvas, {span: -1, expand: true});
 		this.menu.addMenuItem(this.canvasHolder);
 
@@ -1372,6 +1373,20 @@ SystemMonitorApplet.prototype = {
 				this.graph.items[this.settings.graphType].setShowDot(true);
 			}
 		} catch(e){
+			global.logError(e);
+		}
+	},
+	onScroll: function(actor, event){
+		try {
+			let direction = event.get_scroll_direction();
+
+			if(direction == Clutter.ScrollDirection.DOWN && this.settings.graphType < 6)
+				this.settings.graphType++;
+			else if(direction == Clutter.ScrollDirection.UP && this.settings.graphType > 0)
+				this.settings.graphType--;
+
+			this.onGraphTypeChanged();
+	 } catch(e){
 			global.logError(e);
 		}
 	}
