@@ -1,20 +1,21 @@
-const Applet = imports.ui.applet;
+const Cinnamon = imports.gi.Cinnamon;
 const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
-const Lang = imports.lang;
-const Cinnamon = imports.gi.Cinnamon;
+const Pango = imports.gi.Pango;
 const St = imports.gi.St;
-const Settings = imports.ui.settings;
 
+const Applet = imports.ui.applet;
 const Main = imports.ui.main;
+const MessageTray = imports.ui.messageTray;
 const Panel = imports.ui.panel;
 const PopupMenu = imports.ui.popupMenu;
+const Settings = imports.ui.settings;
 
+const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 const Util = imports.misc.util;
 
-const MessageTray = imports.ui.messageTray;
-let messageTray = new MessageTray.MessageTray;
+const messageTray = Main.messageTray;
 
 try {
 	const GTop = imports.gi.GTop;
