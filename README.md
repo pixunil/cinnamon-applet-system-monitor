@@ -9,7 +9,7 @@ System Monitor Applet for Cinnamon
 
 Install the latest version via Cinnamon Applet Settings, or:
 
-1. Download [`applet.js`](applet.js), [`terminal.js`](terminal.js), [`metadata.json`](metadata.json) and [`settings-schema.json`](settings-schema.json)
+1. Download [`applet.js`](applet.js), [`modules.js`](modules.js), [`graph.js`](graph.js), [`terminal.js`](terminal.js), [`metadata.json`](metadata.json) and [`settings-schema.json`](settings-schema.json)
 2. Create a new directory `~/.local/share/cinnamon/applets/system-monitor@pixunil`
 3. Copy the files in this directory
 4. Activate the applet in Cinnamon Settings

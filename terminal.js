@@ -91,7 +91,7 @@ TerminalReader.prototype = {
 
 	closeStderrStream: function(std, result) {
 		try {
-		  std.close_finish(result);
+				std.close_finish(result);
 		} catch(e) {
 			std.close_async(0, null, Lang.bind(this, this.closeStderrStream));
 		}
@@ -99,7 +99,7 @@ TerminalReader.prototype = {
 
 	closeStdout: function(std, result) {
 		try {
-		  std.close_finish(result);
+				std.close_finish(result);
 		} catch(e) {
 			std.close_async(0, null, Lang.bind(this, this.closeStderrStream));
 		}
