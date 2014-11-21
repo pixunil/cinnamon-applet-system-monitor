@@ -131,10 +131,30 @@
 		"units": "ms",
 		"description": "History graphs draw interval"
 	},
-	"panel": {
+	"cpu-section": {
 		"type": "separator"
 	},
-	"panel-cpu-graph": {
+	"color-cpu1": {
+		"type": "colorchooser",
+		"default": "rgba(255, 110, 0, 1)",
+		"description": "CPU1"
+	},
+	"color-cpu2": {
+		"type": "colorchooser",
+		"default": "rgba(203, 12, 41, 1)",
+		"description": "CPU2"
+	},
+	"color-cpu3": {
+		"type": "colorchooser",
+		"default": "rgba(73, 168, 53, 1)",
+		"description": "CPU3"
+	},
+	"color-cpu4": {
+		"type": "colorchooser",
+		"default": "rgba(45, 125, 179, 1)",
+		"description": "CPU4"
+	},
+	"cpu-panel-graph": {
 		"type": "combobox",
 		"default": -1,
 		"options": {
@@ -144,7 +164,7 @@
 		},
 		"description": "Type of CPU graph in the panel"
 	},
-	"panel-cpu-width": {
+	"cpu-panel-width": {
 		"type": "spinbutton",
 		"default": 50,
 		"min": 5,
@@ -153,151 +173,6 @@
 		"units": "px",
 		"description": "Width of CPU graph in the panel",
 		"indent": true
-	},
-	"panel-mem-graph": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Bar": 0,
-			"History": 1
-		},
-		"description": "Type of memory graph in the panel"
-	},
-	"panel-mem-mode": {
-		"type": "combobox",
-		"default": 0,
-		"options": {
-			"only Memory": 0,
-			"Memory and Swap": 2
-		},
-		"description": "Mode of memory graph in the panel",
-		"indent": true
-	},
-	"panel-mem-width": {
-		"type": "spinbutton",
-		"default": 50,
-		"min": 5,
-		"max": 400,
-		"step": 5,
-		"units": "px",
-		"description": "Width of memory graph in the panel",
-		"indent": true
-	},
-	"panel-disk-graph": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Bar": 0,
-			"History": 1
-		},
-		"description": "Type of disk graph in the panel"
-	},
-	"panel-disk-width": {
-		"type": "spinbutton",
-		"default": 50,
-		"min": 5,
-		"max": 400,
-		"step": 5,
-		"units": "px",
-		"description": "Width of disk graph in the panel",
-		"indent": true
-	},
-	"panel-network-graph": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Bar": 0,
-			"History": 1
-		},
-		"description": "Type of network graph in the panel"
-	},
-	"panel-network-width": {
-		"type": "spinbutton",
-		"default": 50,
-		"min": 5,
-		"max": 400,
-		"step": 5,
-		"units": "px",
-		"description": "Width of network graph in the panel",
-		"indent": true
-	},
-	"panel-thermal-graph": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Bar": 0,
-			"History": 1
-		},
-		"description": "Type of thermal graph in the panel"
-	},
-	"panel-thermal-width": {
-		"type": "spinbutton",
-		"default": 50,
-		"min": 5,
-		"max": 400,
-		"step": 5,
-		"units": "px",
-		"description": "Width of thermal graph in the panel",
-		"indent": true
-	},
-	"color": {
-		"type": "separator"
-	},
-	"thermal": {
-		"type": "colorchooser",
-		"default": "rgba(238, 80, 29, 1)",
-		"description": "Thermal"
-	},
-	"write": {
-		"type": "colorchooser",
-		"default": "rgba(238, 29, 0, 1)",
-		"description": "Write / Up"
-	},
-	"read": {
-		"type": "colorchooser",
-		"default": "rgba(45, 125, 179, 1)",
-		"description": "Read / Down"
-	},
-	"cpu1": {
-		"type": "colorchooser",
-		"default": "rgba(255, 110, 0, 1)",
-		"description": "CPU1"
-	},
-	"cpu2": {
-		"type": "colorchooser",
-		"default": "rgba(203, 12, 41, 1)",
-		"description": "CPU2"
-	},
-	"cpu3": {
-		"type": "colorchooser",
-		"default": "rgba(73, 168, 53, 1)",
-		"description": "CPU3"
-	},
-	"cpu4": {
-		"type": "colorchooser",
-		"default": "rgba(45, 125, 179, 1)",
-		"description": "CPU4"
-	},
-	"mem": {
-		"type": "colorchooser",
-		"default": "rgba(171, 24, 82, 1)",
-		"description": "Memory"
-	},
-	"swap": {
-		"type": "colorchooser",
-		"default": "rgba(73, 168, 53, 1)",
-		"description": "Swap"
-	},
-	"notifications": {
-		"type": "separator"
-	},
-	"notificationinfo": {
-		"type": "header",
-		"description": "The unit int equals one interval"
 	},
 	"cpu-warning": {
 		"type": "checkbox",
@@ -332,6 +207,143 @@
 		"description": "Warning CPU usage",
 		"indent": true,
 		"dependency": "cpu-warning"
+	},
+	"mem-section": {
+		"type": "separator"
+	},
+	"color-mem": {
+		"type": "colorchooser",
+		"default": "rgba(171, 24, 82, 1)",
+		"description": "Memory"
+	},
+	"color-swap": {
+		"type": "colorchooser",
+		"default": "rgba(73, 168, 53, 1)",
+		"description": "Swap"
+	},
+	"mem-panel-graph": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"Bar": 0,
+			"History": 1
+		},
+		"description": "Type of memory graph in the panel"
+	},
+	"mem-panel-mode": {
+		"type": "combobox",
+		"default": 0,
+		"options": {
+			"only Memory": 0,
+			"Memory and Swap": 2
+		},
+		"description": "Mode of memory graph in the panel",
+		"indent": true
+	},
+	"mem-panel-width": {
+		"type": "spinbutton",
+		"default": 50,
+		"min": 5,
+		"max": 400,
+		"step": 5,
+		"units": "px",
+		"description": "Width of memory graph in the panel",
+		"indent": true
+	},
+	"disk-section": {
+		"type": "separator"
+	},
+	"color-write": {
+		"type": "colorchooser",
+		"default": "rgba(238, 29, 0, 1)",
+		"description": "Write"
+	},
+	"color-read": {
+		"type": "colorchooser",
+		"default": "rgba(45, 125, 179, 1)",
+		"description": "Read"
+	},
+	"disk-panel-graph": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"Bar": 0,
+			"History": 1
+		},
+		"description": "Type of disk graph in the panel"
+	},
+	"disk-panel-width": {
+		"type": "spinbutton",
+		"default": 50,
+		"min": 5,
+		"max": 400,
+		"step": 5,
+		"units": "px",
+		"description": "Width of disk graph in the panel",
+		"indent": true
+	},
+	"network-section": {
+		"type": "separator"
+	},
+	"color-up": {
+		"type": "colorchooser",
+		"default": "rgba(238, 29, 0, 1)",
+		"description": "Up"
+	},
+	"color-down": {
+		"type": "colorchooser",
+		"default": "rgba(45, 125, 179, 1)",
+		"description": "Down"
+	},
+	"network-panel-graph": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"Bar": 0,
+			"History": 1
+		},
+		"description": "Type of network graph in the panel"
+	},
+	"network-panel-width": {
+		"type": "spinbutton",
+		"default": 50,
+		"min": 5,
+		"max": 400,
+		"step": 5,
+		"units": "px",
+		"description": "Width of network graph in the panel",
+		"indent": true
+	},
+	"thermal-section": {
+		"type": "separator"
+	},
+	"color-thermal": {
+		"type": "colorchooser",
+		"default": "rgba(238, 80, 29, 1)",
+		"description": "Thermal"
+	},
+	"thermal-panel-graph": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"Bar": 0,
+			"History": 1
+		},
+		"description": "Type of thermal graph in the panel"
+	},
+	"thermal-panel-width": {
+		"type": "spinbutton",
+		"default": 50,
+		"min": 5,
+		"max": 400,
+		"step": 5,
+		"units": "px",
+		"description": "Width of thermal graph in the panel",
+		"indent": true
 	},
 	"thermal-warning": {
 		"type": "checkbox",

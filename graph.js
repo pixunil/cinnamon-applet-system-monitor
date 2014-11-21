@@ -52,13 +52,15 @@ Pie.prototype = {
 			this.circle((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
 		}
 
-		this.setColor("read");
-		this.quarterArc(m.disk.data.read / m.disk.max, false, false);
-		this.quarterArc(m.network.data.down / m.network.max, true, true);
-
 		this.setColor("write");
 		this.quarterArc(m.disk.data.write / m.disk.max, false, true);
+		this.setColor("read");
+		this.quarterArc(m.disk.data.read / m.disk.max, false, false);
+
+		this.setColor("up");
 		this.quarterArc(m.network.data.up / m.network.max, true, false);
+		this.setColor("down");
+		this.quarterArc(m.network.data.down / m.network.max, true, true);
 
 		for(let i = 0; i < m.cpu.count; ++i){
 			this.next("cpu" + (i % 4 + 1));
@@ -133,15 +135,15 @@ Arc.prototype = {
 
 		this.r -= this.dr / 2;
 
-		this.next("read");
-		this.quarterArc(m.disk.data.read / m.disk.max, this.settings.order);
-		this.setColor("write");
+		this.next("write");
 		this.quarterArc(m.disk.data.write / m.disk.max, !this.settings.order);
+		this.setColor("read");
+		this.quarterArc(m.disk.data.read / m.disk.max, this.settings.order);
 
-		this.next("read");
-		this.quarterArc(m.network.data.down / m.network.max, this.settings.order);
-		this.setColor("write");
+		this.next("up");
 		this.quarterArc(m.network.data.up / m.network.max, !this.settings.order);
+		this.setColor("down");
+		this.quarterArc(m.network.data.down / m.network.max, this.settings.order);
 
 		for(let i = 0; i < m.cpu.count; ++i){
 			this.next("cpu" + (i % 4 + 1));
@@ -259,8 +261,10 @@ History.prototype = {
 		},
 		bar:	function(history, num, total){
 			var l = history.length;
-			for(var i = 0; i < l; ++i)
-				this.ctx.rectangle(this.dw * (i + this.tx) + this.dw * num / total, this.h, this.dw / total, -(history[i] - this.min) / (this.max - this.min) * this.h);
+			for(var i = 0; i < l; ++i){
+				this.ctx.rectangle(this.dw * (i + this.tx) + this.dw * num / total, this.h, this.dw / total, -(history[i] + (this.last[i] || 0) - this.min) / (this.max - this.min) * this.h);
+				this.last[i] = history[i] + (this.last[i] || 0) - this.min;
+			}
 			this.ctx.fill();
 		}
 	},
@@ -468,11 +472,11 @@ DiskBar.prototype = {
 
 		this.begin(2);
 
-		this.next("read");
-		this.bar(m.disk.data.read / m.disk.max);
-
 		this.next("write");
 		this.bar(m.disk.data.write / m.disk.max);
+
+		this.next("read");
+		this.bar(m.disk.data.read / m.disk.max);
 	}
 };
 
@@ -505,11 +509,11 @@ NetworkBar.prototype = {
 
 		this.begin(2);
 
-		this.next("read");
-		this.bar(m.network.data.down / m.network.max);
-
-		this.next("write");
+		this.next("up");
 		this.bar(m.network.data.up / m.network.max);
+
+		this.next("down");
+		this.bar(m.network.data.down / m.network.max);
 	}
 };
 
@@ -523,10 +527,10 @@ NetworkHistory.prototype = {
 		let m = this.modules;
 		this.begin(m.network.history.up.length, 0, m.network.max);
 
-		this.next("write");
+		this.next("up");
 		this.line(m.network.history.up, 0, 2);
 
-		this.next("read");
+		this.next("down");
 		this.line(m.network.history.down, 1, 2);
 	}
 };
