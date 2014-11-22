@@ -18,11 +18,11 @@ const Graph = imports.ui.appletManager.applets[uuid].graph;
 const Modules = imports.ui.appletManager.applets[uuid].modules;
 
 
-function PanelWidget(panelHeight, modules, settings, colors, name){
-	this._init(panelHeight, modules, settings, colors, name);
+function PanelWidget(panelHeight, modules, time, settings, colors, name){
+	this._init(panelHeight, modules, time, settings, colors, name);
 }
 PanelWidget.prototype = {
-	_init: function(panelHeight, modules, settings, colors, name){
+	_init: function(panelHeight, modules, time, settings, colors, name){
 		this.name = name;
 		this.canvas = new St.DrawingArea({width: settings[name + "PanelWidth"], height: panelHeight, margin_left: 2});
 		this.canvas.connect("repaint", this.draw.bind(this));
@@ -31,6 +31,7 @@ PanelWidget.prototype = {
 		this.graphs = [];
 
 		this.modules = modules;
+		this.time = time;
 		this.settings = settings;
 		this.colors = colors;
 	},
@@ -42,7 +43,7 @@ PanelWidget.prototype = {
 			this.canvas.hide();
 	},
 	addGraph: function(graphClass){
-		let graph = new graphClass(this.canvas, this.modules, this.settings, this.colors);
+		let graph = new graphClass(this.canvas, this.modules, this.time, this.settings, this.colors);
 		graph.packDir = false;
 		this.graphs.push(graph);
 	},
@@ -198,7 +199,7 @@ SystemMonitorApplet.prototype = {
 		this.addPanelWidget([Graph.ThermalBar, Graph.ThermalHistory], "thermal");
 	},
 	addPanelWidget: function(graphs, name){
-		let widget = new PanelWidget(this.panelHeight, this.modules, this.settings, this.colors, name);
+		let widget = new PanelWidget(this.panelHeight, this.modules, this.time, this.settings, this.colors, name);
 		for(var i = 0, l = graphs.length; i < l; ++i)
 			widget.addGraph(graphs[i]);
 		this.panelWidgets.push(widget);

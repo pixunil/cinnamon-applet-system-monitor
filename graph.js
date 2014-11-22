@@ -230,36 +230,43 @@ History.prototype = {
 
 	_line: {
 		line: function(history){
-			this.ctx.moveTo(this.dw * this.tx, this.h * (1 - (history[0] + (this.last[0] || 0) - this.min) / (this.max - this.min)));
+			this.ctx.translate(this.dw * this.tx, this.h - this.min);
+			this.ctx.scale(this.dw, -this.h / this.max);
+			this.ctx.setLineWidth(2 / this.h);
+
+			this.ctx.moveTo(0, history[0] + (this.last[0] || 0));
 			this.connection(history, 1);
 			this.ctx.stroke();
 
-			for(var i = 0, l = history.length; i < l; ++i)
-				this.last[i] = history[i] + (this.last[i] || 0) - this.min;
-		},
-		area:	function(history, num, total){
-			if(this.packDir){
-				this.ctx.translate(0, this.h * num / total);
-				this.ctx.scale(1, 1 / total);
-			} else {
-				this.ctx.translate(this.w * num / total, 0);
-				this.ctx.scale(1 / total, 1);
-				this.ctx.rectangle(0, 0, this.w, this.h);
-				this.ctx.clip();
-			}
-
-			this.ctx.moveTo(this.dw * this.tx, this.h * (1 - (history[0] + (this.last[0] || 0) - this.min) / (this.max - this.min)));
-			this.connection(history, 1, true);
-			if(!this.last.length)
-				this.ctx.lineTo(this.dw * (history.length - 1 + this.tx), this.h * (1 - (this.last[history.length - 1] || 0) / (this.max - this.min)));
-			this.ctx.lineTo(this.dw * this.tx, this.h * (1 - (this.last[0] || 0) / (this.max - this.min)));
-			this.ctx.fill();
 			this.ctx.identityMatrix();
 
 			for(var i = 0, l = history.length; i < l; ++i)
-				this.last[i] = history[i] + (this.last[i] || 0) - this.min;
+				this.last[i] = history[i] + (this.last[i] || 0);
 		},
-		bar:	function(history, num, total){
+		area: function(history, num, total){
+			this.ctx.save();
+			if(this.packDir){
+				this.ctx.translate(this.dw * this.tx, this.h - (this.min + this.h * num / total));
+				this.ctx.scale(this.dw, -this.h / this.max / total);
+			} else {
+				this.ctx.rectangle(this.w * num / total, 0, this.w / total, this.h);
+				this.ctx.clip();
+				this.ctx.translate(this.w * num / total + this.dw * this.tx / total, this.h - this.min);
+				this.ctx.scale(this.dw / total, -this.h / this.max);
+			}
+
+			this.ctx.moveTo(0, history[0] + (this.last[0] || 0));
+			this.connection(history, 1, true);
+			if(!this.last.length)
+				this.ctx.lineTo(history.length - 1, this.last[history.length - 1] || 0);
+			this.ctx.lineTo(0, this.last[0] || 0);
+			this.ctx.fill();
+			this.ctx.restore();
+
+			for(var i = 0, l = history.length; i < l; ++i)
+				this.last[i] = history[i] + (this.last[i] || 0);
+		},
+		bar: function(history, num, total){
 			var l = history.length;
 			for(var i = 0; i < l; ++i){
 				this.ctx.rectangle(this.dw * (i + this.tx) + this.dw * num / total, this.h, this.dw / total, -(history[i] + (this.last[i] || 0) - this.min) / (this.max - this.min) * this.h);
@@ -269,44 +276,38 @@ History.prototype = {
 		}
 	},
 	_connection: {
-		line:	function(history, i, back){
+		line: function(history, i, back){
 			for(var l = history.length; i < l; ++i)
-				this.ctx.lineTo(this.dw * (i + this.tx), this.h * (1 - (history[i] + (this.last[i] || 0) - this.min) / (this.max - this.min)));
+				this.ctx.lineTo(i, history[i] + (this.last[i] || 0));
 
 			if(this.last.length && back){
 				for(--i; i >= 0; --i)
-					this.ctx.lineTo(this.dw * (i + this.tx), this.h * (1 - this.last[i] / (this.max - this.min)));
+					this.ctx.lineTo(i, this.last[i]);
 			}
 		},
-		straight:	function(history, i, back){
+		straight: function(history, i, back){
 			for(var l = history.length; i < l; ++i){
-				this.ctx.lineTo(this.dw * (i + this.tx - .5), this.h * (1 - (history[i - 1] + (this.last[i - 1] || 0) - this.min) / (this.max - this.min)));
-				this.ctx.lineTo(this.dw * (i + this.tx - .5), this.h * (1 - (history[i] + (this.last[i] || 0) - this.min) / (this.max - this.min)));
-				this.ctx.lineTo(this.dw * (i + this.tx), this.h * (1 - (history[i] + (this.last[i] || 0) - this.min) / (this.max - this.min)));
+				this.ctx.lineTo(i - .5, history[i - 1] + (this.last[i - 1] || 0));
+				this.ctx.lineTo(i - .5, history[i] + (this.last[i] || 0));
+				this.ctx.lineTo(i, history[i] + (this.last[i] || 0));
 			}
 			if(this.last.length && back){
-				this.ctx.lineTo(this.dw * (--i + this.tx), this.h * (1 - this.last[i] / (this.max - this.min)));
+				this.ctx.lineTo(--i, this.last[i]);
 				for(--i; i >= 0; --i){
-					this.ctx.lineTo(this.dw * (i + this.tx + .5), this.h * (1 - this.last[i + 1] / (this.max - this.min)));
-					this.ctx.lineTo(this.dw * (i + this.tx + .5), this.h * (1 - this.last[i] / (this.max - this.min)));
-					this.ctx.lineTo(this.dw * (i + this.tx), this.h * (1 - this.last[i] / (this.max - this.min)));
+					this.ctx.lineTo(i + .5, this.last[i + 1]);
+					this.ctx.lineTo(i + .5, this.last[i]);
+					this.ctx.lineTo(i, this.last[i]);
 				}
 			}
 		},
-		curve:	function(history, i, back){
-			for(var l = history.length; i < l; ++i){
-				this.ctx.curveTo(this.dw * (i + this.tx - .5), this.h * (1 - (history[i - 1] + (this.last[i - 1] || 0) - this.min) / (this.max - this.min)),
-					this.dw * (i + this.tx - .5), this.h * (1 - (history[i] + (this.last[i] || 0) - this.min) / (this.max - this.min)),
-					this.dw * (i + this.tx), this.h * (1 - (history[i] + (this.last[i] || 0) - this.min) / (this.max - this.min)));
-			}
+		curve: function(history, i, back){
+			for(var l = history.length; i < l; ++i)
+				this.ctx.curveTo(i - .5, history[i - 1] + (this.last[i - 1] || 0), i - .5, history[i] + (this.last[i] || 0), i, history[i] + (this.last[i] || 0));
 
 			if(this.last.length && back){
-				this.ctx.lineTo(this.dw * (--i + this.tx), this.h * (1 - this.last[i] / (this.max - this.min)));
-				for(--i; i >= 0; --i){
-					this.ctx.curveTo(this.dw * (i + this.tx + .5), this.h * (1 - this.last[i + 1] / (this.max - this.min)),
-						this.dw * (i + this.tx + .5), this.h * (1 - this.last[i] / (this.max - this.min)),
-						this.dw * (i + this.tx), this.h * (1 - this.last[i] / (this.max - this.min)));
-				}
+				this.ctx.lineTo(--i, this.last[i]);
+				for(--i; i >= 0; --i)
+					this.ctx.curveTo(i + .5, this.last[i + 1], i + .5, this.last[i], i, this.last[i]);
 			}
 		}
 	},
