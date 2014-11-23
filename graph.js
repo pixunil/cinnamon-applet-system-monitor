@@ -232,13 +232,11 @@ History.prototype = {
 		line: function(history){
 			this.ctx.translate(this.dw * this.tx, this.h - this.min);
 			this.ctx.scale(this.dw, -this.h / this.max);
-			this.ctx.setLineWidth(2 / this.h);
 
 			this.ctx.moveTo(0, history[0] + (this.last[0] || 0));
 			this.connection(history, 1);
-			this.ctx.stroke();
-
 			this.ctx.identityMatrix();
+			this.ctx.stroke();
 
 			for(var i = 0, l = history.length; i < l; ++i)
 				this.last[i] = history[i] + (this.last[i] || 0);
@@ -404,14 +402,14 @@ MemoryHistory.prototype = {
 
 	draw: function(){
 		let m = this.modules;
-		this.begin(m.mem.history.usedup.length);
+		this.begin(m.mem.history.usedup.length, 0, m.mem.data.total);
 
 		this.next("mem");
-		this.line(m.mem.history.usedup, 0, m.mem.data.total);
+		this.line(m.mem.history.usedup, 0, 1);
 		this.setAlpha(.75);
-		this.line(m.mem.history.cached, 0, m.mem.data.total);
+		this.line(m.mem.history.cached, 0, 1);
 		this.setAlpha(.5);
-		this.line(m.mem.history.buffer, 0, m.mem.data.total);
+		this.line(m.mem.history.buffer, 0, 1);
 	}
 };
 

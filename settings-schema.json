@@ -154,6 +154,16 @@
 		"default": "rgba(45, 125, 179, 1)",
 		"description": "CPU4"
 	},
+	"cpu-panel-label": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"Average": 0,
+			"All Cores": 1
+		},
+		"description": "Label in the panel"
+	},
 	"cpu-panel-graph": {
 		"type": "combobox",
 		"default": -1,
@@ -162,7 +172,7 @@
 			"Bar": 0,
 			"History": 1
 		},
-		"description": "Type of CPU graph in the panel"
+		"description": "Graph in the panel"
 	},
 	"cpu-panel-width": {
 		"type": "spinbutton",
@@ -171,7 +181,7 @@
 		"max": 400,
 		"step": 5,
 		"units": "px",
-		"description": "Width of CPU graph in the panel",
+		"description": "Width of graph",
 		"indent": true
 	},
 	"cpu-warning": {
@@ -221,6 +231,15 @@
 		"default": "rgba(73, 168, 53, 1)",
 		"description": "Swap"
 	},
+	"mem-panel-label": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"Percent": 0
+		},
+		"description": "Label in the panel"
+	},
 	"mem-panel-graph": {
 		"type": "combobox",
 		"default": -1,
@@ -229,7 +248,7 @@
 			"Bar": 0,
 			"History": 1
 		},
-		"description": "Type of memory graph in the panel"
+		"description": "Graph in the panel"
 	},
 	"mem-panel-mode": {
 		"type": "combobox",
@@ -238,7 +257,7 @@
 			"only Memory": 0,
 			"Memory and Swap": 2
 		},
-		"description": "Mode of memory graph in the panel",
+		"description": "Mode of graph",
 		"indent": true
 	},
 	"mem-panel-width": {
@@ -248,7 +267,7 @@
 		"max": 400,
 		"step": 5,
 		"units": "px",
-		"description": "Width of memory graph in the panel",
+		"description": "Width of graph",
 		"indent": true
 	},
 	"disk-section": {
@@ -264,6 +283,15 @@
 		"default": "rgba(45, 125, 179, 1)",
 		"description": "Read"
 	},
+	"disk-panel-label": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"Usage": 0
+		},
+		"description": "Label in the panel"
+	},
 	"disk-panel-graph": {
 		"type": "combobox",
 		"default": -1,
@@ -272,7 +300,7 @@
 			"Bar": 0,
 			"History": 1
 		},
-		"description": "Type of disk graph in the panel"
+		"description": "Graph in the panel"
 	},
 	"disk-panel-width": {
 		"type": "spinbutton",
@@ -281,7 +309,7 @@
 		"max": 400,
 		"step": 5,
 		"units": "px",
-		"description": "Width of disk graph in the panel",
+		"description": "Width of graph",
 		"indent": true
 	},
 	"network-section": {
@@ -297,6 +325,15 @@
 		"default": "rgba(45, 125, 179, 1)",
 		"description": "Down"
 	},
+	"network-panel-label": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"Usage": 0
+		},
+		"description": "Label in the panel"
+	},
 	"network-panel-graph": {
 		"type": "combobox",
 		"default": -1,
@@ -305,7 +342,7 @@
 			"Bar": 0,
 			"History": 1
 		},
-		"description": "Type of network graph in the panel"
+		"description": "Graph in the panel"
 	},
 	"network-panel-width": {
 		"type": "spinbutton",
@@ -314,7 +351,7 @@
 		"max": 400,
 		"step": 5,
 		"units": "px",
-		"description": "Width of network graph in the panel",
+		"description": "Width of graph",
 		"indent": true
 	},
 	"thermal-section": {
@@ -325,6 +362,15 @@
 		"default": "rgba(238, 80, 29, 1)",
 		"description": "Thermal"
 	},
+	"thermal-panel-label": {
+		"type": "combobox",
+		"default": -1,
+		"options": {
+			"None": -1,
+			"Temperature": 0
+		},
+		"description": "Label in the panel"
+	},
 	"thermal-panel-graph": {
 		"type": "combobox",
 		"default": -1,
@@ -333,7 +379,7 @@
 			"Bar": 0,
 			"History": 1
 		},
-		"description": "Type of thermal graph in the panel"
+		"description": "Graph in the panel"
 	},
 	"thermal-panel-width": {
 		"type": "spinbutton",
@@ -342,7 +388,7 @@
 		"max": 400,
 		"step": 5,
 		"units": "px",
-		"description": "Width of thermal graph in the panel",
+		"description": "Width of graph",
 		"indent": true
 	},
 	"thermal-warning": {

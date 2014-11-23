@@ -46,13 +46,15 @@ function setProperty(obj, str, value){
 	res[str[i]] = value;
 }
 
-function Base(settings){
-	this._init(settings);
+function Base(settings, colors, time){
+	this._init(settings, colors, time);
 }
 
 Base.prototype = {
-	_init: function(settings){
+	_init: function(settings, colors, time){
 		this.settings = settings;
+		this.colors = colors;
+		this.time = time;
 		this.container = [];
 		this.build();
 	},
@@ -87,8 +89,8 @@ Base.prototype = {
 			this.submenu.menu.addMenuItem(item);
 		return item;
 	},
-	buildSubMenu: function(name, labels, margin){
-		this.submenu = new PopupMenu.PopupSubMenuMenuItem(name);
+	buildSubMenu: function(labels, margin){
+		this.submenu = new PopupMenu.PopupSubMenuMenuItem(this.display);
 		let box = new St.BoxLayout({margin_left: margin || 0});
 		this.submenu.addActor(box);
 		this.container.push(box);
@@ -97,13 +99,30 @@ Base.prototype = {
 			box.add_actor(new St.Label({width: labels[i], style: "text-align: right"}));
 	},
 
+	_update: function(menuOpen){
+		this.menuOpen = menuOpen;
+		this.panelText = [];
+		this.update();
+
+		if(this.panel){
+			this.panel.label.set_text(this.panelText.join(" "));
+			this.panel.label.set_margin_left(this.panelText.length? 6 : 0);
+		}
+		delete this.menuOpen;
+	},
 	setText: function(container, label, format, value, ext){
+		if((container !== -1 && !this.menuOpen) || (container > 0 && !this.submenu.isOpen) || (container === -1 && (!this.panel || this.settings[this.name + "PanelLabel"] === -1))) return;
+
+		value = value || 0;
 		if(format === "rate") value = this.formatRate(value, ext);
 		if(format === "percent") value = this.formatPercent(value, ext);
 		if(format === "thermal") value = this.formatThermal(value);
 		if(format === "bytes") value = this.formatBytes(value);
 
-		this.container[container].get_children()[label].set_text(value);
+		if(container === -1)
+			this.panelText[label] = value;
+		else
+			this.container[container].get_children()[label].set_text(value);
 	},
 
 	notify: function(summary, body){
@@ -139,16 +158,28 @@ Base.prototype = {
 	},
 	formatThermal: function(celsius){
 		return (this.settings.thermalUnit? celsius : celsius * 1.8 + 32).toFixed(1) + "\u00b0" + (this.settings.thermalUnit? "C" : "F");
+	},
+
+	onSettingsChanged: function(){
+		if(!this.panel) return;
+		this.panel.canvas.set_width(this.settings[this.name + "PanelWidth"]);
+		if(this.settings[this.name + "PanelGraph"] !== -1)
+			this.panel.canvas.show();
+		else
+			this.panel.canvas.hide();
 	}
 };
 
 
-function CPU(settings){
-	this._init(settings);
+function CPU(settings, colors, time){
+	this._init(settings, colors, time);
 }
 
 CPU.prototype = {
 	__proto__: Base.prototype,
+
+	name: "cpu",
+	display: _("CPU"),
 
 	gtop: new GTop.glibtop_cpu(),
 
@@ -181,7 +212,7 @@ CPU.prototype = {
 
 			labels.push(60);
 		}
-		this.buildSubMenu(_("CPU"), labels, margin);
+		this.buildSubMenu(labels, margin);
 		this.buildMenuItem(_("User"), labels, margin);
 		this.buildMenuItem(_("System"), labels, margin);
 	},
@@ -219,14 +250,24 @@ CPU.prototype = {
 					this.notifications = this.settings.cpuWarningTime;
 			}
 	},
-	updateMenuItems: function(){
+	update: function(){
+		let r = 0;
 		for(var i = 0; i < this.count; ++i){
 			this.setText(0, i, "percent", this.data.usage[i]);
 			this.setText(1, i, "percent", this.data.user[i]);
 			this.setText(2, i, "percent", this.data.system[i]);
+
+			if(this.settings.cpuPanelLabel === 0)
+				r += this.data.usage[i];
+			else if(this.settings.cpuPanelLabel === 1)
+				this.setText(-1, i, "percent", this.data.usage[i]);
 		}
+
+		if(this.settings.cpuPanelLabel === 0)
+			this.setText(-1, 0, "percent", r / this.count);
 	},
 	onSettingsChanged: function(){
+		Base.prototype.onSettingsChanged.call(this);
 		if(this.settings.cpuWarning){
 			if(this.settings.cpuWarningMode)
 				this.notifications = this.settings.cpuWarningTime;
@@ -236,16 +277,21 @@ CPU.prototype = {
 					this.notifications.push(this.settings.cpuWarningTime);
 			}
 		}
-	}
+	},
+
+	panelGraphs: ["CPUBar", "CPUHistory"]
 };
 
 
-function Memory(settings){
-	this._init(settings);
+function Memory(settings, colors, time){
+	this._init(settings, colors, time);
 }
 
 Memory.prototype = {
 	__proto__: Base.prototype,
+
+	name: "mem",
+	display: _("Memory"),
 
 	gtop: new GTop.glibtop_mem(),
 
@@ -264,7 +310,7 @@ Memory.prototype = {
 
 	build: function(){
 		let labels = [100, 100, 60];
-		this.buildSubMenu(_("Memory"), labels);
+		this.buildSubMenu(labels);
 		this.buildMenuItem(_("used"), labels);
 		this.buildMenuItem(_("cached"), labels);
 		this.buildMenuItem(_("buffered"), labels);
@@ -278,7 +324,7 @@ Memory.prototype = {
 		this.saveDataPoint("cached", this.gtop.cached);
 		this.saveDataPoint("buffer", this.gtop.buffer);
 	},
-	updateMenuItems: function(){
+	update: function(){
 		this.setText(0, 0, "bytes", this.data.used);
 		this.setText(0, 1, "bytes", this.data.total);
 		this.setText(0, 2, "percent", this.data.used, this.data.total);
@@ -291,12 +337,16 @@ Memory.prototype = {
 
 		this.setText(3, 0, "bytes", this.data.buffer);
 		this.setText(3, 2, "percent", this.data.buffer, this.data.total);
-	}
+
+		this.setText(-1, 2, "percent", this.data.usedup, this.data.total);
+	},
+
+	panelGraphs: ["MemoryBar", "MemoryHistory", "MemorySwapBar", "MemorySwapHistory"]
 };
 
 
-function Swap(settings){
-	this._init(settings);
+function Swap(settings, colors, time){
+	this._init(settings, colors, time);
 }
 
 Swap.prototype = {
@@ -322,7 +372,7 @@ Swap.prototype = {
 		this.saveDataPoint("total", this.gtop.total);
 		this.saveDataPoint("used", this.gtop.used);
 	},
-	updateMenuItems: function(){
+	update: function(){
 		this.setText(0, 0, "bytes", this.data.used);
 		this.setText(0, 1, "bytes", this.data.total);
 		this.setText(0, 2, "percent", this.data.used, this.data.total);
@@ -330,14 +380,17 @@ Swap.prototype = {
 };
 
 
-function Disk(settings){
-	this._init(settings);
+function Disk(settings, colors, time){
+	this._init(settings, colors, time);
 }
 
 Disk.prototype = {
 	__proto__: Base.prototype,
 
 	gtop: new GTop.glibtop_fsusage(),
+
+	name: "disk",
+	display: _("Disk"),
 
 	raw: {
 		write: 0,
@@ -358,7 +411,7 @@ Disk.prototype = {
 
 	build: function(){
 		let labels = [130, 130];
-		this.buildSubMenu(_("Disk"), labels);
+		this.buildSubMenu(labels);
 		labels = [100, 100, 60];
 		let mountFile = Cinnamon.get_file_contents_utf8_sync('/etc/mtab').split("\n");
 		var	mount;
@@ -385,44 +438,45 @@ Disk.prototype = {
 			this.dev[i].free = this.gtop.bfree;
 			this.dev[i].blocks = this.gtop.blocks;
 
-				write += this.gtop.write * this.dev[i].size;
-				read += this.gtop.read * this.dev[i].size;
+			write += this.gtop.write * this.dev[i].size;
+			read += this.gtop.read * this.dev[i].size;
+		}
+
+		if(delta > 0 && this.raw.write && this.raw.read){
+			this.saveDataPoint("write", (write - this.raw.write) / delta);
+			this.saveDataPoint("read", (read - this.raw.read) / delta);
+
+			if(this.max <= this.data.write){
+				this.max = this.data.write;
+				this.maxIndex = 0;
 			}
 
-			if(delta > 0 && this.raw.write && this.raw.read){
-				this.saveDataPoint("write", (write - this.raw.write) / delta);
-				this.saveDataPoint("read", (read - this.raw.read) / delta);
+			if(this.max <= this.data.read){
+				this.max = this.data.read;
+				this.maxIndex = 0;
+			}
 
-				if(this.max <= this.data.write){
-					this.max = this.data.write;
-					this.maxIndex = 0;
-				}
-
-				if(this.max <= this.data.read){
-					this.max = this.data.read;
-					this.maxIndex = 0;
-				}
-
-				if(++this.maxIndex > this.settings.graphSteps + 1){
-					this.max = Math.max(this.data.write, this.data.read, 1);
-					this.maxIndex = 0;
-					for(i = 1, l = this.history.write.length; i < l; ++i){
-						if(this.max < this.history.write[i]){
-							this.max = this.history.write[i];
-							this.maxIndex = i;
-						}
-						if(this.max < this.history.read[i]){
-							this.max = this.history.read[i];
-							this.maxIndex = i;
-						}
+			if(++this.maxIndex > this.settings.graphSteps + 1){
+				this.max = Math.max(this.data.write, this.data.read, 1);
+				this.maxIndex = 0;
+				var l;
+				for(i = 1, l = this.history.write.length; i < l; ++i){
+					if(this.max < this.history.write[i]){
+						this.max = this.history.write[i];
+						this.maxIndex = i;
+					}
+					if(this.max < this.history.read[i]){
+						this.max = this.history.read[i];
+						this.maxIndex = i;
 					}
 				}
 			}
+		}
 
-			this.saveRawPoint("write", write);
-			this.saveRawPoint("read", read);
+		this.saveRawPoint("write", write);
+		this.saveRawPoint("read", read);
 	},
-	updateMenuItems: function(){
+	update: function(){
 		this.setText(0, this.settings.order? 0 : 1, "rate", this.data.write, true);
 		this.setText(0, this.settings.order? 1 : 0, "rate", this.data.read, false);
 
@@ -431,16 +485,24 @@ Disk.prototype = {
 			this.setText(i + 1, 1, "bytes", this.dev[i].blocks * this.dev[i].size);
 			this.setText(i + 1, 2, "percent", this.dev[i].blocks - this.dev[i].free, this.dev[i].blocks);
 		}
-	}
+
+		this.setText(-1, this.settings.order? 0 : 1, "rate", this.data.write, true);
+		this.setText(-1, this.settings.order? 1 : 0, "rate", this.data.read, false);
+	},
+
+	panelGraphs: ["DiskBar", "DiskHistory"]
 };
 
 
-function Network(settings){
-	this._init(settings);
+function Network(settings, colors, time){
+	this._init(settings, colors, time);
 }
 
 Network.prototype = {
 	__proto__: Base.prototype,
+
+	name: "network",
+	display: _("Network"),
 
 	gtop: new GTop.glibtop_netload(),
 
@@ -464,7 +526,7 @@ Network.prototype = {
 
 	build: function(){
 		let labels = [130, 130];
-		this.buildSubMenu(_("Network"), labels);
+		this.buildSubMenu(labels);
 		let r = Cinnamon.get_file_contents_utf8_sync('/proc/net/dev').split("\n"), s;
 		for(var i = 2, l = r.length; i < l; ++i){
 			s = r[i].match(/^\s*(\w+)/);
@@ -517,36 +579,44 @@ Network.prototype = {
 		this.saveRawPoint("up", up);
 		this.saveRawPoint("down", down);
 	},
-	updateMenuItems: function(){
+	update: function(){
 		this.setText(0, this.settings.order? 0 : 1, "rate", this.data.up, true);
 		this.setText(0, this.settings.order? 1 : 0, "rate", this.data.down, false);
 
 		this.setText(1, this.settings.order? 0 : 1, "bytes", this.raw.up);
 		this.setText(1, this.settings.order? 1 : 0, "bytes", this.raw.down);
-	}
+
+		this.setText(-1, this.settings.order? 0 : 1, "rate", this.data.up, true);
+		this.setText(-1, this.settings.order? 1 : 0, "rate", this.data.down, false);
+	},
+
+	panelGraphs: ["NetworkBar", "NetworkHistory"]
 };
 
 
-function Thermal(settings){
-	this._init(settings);
+function Thermal(settings, colors, time){
+	this._init(settings, colors, time);
 }
 
 Thermal.prototype = {
 	__proto__: Base.prototype,
 
+	name: "thermal",
+	display: _("Thermal"),
+
 	sensors: [],
-		colors: [],
-		path: "",
+	colors: [],
+	path: "",
 
-		data: [],
-		history: [[]],
+	data: [],
+	history: [[]],
 
-		min: null,
-		max: null,
+	min: null,
+	max: null,
 
 	build: function(){
 		let labels = [80], margin = 180;
-		this.buildSubMenu(_("Thermal"), labels, 180);
+		this.buildSubMenu(labels, 180);
 		let r = GLib.spawn_command_line_sync("which sensors");
 		if(r[0] && r[3] == 0){
 			this.path = r[1].toString().split("\n", 1)[0];
@@ -597,14 +667,18 @@ Thermal.prototype = {
 			} else
 				this.notifications = this.settings.thermalWarningTime;
 	},
-	updateMenuItems: function(){
+	update: function(){
 		for(var i = 0, l = this.data.length; i < l; ++i)
 			this.setText(i, 0, "thermal", this.data[i]);
+
+		this.setText(-1, 0, "thermal", this.data[0]);
 	},
 	onSettingsChanged: function(){
 		if(this.settings.thermalWarning){
 			this.notifications = this.settings.thermalWarningTime;
 			if(!this.settings.thermalUnit) this.settings.thermalWarningValue = (this.settings.thermalWarningValue - 32) * 5 / 9; //Fahrenheit => Celsius
 		}
-	}
+	},
+
+	panelGraphs: ["ThermalBar", "ThermalHistory"]
 };
