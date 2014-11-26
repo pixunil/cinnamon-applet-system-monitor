@@ -111,7 +111,7 @@ Base.prototype = {
 		delete this.menuOpen;
 	},
 	setText: function(container, label, format, value, ext){
-		if((container !== -1 && !this.menuOpen) || (container > 0 && !this.submenu.isOpen) || (container === -1 && (!this.panel || this.settings[this.name + "PanelLabel"] === -1))) return;
+		if((container !== -1 && !this.menuOpen) || (container === -1 && (!this.panel || this.settings[this.name + "PanelLabel"] === -1))) return;
 
 		value = value || 0;
 		if(format === "rate") value = this.formatRate(value, ext);
@@ -162,6 +162,16 @@ Base.prototype = {
 
 	onSettingsChanged: function(){
 		if(!this.panel) return;
+		if(this.settings[this.name + "PanelLabel"] !== -1 || this.settings[this.name + "PanelGraph"] !== -1)
+			this.panel.box.show();
+		else
+			this.panel.box.hide();
+
+		if(this.settings[this.name + "PanelLabel"] !== -1)
+			this.panel.label.show();
+		else
+			this.panel.label.hide();
+
 		this.panel.canvas.set_width(this.settings[this.name + "PanelWidth"]);
 		if(this.settings[this.name + "PanelGraph"] !== -1)
 			this.panel.canvas.show();
@@ -605,7 +615,7 @@ Thermal.prototype = {
 	display: _("Thermal"),
 
 	sensors: [],
-	colors: [],
+	colorRef: [],
 	path: "",
 
 	data: [],
@@ -628,8 +638,8 @@ Thermal.prototype = {
 						if(r[i].match(/\d+.\d+\xb0C/)){
 							t = r[i].match(/[^:]+/)[0];
 
-							if((j = t.match(/core\s*(\d)/i)) !== null) this.colors.push(parseInt(j[1]) % 4 + 1);
-							else this.colors.push(null);
+							if((j = t.match(/core\s*(\d)/i)) !== null) this.colorRef.push(parseInt(j[1]) % 4 + 1);
+							else this.colorRef.push(null);
 
 							this.buildMenuItem(t, labels, margin);
 							this.sensors.push(i);

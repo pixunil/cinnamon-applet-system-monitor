@@ -1,3 +1,4 @@
+//Credits go to lestcape (https://github.com/lestcape)
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;

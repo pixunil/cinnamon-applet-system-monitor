@@ -32,7 +32,7 @@ PanelWidget.prototype = {
 		this.label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
 		this.box.add(this.label, {y_align: St.Align.MIDDLE, y_fill: false});
 
-		this.canvas = new St.DrawingArea({height: panelHeight, margin_left: 2});
+		this.canvas = new St.DrawingArea({height: panelHeight});
 		this.canvas.connect("repaint", this.draw.bind(this));
 		this.box.add_actor(this.canvas);
 

@@ -230,8 +230,9 @@ History.prototype = {
 
 	_line: {
 		line: function(history){
-			this.ctx.translate(this.dw * this.tx, this.h - this.min);
-			this.ctx.scale(this.dw, -this.h / this.max);
+			this.ctx.translate(this.dw * this.tx, this.h);
+			this.ctx.scale(this.dw, -this.h / (this.max - this.min));
+			this.ctx.translate(0, -this.min);
 
 			this.ctx.moveTo(0, history[0] + (this.last[0] || 0));
 			this.connection(history, 1);
@@ -244,20 +245,22 @@ History.prototype = {
 		area: function(history, num, total){
 			this.ctx.save();
 			if(this.packDir){
-				this.ctx.translate(this.dw * this.tx, this.h - (this.min + this.h * num / total));
-				this.ctx.scale(this.dw, -this.h / this.max / total);
+				this.ctx.translate(this.dw * this.tx, this.h - (this.h * num / total));
+				this.ctx.scale(this.dw, -this.h / (this.max - this.min) / total);
+				this.ctx.translate(0, -this.min);
 			} else {
 				this.ctx.rectangle(this.w * num / total, 0, this.w / total, this.h);
 				this.ctx.clip();
-				this.ctx.translate(this.w * num / total + this.dw * this.tx / total, this.h - this.min);
-				this.ctx.scale(this.dw / total, -this.h / this.max);
+				this.ctx.translate(this.w * num / total + this.dw * this.tx / total, this.h);
+				this.ctx.scale(this.dw / total, -this.h / (this.max - this.min));
+				this.ctx.translate(0, -this.min);
 			}
 
 			this.ctx.moveTo(0, history[0] + (this.last[0] || 0));
 			this.connection(history, 1, true);
 			if(!this.last.length)
-				this.ctx.lineTo(history.length - 1, this.last[history.length - 1] || 0);
-			this.ctx.lineTo(0, this.last[0] || 0);
+				this.ctx.lineTo(history.length - 1, (this.last[history.length - 1] || 0) + this.min);
+			this.ctx.lineTo(0, (this.last[0] || 0) + this.min);
 			this.ctx.fill();
 			this.ctx.restore();
 
@@ -561,8 +564,8 @@ ThermalHistory.prototype = {
 		this.begin(m.thermal.history[0].length, 1, m.thermal.max, m.thermal.min);
 
 		for(var i = 1, l = m.thermal.history.length; i < l; ++i){
-			if(m.thermal.colors[i])
-				this.next("cpu" + m.thermal.colors[i]);
+			if(m.thermal.colorRef[i])
+				this.next("cpu" + m.thermal.colorRef[i]);
 			else {
 				this.next("thermal");
 				this.setAlpha((l - i / 4) / l);
