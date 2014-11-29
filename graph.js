@@ -29,64 +29,79 @@ Base.prototype = {
 	}
 };
 
-function Pie(canvas, modules, time, settings, colors){
+
+function Overview(canvas, modules, time, settings, colors){
 	this._init(canvas, modules, time, settings, colors);
 }
-Pie.prototype = {
+Overview.prototype = {
 	__proto__: Base.prototype,
+
+	draw: function(){
+		let m = this.modules;
+		this.begin(m.cpu.count + 5);
+
+		if(this.settings.thermalMode){
+			this.setColor("thermal");
+			this.center((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
+		}
+
+		this.setColor("write");
+		this.small(m.disk.data.write / m.disk.max, true, false);
+		this.setColor("read");
+		this.small(m.disk.data.read / m.disk.max, false, false);
+
+		if(!this.smallMerged)
+			this.next("up");
+		else
+			this.setColor("up");
+		this.small(m.network.data.up / m.network.max, true, true);
+		this.setColor("down");
+		this.small(m.network.data.down / m.network.max, false, true);
+
+		for(let i = 0; i < m.cpu.count; ++i){
+			this.next("cpu" + (i % 4 + 1));
+			this.normal(m.cpu.data.user[i], true);
+			this.setAlpha(.75);
+			this.normal(m.cpu.data.system[i], true);
+		}
+
+		this.next("mem");
+		this.normal(m.mem.data.usedup / m.mem.data.total, false);
+		this.setAlpha(.75);
+		this.normal(m.mem.data.cached / m.mem.data.total, false);
+		this.setAlpha(.5);
+		this.normal(m.mem.data.buffer / m.mem.data.total, false);
+
+		this.next("swap");
+		this.normal(m.swap.data.used / m.swap.data.total, false);
+	},
+
+	next: function(color){
+		this.a = this.startA;
+		this.r += this.dr;
+		this.setColor(color);
+	}
+};
+
+
+function PieOverview(canvas, modules, time, settings, colors){
+	this._init(canvas, modules, time, settings, colors);
+}
+PieOverview.prototype = {
+	__proto__: Overview.prototype,
 
 	begin: function(n){
 		Base.prototype.begin.call(this);
 
-		this.dr = this.h / n / 2;
+		this.dr = Math.min(this.w / (n - 1) / 2, this.h / (n - 1) / 2);
 		this.r = this.dr * 1.5;
 		this.ctx.setLineWidth(this.dr);
 	},
 
-	draw: function(){
-		let m = this.modules;
-		this.begin(m.cpu.count + 4);
+	startA: -Math.PI / 2,
+	smallMerged: true,
 
-		if(this.settings.thermalMode){
-			this.setColor("thermal");
-			this.circle((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
-		}
-
-		this.setColor("write");
-		this.quarterArc(m.disk.data.write / m.disk.max, false, true);
-		this.setColor("read");
-		this.quarterArc(m.disk.data.read / m.disk.max, false, false);
-
-		this.setColor("up");
-		this.quarterArc(m.network.data.up / m.network.max, true, false);
-		this.setColor("down");
-		this.quarterArc(m.network.data.down / m.network.max, true, true);
-
-		for(let i = 0; i < m.cpu.count; ++i){
-			this.next("cpu" + (i % 4 + 1));
-			this.arc(m.cpu.data.user[i], true);
-			this.setAlpha(.75);
-			this.arc(m.cpu.data.system[i], true);
-		}
-
-		this.next("mem");
-		this.arc(m.mem.data.usedup / m.mem.data.total, false);
-		this.setAlpha(.75);
-		this.arc(m.mem.data.cached / m.mem.data.total, false);
-		this.setAlpha(.5);
-		this.arc(m.mem.data.buffer / m.mem.data.total, false);
-
-		this.next("swap");
-		this.arc(m.swap.data.used / m.swap.data.total, false);
-	},
-
-	next: function(color){
-		this.a = -Math.PI / 2;
-		this.r += this.dr;
-		this.setColor(color);
-	},
-
-	arc: function(angle, dir){
+	normal: function(angle, dir){
 		angle *= Math.PI * 2;
 		if(dir)
 			this.ctx.arc(this.w / 2, this.h / 2, this.r, this.a, this.a += angle);
@@ -94,8 +109,12 @@ Pie.prototype = {
 			this.ctx.arcNegative(this.w / 2, this.h / 2, this.r, this.a, this.a -= angle);
 		this.ctx.stroke();
 	},
-	quarterArc: function(angle, side, dir){
-		var a = side? 0 : -Math.PI;
+	small: function(angle, dir, side){
+		if(side){
+			var a = 0;
+			dir = !dir;
+		} else
+		 var a = -Math.PI;
 		angle *= Math.PI / 2;
 
 		if(dir)
@@ -104,72 +123,29 @@ Pie.prototype = {
 			this.ctx.arcNegative(this.w / 2, this.h / 2, this.r, a, a - angle);
 		this.ctx.stroke();
 	},
-	circle: function(radius){
+	center: function(radius){
 		this.ctx.arc(this.w / 2, this.h / 2, radius * this.dr, 0, Math.PI * 2);
 		this.ctx.fill();
 	}
 };
 
-function Arc(canvas, modules, time, settings, colors){
+function ArcOverview(canvas, modules, time, settings, colors){
 	this._init(canvas, modules, time, settings, colors);
 }
-Arc.prototype = {
-	__proto__: Base.prototype,
+ArcOverview.prototype = {
+	__proto__: Overview.prototype,
 
 	begin: function(n){
 		Base.prototype.begin.call(this);
 
 		this.dr = Math.min(this.w / n / 2, this.h / n);
-		this.r = this.dr;
+		this.r = this.dr * 1.5;
 		this.ctx.setLineWidth(this.dr);
 	},
 
-	draw: function(){
-		let m = this.modules;
-		this.begin(m.cpu.count + 5);
+ startA: 0,
 
-		if(this.settings.thermalMode){
-			this.setColor("thermal");
-			this.halfCircle((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
-		}
-
-		this.r -= this.dr / 2;
-
-		this.next("write");
-		this.quarterArc(m.disk.data.write / m.disk.max, !this.settings.order);
-		this.setColor("read");
-		this.quarterArc(m.disk.data.read / m.disk.max, this.settings.order);
-
-		this.next("up");
-		this.quarterArc(m.network.data.up / m.network.max, !this.settings.order);
-		this.setColor("down");
-		this.quarterArc(m.network.data.down / m.network.max, this.settings.order);
-
-		for(let i = 0; i < m.cpu.count; ++i){
-			this.next("cpu" + (i % 4 + 1));
-			this.arc(m.cpu.data.user[i]);
-			this.setAlpha(.75);
-			this.arc(m.cpu.data.system[i]);
-		}
-
-		this.next("mem");
-		this.arc(m.mem.data.usedup / m.mem.data.total);
-		this.setAlpha(.75);
-		this.arc(m.mem.data.cached / m.mem.data.total);
-		this.setAlpha(.5);
-		this.arc(m.mem.data.buffer / m.mem.data.total);
-
-		this.next("swap");
-		this.arc(m.swap.data.used / m.swap.data.total);
-	},
-
-	next: function(color){
-		this.a = 0;
-		this.r += this.dr;
-		this.setColor(color);
-	},
-
-	arc: function(angle){
+	normal: function(angle){
 		angle *= Math.PI / 2;
 		if(this.a === 0){
 			this.a = angle;
@@ -182,7 +158,7 @@ Arc.prototype = {
 		}
 		this.ctx.stroke();
 	},
-	quarterArc: function(angle, dir){
+	small: function(angle, dir){
 		angle *= Math.PI / 2;
 
 		if(dir)
@@ -191,8 +167,8 @@ Arc.prototype = {
 			this.ctx.arcNegative(this.w / 2, this.h, this.r, -Math.PI / 2, -angle - Math.PI / 2);
 		this.ctx.stroke();
 	},
-	halfCircle: function(radius){
-		this.ctx.arc(this.w / 2, this.h, radius * this.r, -Math.PI, Math.PI);
+	center: function(radius){
+		this.ctx.arc(this.w / 2, this.h, radius * this.dr, -Math.PI, Math.PI);
 		this.ctx.fill();
 	}
 };

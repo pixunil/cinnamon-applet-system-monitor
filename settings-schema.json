@@ -74,13 +74,12 @@
 		"default": 0,
 		"options": {
 			"None": -1,
-			"Pie": 0,
-			"Arc": 1,
-			"CPU History": 2,
-			"Memory History": 3,
-			"Disk History": 4,
-			"Network History": 5,
-			"Thermal History": 6
+			"Overview": 0,
+			"CPU History": 1,
+			"Memory History": 2,
+			"Disk History": 3,
+			"Network History": 4,
+			"Thermal History": 5
 		},
 		"description": "Type of graph"
 	},
@@ -101,6 +100,15 @@
 		"step": 5,
 		"units": " ",
 		"description": "Ammount of history steps"
+	},
+	"graph-overview": {
+		"type": "combobox",
+		"default": 0,
+		"options": {
+			"Pie": 0,
+			"Arc": 1
+		},
+		"description": "Appearance of Overview graph"
 	},
 	"graph-appearance": {
 		"type": "combobox",

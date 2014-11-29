@@ -73,7 +73,7 @@ SystemMonitorApplet.prototype = {
 
 	graph: {
 		submenu: new PopupMenu.PopupSubMenuMenuItem(_("Graph")),
-		items: [new PopupMenu.PopupMenuItem(_("Pie")), new PopupMenu.PopupMenuItem(_("Arc")), new PopupMenu.PopupMenuItem(_("CPU History")), new PopupMenu.PopupMenuItem(_("Memory History")),
+		items: [new PopupMenu.PopupMenuItem(_("Overview")), new PopupMenu.PopupMenuItem(_("CPU History")), new PopupMenu.PopupMenuItem(_("Memory History")),
 			new PopupMenu.PopupMenuItem(_("Disk History")), new PopupMenu.PopupMenuItem(_("Network History")), new PopupMenu.PopupMenuItem(_("Thermal History"))]
 	},
 	graphs: [],
@@ -90,7 +90,7 @@ SystemMonitorApplet.prototype = {
 			this.colors = {};
 			this.settingProvider = new Settings.AppletSettings(this.settings, uuid, instanceId);
 			["interval", "byte-unit", "rate-unit", "maxsize", "order",
-				"graph-appearance", "graph-connection", "graph-interval", "graph-steps"].forEach(function(p){
+				"graph-overview", "graph-appearance", "graph-connection", "graph-interval", "graph-steps"].forEach(function(p){
 				var q = p.replace(/-(.)/g, function(m, c){
 					return c.toUpperCase();
 				});
@@ -171,9 +171,13 @@ SystemMonitorApplet.prototype = {
 		this.canvasHolder.addActor(this.canvas, {span: -1, expand: true});
 		this.menu.addMenuItem(this.canvasHolder);
 
+		let overviewGraphs = [
+			new Graph.PieOverview(this.canvas, this.modules, this.time, this.settings, this.colors),
+			new Graph.ArcOverview(this.canvas, this.modules, this.time, this.settings, this.colors)
+		];
+
 		this.graphs = [
-			new Graph.Pie(this.canvas, this.modules, this.time, this.settings, this.colors),
-			new Graph.Arc(this.canvas, this.modules, this.time, this.settings, this.colors),
+			overviewGraphs,
 			new Graph.CPUHistory(this.canvas, this.modules, this.time, this.settings, this.colors),
 			new Graph.MemorySwapHistory(this.canvas, this.modules, this.time, this.settings, this.colors),
 			new Graph.DiskHistory(this.canvas, this.modules, this.time, this.settings, this.colors),
@@ -231,7 +235,10 @@ SystemMonitorApplet.prototype = {
 	},
 	draw: function(){
 		try {
-			this.graphs[this.settings.graphType].draw();
+			if(this.settings.graphType === 0)
+				this.graphs[0][this.settings.graphOverview].draw();
+			else
+				this.graphs[this.settings.graphType].draw();
 		} catch(e){
 			global.logError(e);
 		}
