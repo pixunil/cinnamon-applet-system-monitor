@@ -302,7 +302,7 @@ SystemMonitorApplet.prototype = {
 		try {
 			let direction = event.get_scroll_direction();
 
-			if(direction == Clutter.ScrollDirection.DOWN && this.settings.graphType < 6)
+			if(direction == Clutter.ScrollDirection.DOWN && this.settings.graphType < this.graphs.length - 1)
 				this.settings.graphType++;
 			else if(direction == Clutter.ScrollDirection.UP && this.settings.graphType > 0)
 				this.settings.graphType--;
