@@ -129,7 +129,7 @@ Base.prototype = {
 		let source = new MessageTray.SystemNotificationSource();
 		messageTray.add(source);
 
-		let icon = new St.Icon({icon_name: iconName,	icon_type: St.IconType.FULLCOLOR, icon_size: 24});
+		let icon = new St.Icon({icon_name: iconName, icon_type: St.IconType.FULLCOLOR, icon_size: 24});
 
 		let notification = new MessageTray.Notification(source, summary, body, {icon: icon});
 		notification.setTransient(true);
@@ -684,6 +684,7 @@ Thermal.prototype = {
 		this.setText(-1, 0, "thermal", this.data[0]);
 	},
 	onSettingsChanged: function(){
+		Base.prototype.onSettingsChanged.call(this);
 		if(this.settings.thermalWarning){
 			this.notifications = this.settings.thermalWarningTime;
 			if(!this.settings.thermalUnit) this.settings.thermalWarningValue = (this.settings.thermalWarningValue - 32) * 5 / 9; //Fahrenheit => Celsius

@@ -49,6 +49,8 @@ PanelWidget.prototype = {
 	},
 	draw: function(){
 		try {
+			if(this.module.settings[this.module.name + "PanelGraph"] === -1) return;
+
 			let graph = this.module.settings[this.module.name + "PanelGraph"];
 			if(this.module.settings[this.module.name + "PanelMode"])
 				graph += this.module.settings[this.module.name + "PanelMode"];
