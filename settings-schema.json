@@ -1,4 +1,8 @@
 {
+	"general-header": {
+		"type": "header",
+		"description": "General"
+	},
 	"interval": {
 		"type": "spinbutton",
 		"default": 1000,
@@ -68,6 +72,10 @@
 	},
 	"graph": {
 		"type": "separator"
+	},
+	"graph-header": {
+		"type": "header",
+		"description": "Graphs"
 	},
 	"graph-type": {
 		"type": "combobox",
@@ -141,6 +149,10 @@
 	},
 	"cpu-section": {
 		"type": "separator"
+	},
+	"cpu-header": {
+		"type": "header",
+		"description": "CPU"
 	},
 	"color-cpu1": {
 		"type": "colorchooser",
@@ -229,6 +241,10 @@
 	"mem-section": {
 		"type": "separator"
 	},
+	"mem-header": {
+		"type": "header",
+		"description": "Memory and Swap"
+	},
 	"color-mem": {
 		"type": "colorchooser",
 		"default": "rgba(171, 24, 82, 1)",
@@ -281,6 +297,10 @@
 	"disk-section": {
 		"type": "separator"
 	},
+	"disk-header": {
+		"type": "header",
+		"description": "Disk"
+	},
 	"color-write": {
 		"type": "colorchooser",
 		"default": "rgba(238, 29, 0, 1)",
@@ -323,6 +343,10 @@
 	"network-section": {
 		"type": "separator"
 	},
+	"network-header": {
+		"type": "header",
+		"description": "Network"
+	},
 	"color-up": {
 		"type": "colorchooser",
 		"default": "rgba(238, 29, 0, 1)",
@@ -364,6 +388,10 @@
 	},
 	"thermal-section": {
 		"type": "separator"
+	},
+	"thermal-header": {
+		"type": "header",
+		"description": "Thermal"
 	},
 	"color-thermal": {
 		"type": "colorchooser",

@@ -524,7 +524,7 @@ ThermalBar.prototype = {
 
 		this.begin(1);
 
-		this.setColor("thermal");
+		this.next("thermal");
 		this.bar((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
 	}
 };
