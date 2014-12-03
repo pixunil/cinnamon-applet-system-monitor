@@ -198,7 +198,7 @@ SystemMonitorApplet.prototype = {
 
 		this.panelWidgets = {};
 
-		for(i in this.modules){
+		for(var i in this.modules){
 			if(!this.modules[i].name) continue;
 			let widget = new PanelWidget(this.panelHeight, this.modules[i], this.modules);
 			this.actor.add(widget.box);

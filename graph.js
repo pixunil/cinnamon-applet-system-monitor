@@ -114,7 +114,7 @@ PieOverview.prototype = {
 			var a = 0;
 			dir = !dir;
 		} else
-		 var a = -Math.PI;
+			var a = -Math.PI;
 		angle *= Math.PI / 2;
 
 		if(dir)
@@ -143,7 +143,7 @@ ArcOverview.prototype = {
 		this.ctx.setLineWidth(this.dr);
 	},
 
- startA: 0,
+	startA: 0,
 
 	normal: function(angle){
 		angle *= Math.PI / 2;
@@ -215,8 +215,7 @@ History.prototype = {
 			this.ctx.identityMatrix();
 			this.ctx.stroke();
 
-			for(var i = 0, l = history.length; i < l; ++i)
-				this.last[i] = history[i] + (this.last[i] || 0);
+			this._incrementLast(history);
 		},
 		area: function(history, num, total){
 			this.ctx.save();
@@ -240,8 +239,7 @@ History.prototype = {
 			this.ctx.fill();
 			this.ctx.restore();
 
-			for(var i = 0, l = history.length; i < l; ++i)
-				this.last[i] = history[i] + (this.last[i] || 0);
+			this._incrementLast(history);
 		},
 		bar: function(history, num, total){
 			var l = history.length;
@@ -287,6 +285,10 @@ History.prototype = {
 					this.ctx.curveTo(i + .5, this.last[i + 1], i + .5, this.last[i], i, this.last[i]);
 			}
 		}
+	},
+	_incrementLast: function(history){
+		for(var i = 0, l = history.length; i < l; ++i)
+			this.last[i] = history[i] + (this.last[i] || 0);
 	},
 
 	packDir: true,
