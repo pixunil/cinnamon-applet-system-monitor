@@ -241,6 +241,49 @@ History.prototype = {
 
 			this._incrementLast(history);
 		},
+		areaUpDown: function(history, num){
+			this.ctx.save();
+			if(this.packDir){
+				this.ctx.translate(this.dw * this.tx, this.h / 2);
+				if(!num) //up
+					this.ctx.scale(this.dw, -this.h / (this.max - this.min) / 2);
+				else //down
+					this.ctx.scale(this.dw, this.h / (this.max - this.min) / 2);
+				this.ctx.translate(0, -this.min);
+			} else {
+				this.ctx.rectangle(num? 0 : this.w / 2, 0, this.w / 2, this.h);
+				this.ctx.clip();
+				this.ctx.translate((num? 0 : this.w / 2) + this.dw * this.tx / 2, this.h);
+				this.ctx.scale(this.dw / 2, -this.h / (this.max - this.min));
+				this.ctx.translate(0, -this.min);
+			}
+
+			this.ctx.moveTo(0, history[0] + (this.last[0] || 0));
+			this.connection(history, 1, true);
+			if(!this.last.length)
+				this.ctx.lineTo(history.length - 1, (this.last[history.length - 1] || 0) + this.min);
+			this.ctx.lineTo(0, (this.last[0] || 0) + this.min);
+			this.ctx.fill();
+			this.ctx.restore();
+
+			this._incrementLast(history);
+		},
+		stack: function(history, num, total){
+			this.ctx.save();
+			this.ctx.translate(this.dw * this.tx, this.h);
+			this.ctx.scale(this.dw, -this.h / (this.max - this.min) / total);
+			this.ctx.translate(0, -this.min);
+
+			this.ctx.moveTo(0, history[0] + (this.last[0] || 0));
+			this.connection(history, 1, true);
+			if(!this.last.length)
+				this.ctx.lineTo(history.length - 1, (this.last[history.length - 1] || 0) + this.min);
+			this.ctx.lineTo(0, (this.last[0] || 0) + this.min);
+			this.ctx.fill();
+			this.ctx.restore();
+
+			this._incrementLast(history);
+		},
 		bar: function(history, num, total){
 			var l = history.length;
 			for(var i = 0; i < l; ++i){
@@ -304,14 +347,16 @@ History.prototype = {
 		this.min = min || 0;
 		this.max = max || 1;
 
-		this.line = this._line[this.settings.graphAppearance];
+		this.line = this._line[this.settings[this.name + "Appearance"]];
 		if(!this.line) this.line = this._line.line;
 		this.connection = this._connection[this.settings.graphConnection];
 		if(!this.connection) this.connection = this._connection.line;
+		this.last = [];
 	},
 	next: function(color){
 		this.setColor(color);
-		this.last = [];
+		if(this.settings[this.name + "Appearance"] !== "stack")
+			this.last = [];
 	}
 };
 
@@ -340,6 +385,8 @@ function CPUHistory(canvas, modules, time, settings, colors){
 }
 CPUHistory.prototype = {
 	__proto__: History.prototype,
+
+	name: "cpu",
 
 	draw: function(){
 		let m = this.modules;
@@ -380,6 +427,8 @@ function MemoryHistory(canvas, modules, time, settings, colors){
 }
 MemoryHistory.prototype = {
 	__proto__: History.prototype,
+
+	name: "mem",
 
 	draw: function(){
 		let m = this.modules;
@@ -422,6 +471,8 @@ function MemorySwapHistory(canvas, modules, time, settings, colors){
 }
 MemorySwapHistory.prototype = {
 	__proto__: History.prototype,
+
+	name: "mem",
 
 	draw: function(){
 		let m = this.modules;
@@ -466,6 +517,8 @@ function DiskHistory(canvas, modules, time, settings, colors){
 DiskHistory.prototype = {
 	__proto__: History.prototype,
 
+	name: "disk",
+
 	draw: function(){
 		let m = this.modules;
 		this.begin(m.disk.history.write.length, 0, m.disk.max);
@@ -503,6 +556,8 @@ function NetworkHistory(canvas, modules, time, settings, colors){
 NetworkHistory.prototype = {
 	__proto__: History.prototype,
 
+	name: "network",
+
 	draw: function(){
 		let m = this.modules;
 		this.begin(m.network.history.up.length, 0, m.network.max);
@@ -536,6 +591,8 @@ function ThermalHistory(canvas, modules, time, settings, colors){
 }
 ThermalHistory.prototype = {
 	__proto__: History.prototype,
+
+	name: "thermal",
 
 	draw: function(){
 		let m = this.modules;

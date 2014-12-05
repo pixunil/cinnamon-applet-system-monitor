@@ -92,7 +92,7 @@ SystemMonitorApplet.prototype = {
 			this.colors = {};
 			this.settingProvider = new Settings.AppletSettings(this.settings, uuid, instanceId);
 			["interval", "byte-unit", "rate-unit", "maxsize", "order",
-				"graph-overview", "graph-appearance", "graph-connection", "graph-interval", "graph-steps"].forEach(function(p){
+				"graph-overview", "graph-connection", "graph-interval", "graph-steps"].forEach(function(p){
 				var q = p.replace(/-(.)/g, function(m, c){
 					return c.toUpperCase();
 				});
@@ -107,7 +107,7 @@ SystemMonitorApplet.prototype = {
 				"cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value", "thermal-warning", "thermal-warning-time", "thermal-warning-value", "mem-panel-mode"];
 
 			["cpu", "mem", "disk", "network", "thermal"].forEach(function(p){
-				keys.push(p + "-panel-label", p + "-panel-graph", p + "-panel-width");
+				keys.push(p + "-appearance", p + "-panel-label", p + "-panel-graph", p + "-panel-width");
 			});
 
 			keys.forEach(function(p){

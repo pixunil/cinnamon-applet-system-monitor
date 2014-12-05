@@ -118,25 +118,15 @@
 		},
 		"description": "Appearance of Overview graph"
 	},
-	"graph-appearance": {
-		"type": "combobox",
-		"default": 0,
-		"options": {
-			"Line": "line",
-			"Area": "area",
-			"Bar": "bar"
-		},
-		"description": "Appearance of history graphs"
-	},
 	"graph-connection": {
 		"type": "combobox",
-		"default": 0,
+		"default": "line",
 		"options": {
 			"Line": "line",
 			"Straight": "straight",
 			"Curve": "curve"
 		},
-		"description": "Connection type for Line or Area"
+		"description": "Connection type for History graphs"
 	},
 	"graph-interval": {
 		"type": "spinbutton",
@@ -173,6 +163,17 @@
 		"type": "colorchooser",
 		"default": "rgba(45, 125, 179, 1)",
 		"description": "CPU4"
+	},
+	"cpu-appearance": {
+		"type": "combobox",
+		"default": "line",
+		"options": {
+			"Line": "line",
+			"Area": "area",
+			"Stack": "stack",
+			"Bar": "bar"
+		},
+		"description": "Appearance of history graphs"
 	},
 	"cpu-panel-label": {
 		"type": "combobox",
@@ -255,6 +256,15 @@
 		"default": "rgba(73, 168, 53, 1)",
 		"description": "Swap"
 	},
+	"mem-appearance": {
+		"type": "combobox",
+		"default": "line",
+		"options": {
+			"Line": "line",
+			"Area": "area"
+		},
+		"description": "Appearance of history graphs"
+	},
 	"mem-panel-label": {
 		"type": "combobox",
 		"default": -1,
@@ -311,6 +321,16 @@
 		"default": "rgba(45, 125, 179, 1)",
 		"description": "Read"
 	},
+	"disk-appearance": {
+		"type": "combobox",
+		"default": "line",
+		"options": {
+			"Line": "line",
+			"Area": "areaUpDown",
+			"Bar": "bar"
+		},
+		"description": "Appearance of history graphs"
+	},
 	"disk-panel-label": {
 		"type": "combobox",
 		"default": -1,
@@ -357,6 +377,16 @@
 		"default": "rgba(45, 125, 179, 1)",
 		"description": "Down"
 	},
+	"network-appearance": {
+		"type": "combobox",
+		"default": "line",
+		"options": {
+			"Line": "line",
+			"Area": "areaUpDown",
+			"Bar": "bar"
+		},
+		"description": "Appearance of history graphs"
+	},
 	"network-panel-label": {
 		"type": "combobox",
 		"default": -1,
@@ -397,6 +427,15 @@
 		"type": "colorchooser",
 		"default": "rgba(238, 80, 29, 1)",
 		"description": "Thermal"
+	},
+	"thermal-appearance": {
+		"type": "combobox",
+		"default": "line",
+		"options": {
+			"Line": "line",
+			"Area": "area"
+		},
+		"description": "Appearance of history graphs"
 	},
 	"thermal-panel-label": {
 		"type": "combobox",
