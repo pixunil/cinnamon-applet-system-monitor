@@ -244,7 +244,7 @@ CPU.prototype = {
 					r += this.data.usage[i];
 				else {
 					if(this.data.usage[i] >= this.settings.cpuWarningValue / 100){
-						if(--this.notifications[i] == 0)
+						if(--this.notifications[i] === 0)
 							this.notify("Warning:", "CPU core " + (i + 1) + " usage was over " + this.settings.cpuWarningValue + "% for " + this.settings.cpuWarningTime * this.settings.interval / 1000 + "sec");
 					} else
 						this.notifications[i] = this.settings.cpuWarningTime;
@@ -254,7 +254,7 @@ CPU.prototype = {
 
 		if(this.settings.cpuWarning && this.settings.cpuWarningMode){
 				if(r / this.count >= this.settings.cpuWarningValue / 100){
-					if(--this.notifications == 0)
+					if(--this.notifications === 0)
 						this.notify("Warning:", "CPU usage was over " + this.settings.cpuWarningValue + "% for " + this.settings.cpuWarningTime * this.settings.interval / 1000 + "sec");
 				} else
 					this.notifications = this.settings.cpuWarningTime;
@@ -672,10 +672,10 @@ Thermal.prototype = {
 		this.saveDataPoint("0", temp);
 
 		if(this.settings.thermalWarning && temp > this.settings.thermalWarningValue){
-			if(--this.notifications == 0)
-					this.notify("Warning:", "Temperature was over " + this.formatthermal(this.settings.thermalWarningValue) + " for " + this.settings.thermalWarningTime * this.settings.interval / 1000 + "sec");
-			} else
-				this.notifications = this.settings.thermalWarningTime;
+			if(--this.notifications === 0)
+				this.notify("Warning:", "Temperature was over " + this.formatThermal(this.settings.thermalWarningValue) + " for " + this.settings.thermalWarningTime * this.settings.interval / 1000 + "sec");
+		} else
+			this.notifications = this.settings.thermalWarningTime;
 	},
 	update: function(){
 		for(var i = 0, l = this.data.length; i < l; ++i)
