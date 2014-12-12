@@ -103,7 +103,7 @@ SystemMonitorApplet.prototype = {
 			this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "thermal-mode", "thermalMode");
 
 			//Settings with callback
-			let keys = ["thermal-unit", "graph-size", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "color-mem", "color-swap", "color-write", "color-read", "color-up", "color-down", "color-thermal",
+			let keys = ["thermal-unit", "graph-size", "show-icon", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "color-mem", "color-swap", "color-write", "color-read", "color-up", "color-down", "color-thermal",
 				"cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value", "thermal-warning", "thermal-warning-time", "thermal-warning-value", "mem-panel-mode"];
 
 			["cpu", "mem", "disk", "network", "thermal"].forEach(function(p){
@@ -191,10 +191,10 @@ SystemMonitorApplet.prototype = {
 	initPanel: function(){
 		this.set_applet_tooltip(_("System monitor"));
 
-		let iconBox = new St.Bin();
+		this.iconBox = new St.Bin();
 		let icon = new St.Icon({icon_name: iconName, icon_type: St.IconType.SYMBOLIC, reactive: true, track_hover: true, style_class: "system-status-icon"});
-		iconBox.child = icon;
-		this.actor.add(iconBox, {y_align: St.Align.MIDDLE, y_fill: false});
+		this.iconBox.child = icon;
+		this.actor.add(this.iconBox, {y_align: St.Align.MIDDLE, y_fill: false});
 
 		this.panelWidgets = {};
 
@@ -275,6 +275,11 @@ SystemMonitorApplet.prototype = {
 				if(this.modules[i].onSettingsChanged)
 					this.modules[i].onSettingsChanged();
 			}
+
+			if(this.settings.showIcon)
+				this.iconBox.show();
+			else
+				this.iconBox.hide();
 
 			this.updateText();
 		} catch(e){
