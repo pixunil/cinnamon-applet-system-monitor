@@ -112,7 +112,7 @@
 		"max": 200,
 		"step": 5,
 		"units": " ",
-		"description": "Ammount of history steps"
+		"description": "Amount of history steps"
 	},
 	"graph-overview": {
 		"type": "combobox",
@@ -494,7 +494,7 @@
 		"default": 50,
 		"step": 0.5,
 		"units": "\u00b0",
-		"description": "Warning temperatur",
+		"description": "Warning temperature",
 		"indent": true,
 		"dependency": "thermal-warning"
 	}
