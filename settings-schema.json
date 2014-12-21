@@ -1,501 +1,501 @@
 {
-	"general-header": {
-		"type": "header",
-		"description": "General"
-	},
-	"show-icon": {
-		"type": "checkbox",
-		"default": true,
-		"description": "Show icon"
-	},
-	"interval": {
-		"type": "spinbutton",
-		"default": 1000,
-		"min": 720,
-		"max": 5000,
-		"step": 20,
-		"units": "ms",
-		"description": "Interval"
-	},
-	"byte-unit": {
-		"type": "combobox",
-		"default": true,
-		"options": {
-			"Bytes with binary prefix": true,
-			"Bytes with decimal prefix": false
-		},
-		"description": "Bytes unit"
-	},
-	"rate-unit": {
-		"type": "combobox",
-		"default": 1,
-		"options": {
-			"Bytes with binary prefix per second": 1,
-			"Bytes with decimal prefix per second": 0,
-			"Bits with binary prefix per second": 3,
-			"Bits with decimal prefix per second": 2
-		},
-		"description": "Rates unit"
-	},
-	"thermal-unit": {
-		"type": "combobox",
-		"default": true,
-		"options": {
-			"\u00b0C": true,
-			"\u00b0F": false
-		},
-		"description": "Thermal unit"
-	},
-	"maxsize": {
-		"type": "spinbutton",
-		"default": 2000,
-		"min": 1000,
-		"max": 10000,
-		"step": 100,
-		"units": " ",
-		"description": "Maximal size"
-	},
-	"order": {
-		"type": "combobox",
-		"default": true,
-		"options": {
-			"Write - Read / Up - Down": true,
-			"Read - Write / Down - Up": false
-		},
-		"description": "Order of Disk and Network items"
-	},
-	"thermal-mode": {
-		"type": "combobox",
-		"default": 1,
-		"options": {
-			"Disabled": 0,
-			"Minimum": 1,
-			"Average": 2,
-			"Maximum": 3
-		},
-		"description": "Thermal mode"
-	},
-	"graph": {
-		"type": "separator"
-	},
-	"graph-header": {
-		"type": "header",
-		"description": "Graphs"
-	},
-	"graph-type": {
-		"type": "combobox",
-		"default": 0,
-		"options": {
-			"None": -1,
-			"Overview": 0,
-			"CPU History": 1,
-			"Memory History": 2,
-			"Disk History": 3,
-			"Network History": 4,
-			"Thermal History": 5
-		},
-		"description": "Type of graph"
-	},
-	"graph-size": {
-		"type": "spinbutton",
-		"default": 100,
-		"min": 100,
-		"max": 400,
-		"step": 10,
-		"units": "px",
-		"description": "Height of graph"
-	},
-	"graph-steps": {
-		"type": "spinbutton",
-		"default": 60,
-		"min": 5,
-		"max": 200,
-		"step": 5,
-		"units": " ",
-		"description": "Ammount of history steps"
-	},
-	"graph-overview": {
-		"type": "combobox",
-		"default": 0,
-		"options": {
-			"Pie": 0,
-			"Arc": 1
-		},
-		"description": "Appearance of Overview graph"
-	},
-	"graph-connection": {
-		"type": "combobox",
-		"default": "line",
-		"options": {
-			"Line": "line",
-			"Straight": "straight",
-			"Curve": "curve"
-		},
-		"description": "Connection type for History graphs"
-	},
-	"graph-interval": {
-		"type": "spinbutton",
-		"default": 1000,
-		"min": 20,
-		"max": 5000,
-		"step": 20,
-		"units": "ms",
-		"description": "History graphs draw interval"
-	},
-	"cpu-section": {
-		"type": "separator"
-	},
-	"cpu-header": {
-		"type": "header",
-		"description": "CPU"
-	},
-	"color-cpu1": {
-		"type": "colorchooser",
-		"default": "rgba(255, 110, 0, 1)",
-		"description": "CPU1"
-	},
-	"color-cpu2": {
-		"type": "colorchooser",
-		"default": "rgba(203, 12, 41, 1)",
-		"description": "CPU2"
-	},
-	"color-cpu3": {
-		"type": "colorchooser",
-		"default": "rgba(73, 168, 53, 1)",
-		"description": "CPU3"
-	},
-	"color-cpu4": {
-		"type": "colorchooser",
-		"default": "rgba(45, 125, 179, 1)",
-		"description": "CPU4"
-	},
-	"cpu-appearance": {
-		"type": "combobox",
-		"default": "line",
-		"options": {
-			"Line": "line",
-			"Area": "area",
-			"Stack": "stack",
-			"Bar": "bar"
-		},
-		"description": "Appearance of history graphs"
-	},
-	"cpu-panel-label": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Average": 0,
-			"All Cores": 1
-		},
-		"description": "Label in the panel"
-	},
-	"cpu-panel-graph": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Bar": 0,
-			"History": 1
-		},
-		"description": "Graph in the panel"
-	},
-	"cpu-panel-width": {
-		"type": "spinbutton",
-		"default": 50,
-		"min": 5,
-		"max": 400,
-		"step": 5,
-		"units": "px",
-		"description": "Width of graph",
-		"indent": true
-	},
-	"cpu-warning": {
-		"type": "checkbox",
-		"default": false,
-		"description": "enable CPU warning"
-	},
-	"cpu-warning-time": {
-		"type": "spinbutton",
-		"min": 1,
-		"max": 40,
-		"default": 5,
-		"step": 1,
-		"units": "int",
-		"description": "Warning time",
-		"indent": true,
-		"dependency": "cpu-warning"
-	},
-	"cpu-warning-mode": {
-		"type": "checkbox",
-		"default": true,
-		"description": "Use average CPU usage",
-		"indent": true,
-		"dependency": "cpu-warning"
-	},
-	"cpu-warning-value": {
-		"type": "spinbutton",
-		"min": 50,
-		"max": 100,
-		"default": 100,
-		"step": 0.5,
-		"units": "%",
-		"description": "Warning CPU usage",
-		"indent": true,
-		"dependency": "cpu-warning"
-	},
-	"mem-section": {
-		"type": "separator"
-	},
-	"mem-header": {
-		"type": "header",
-		"description": "Memory and Swap"
-	},
-	"color-mem": {
-		"type": "colorchooser",
-		"default": "rgba(171, 24, 82, 1)",
-		"description": "Memory"
-	},
-	"color-swap": {
-		"type": "colorchooser",
-		"default": "rgba(73, 168, 53, 1)",
-		"description": "Swap"
-	},
-	"mem-appearance": {
-		"type": "combobox",
-		"default": "line",
-		"options": {
-			"Line": "line",
-			"Area": "area"
-		},
-		"description": "Appearance of history graphs"
-	},
-	"mem-panel-label": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Percent": 0
-		},
-		"description": "Label in the panel"
-	},
-	"mem-panel-graph": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Bar": 0,
-			"History": 1
-		},
-		"description": "Graph in the panel"
-	},
-	"mem-panel-mode": {
-		"type": "combobox",
-		"default": 0,
-		"options": {
-			"only Memory": 0,
-			"Memory and Swap": 2
-		},
-		"description": "Mode of graph",
-		"indent": true
-	},
-	"mem-panel-width": {
-		"type": "spinbutton",
-		"default": 50,
-		"min": 5,
-		"max": 400,
-		"step": 5,
-		"units": "px",
-		"description": "Width of graph",
-		"indent": true
-	},
-	"disk-section": {
-		"type": "separator"
-	},
-	"disk-header": {
-		"type": "header",
-		"description": "Disk"
-	},
-	"color-write": {
-		"type": "colorchooser",
-		"default": "rgba(238, 29, 0, 1)",
-		"description": "Write"
-	},
-	"color-read": {
-		"type": "colorchooser",
-		"default": "rgba(45, 125, 179, 1)",
-		"description": "Read"
-	},
-	"disk-appearance": {
-		"type": "combobox",
-		"default": "line",
-		"options": {
-			"Line": "line",
-			"Area": "areaUpDown",
-			"Bar": "bar"
-		},
-		"description": "Appearance of history graphs"
-	},
-	"disk-panel-label": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Usage": 0
-		},
-		"description": "Label in the panel"
-	},
-	"disk-panel-graph": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Bar": 0,
-			"History": 1
-		},
-		"description": "Graph in the panel"
-	},
-	"disk-panel-width": {
-		"type": "spinbutton",
-		"default": 50,
-		"min": 5,
-		"max": 400,
-		"step": 5,
-		"units": "px",
-		"description": "Width of graph",
-		"indent": true
-	},
-	"network-section": {
-		"type": "separator"
-	},
-	"network-header": {
-		"type": "header",
-		"description": "Network"
-	},
-	"color-up": {
-		"type": "colorchooser",
-		"default": "rgba(238, 29, 0, 1)",
-		"description": "Up"
-	},
-	"color-down": {
-		"type": "colorchooser",
-		"default": "rgba(45, 125, 179, 1)",
-		"description": "Down"
-	},
-	"network-appearance": {
-		"type": "combobox",
-		"default": "line",
-		"options": {
-			"Line": "line",
-			"Area": "areaUpDown",
-			"Bar": "bar"
-		},
-		"description": "Appearance of history graphs"
-	},
-	"network-panel-label": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Usage": 0
-		},
-		"description": "Label in the panel"
-	},
-	"network-panel-graph": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Bar": 0,
-			"History": 1
-		},
-		"description": "Graph in the panel"
-	},
-	"network-panel-width": {
-		"type": "spinbutton",
-		"default": 50,
-		"min": 5,
-		"max": 400,
-		"step": 5,
-		"units": "px",
-		"description": "Width of graph",
-		"indent": true
-	},
-	"thermal-section": {
-		"type": "separator"
-	},
-	"thermal-header": {
-		"type": "header",
-		"description": "Thermal"
-	},
-	"color-thermal": {
-		"type": "colorchooser",
-		"default": "rgba(238, 80, 29, 1)",
-		"description": "Thermal"
-	},
-	"thermal-appearance": {
-		"type": "combobox",
-		"default": "line",
-		"options": {
-			"Line": "line",
-			"Area": "area"
-		},
-		"description": "Appearance of history graphs"
-	},
-	"thermal-panel-label": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Temperature": 0
-		},
-		"description": "Label in the panel"
-	},
-	"thermal-panel-graph": {
-		"type": "combobox",
-		"default": -1,
-		"options": {
-			"None": -1,
-			"Bar": 0,
-			"History": 1
-		},
-		"description": "Graph in the panel"
-	},
-	"thermal-panel-width": {
-		"type": "spinbutton",
-		"default": 50,
-		"min": 5,
-		"max": 400,
-		"step": 5,
-		"units": "px",
-		"description": "Width of graph",
-		"indent": true
-	},
-	"thermal-warning": {
-		"type": "checkbox",
-		"default": false,
-		"description": "enable thermal warning"
-	},
-	"thermal-warning-time": {
-		"type": "spinbutton",
-		"min": 1,
-		"max": 40,
-		"default": 5,
-		"step": 1,
-		"units": "int",
-		"description": "Warning time",
-		"indent": true,
-		"dependency": "thermal-warning"
-	},
-	"thermal-warning-value": {
-		"type": "spinbutton",
-		"min": 25,
-		"max": 200,
-		"default": 50,
-		"step": 0.5,
-		"units": "\u00b0",
-		"description": "Warning temperatur",
-		"indent": true,
-		"dependency": "thermal-warning"
-	}
+    "general-header": {
+        "type": "header",
+        "description": "General"
+    },
+    "show-icon": {
+        "type": "checkbox",
+        "default": true,
+        "description": "Show icon"
+    },
+    "interval": {
+        "type": "spinbutton",
+        "default": 1000,
+        "min": 720,
+        "max": 5000,
+        "step": 20,
+        "units": "ms",
+        "description": "Interval"
+    },
+    "byte-unit": {
+        "type": "combobox",
+        "default": true,
+        "options": {
+            "Bytes with binary prefix": true,
+            "Bytes with decimal prefix": false
+        },
+        "description": "Bytes unit"
+    },
+    "rate-unit": {
+        "type": "combobox",
+        "default": 1,
+        "options": {
+            "Bytes with binary prefix per second": 1,
+            "Bytes with decimal prefix per second": 0,
+            "Bits with binary prefix per second": 3,
+            "Bits with decimal prefix per second": 2
+        },
+        "description": "Rates unit"
+    },
+    "thermal-unit": {
+        "type": "combobox",
+        "default": true,
+        "options": {
+            "\u00b0C": true,
+            "\u00b0F": false
+        },
+        "description": "Thermal unit"
+    },
+    "maxsize": {
+        "type": "spinbutton",
+        "default": 2000,
+        "min": 1000,
+        "max": 10000,
+        "step": 100,
+        "units": " ",
+        "description": "Maximal size"
+    },
+    "order": {
+        "type": "combobox",
+        "default": true,
+        "options": {
+            "Write - Read / Up - Down": true,
+            "Read - Write / Down - Up": false
+        },
+        "description": "Order of Disk and Network items"
+    },
+    "thermal-mode": {
+        "type": "combobox",
+        "default": 1,
+        "options": {
+            "Disabled": 0,
+            "Minimum": 1,
+            "Average": 2,
+            "Maximum": 3
+        },
+        "description": "Thermal mode"
+    },
+    "graph": {
+        "type": "separator"
+    },
+    "graph-header": {
+        "type": "header",
+        "description": "Graphs"
+    },
+    "graph-type": {
+        "type": "combobox",
+        "default": 0,
+        "options": {
+            "None": -1,
+            "Overview": 0,
+            "CPU History": 1,
+            "Memory History": 2,
+            "Disk History": 3,
+            "Network History": 4,
+            "Thermal History": 5
+        },
+        "description": "Type of graph"
+    },
+    "graph-size": {
+        "type": "spinbutton",
+        "default": 100,
+        "min": 100,
+        "max": 400,
+        "step": 10,
+        "units": "px",
+        "description": "Height of graph"
+    },
+    "graph-steps": {
+        "type": "spinbutton",
+        "default": 60,
+        "min": 5,
+        "max": 200,
+        "step": 5,
+        "units": " ",
+        "description": "Number of history steps"
+    },
+    "graph-overview": {
+        "type": "combobox",
+        "default": 0,
+        "options": {
+            "Pie": 0,
+            "Arc": 1
+        },
+        "description": "Appearance of Overview graph"
+    },
+    "graph-connection": {
+        "type": "combobox",
+        "default": "line",
+        "options": {
+            "Line": "line",
+            "Straight": "straight",
+            "Curve": "curve"
+        },
+        "description": "Connection type for History graphs"
+    },
+    "graph-interval": {
+        "type": "spinbutton",
+        "default": 1000,
+        "min": 20,
+        "max": 5000,
+        "step": 20,
+        "units": "ms",
+        "description": "History graphs draw interval"
+    },
+    "cpu-section": {
+        "type": "separator"
+    },
+    "cpu-header": {
+        "type": "header",
+        "description": "CPU"
+    },
+    "color-cpu1": {
+        "type": "colorchooser",
+        "default": "rgba(255, 110, 0, 1)",
+        "description": "CPU1"
+    },
+    "color-cpu2": {
+        "type": "colorchooser",
+        "default": "rgba(203, 12, 41, 1)",
+        "description": "CPU2"
+    },
+    "color-cpu3": {
+        "type": "colorchooser",
+        "default": "rgba(73, 168, 53, 1)",
+        "description": "CPU3"
+    },
+    "color-cpu4": {
+        "type": "colorchooser",
+        "default": "rgba(45, 125, 179, 1)",
+        "description": "CPU4"
+    },
+    "cpu-appearance": {
+        "type": "combobox",
+        "default": "line",
+        "options": {
+            "Line": "line",
+            "Area": "area",
+            "Stack": "stack",
+            "Bar": "bar"
+        },
+        "description": "Appearance of history graphs"
+    },
+    "cpu-panel-label": {
+        "type": "combobox",
+        "default": -1,
+        "options": {
+            "None": -1,
+            "Average": 0,
+            "All Cores": 1
+        },
+        "description": "Label in the panel"
+    },
+    "cpu-panel-graph": {
+        "type": "combobox",
+        "default": -1,
+        "options": {
+            "None": -1,
+            "Bar": 0,
+            "History": 1
+        },
+        "description": "Graph in the panel"
+    },
+    "cpu-panel-width": {
+        "type": "spinbutton",
+        "default": 50,
+        "min": 5,
+        "max": 400,
+        "step": 5,
+        "units": "px",
+        "description": "Width of graph",
+        "indent": true
+    },
+    "cpu-warning": {
+        "type": "checkbox",
+        "default": false,
+        "description": "enable CPU warning"
+    },
+    "cpu-warning-time": {
+        "type": "spinbutton",
+        "min": 1,
+        "max": 40,
+        "default": 5,
+        "step": 1,
+        "units": "int",
+        "description": "Warning time",
+        "indent": true,
+        "dependency": "cpu-warning"
+    },
+    "cpu-warning-mode": {
+        "type": "checkbox",
+        "default": true,
+        "description": "Use average CPU usage",
+        "indent": true,
+        "dependency": "cpu-warning"
+    },
+    "cpu-warning-value": {
+        "type": "spinbutton",
+        "min": 50,
+        "max": 100,
+        "default": 100,
+        "step": 0.5,
+        "units": "%",
+        "description": "Warning CPU usage",
+        "indent": true,
+        "dependency": "cpu-warning"
+    },
+    "mem-section": {
+        "type": "separator"
+    },
+    "mem-header": {
+        "type": "header",
+        "description": "Memory and Swap"
+    },
+    "color-mem": {
+        "type": "colorchooser",
+        "default": "rgba(171, 24, 82, 1)",
+        "description": "Memory"
+    },
+    "color-swap": {
+        "type": "colorchooser",
+        "default": "rgba(73, 168, 53, 1)",
+        "description": "Swap"
+    },
+    "mem-appearance": {
+        "type": "combobox",
+        "default": "line",
+        "options": {
+            "Line": "line",
+            "Area": "area"
+        },
+        "description": "Appearance of history graphs"
+    },
+    "mem-panel-label": {
+        "type": "combobox",
+        "default": -1,
+        "options": {
+            "None": -1,
+            "Percent": 0
+        },
+        "description": "Label in the panel"
+    },
+    "mem-panel-graph": {
+        "type": "combobox",
+        "default": -1,
+        "options": {
+            "None": -1,
+            "Bar": 0,
+            "History": 1
+        },
+        "description": "Graph in the panel"
+    },
+    "mem-panel-mode": {
+        "type": "combobox",
+        "default": 0,
+        "options": {
+            "only Memory": 0,
+            "Memory and Swap": 2
+        },
+        "description": "Mode of graph",
+        "indent": true
+    },
+    "mem-panel-width": {
+        "type": "spinbutton",
+        "default": 50,
+        "min": 5,
+        "max": 400,
+        "step": 5,
+        "units": "px",
+        "description": "Width of graph",
+        "indent": true
+    },
+    "disk-section": {
+        "type": "separator"
+    },
+    "disk-header": {
+        "type": "header",
+        "description": "Disk"
+    },
+    "color-write": {
+        "type": "colorchooser",
+        "default": "rgba(238, 29, 0, 1)",
+        "description": "Write"
+    },
+    "color-read": {
+        "type": "colorchooser",
+        "default": "rgba(45, 125, 179, 1)",
+        "description": "Read"
+    },
+    "disk-appearance": {
+        "type": "combobox",
+        "default": "line",
+        "options": {
+            "Line": "line",
+            "Area": "areaUpDown",
+            "Bar": "bar"
+        },
+        "description": "Appearance of history graphs"
+    },
+    "disk-panel-label": {
+        "type": "combobox",
+        "default": -1,
+        "options": {
+            "None": -1,
+            "Usage": 0
+        },
+        "description": "Label in the panel"
+    },
+    "disk-panel-graph": {
+        "type": "combobox",
+        "default": -1,
+        "options": {
+            "None": -1,
+            "Bar": 0,
+            "History": 1
+        },
+        "description": "Graph in the panel"
+    },
+    "disk-panel-width": {
+        "type": "spinbutton",
+        "default": 50,
+        "min": 5,
+        "max": 400,
+        "step": 5,
+        "units": "px",
+        "description": "Width of graph",
+        "indent": true
+    },
+    "network-section": {
+        "type": "separator"
+    },
+    "network-header": {
+        "type": "header",
+        "description": "Network"
+    },
+    "color-up": {
+        "type": "colorchooser",
+        "default": "rgba(238, 29, 0, 1)",
+        "description": "Up"
+    },
+    "color-down": {
+        "type": "colorchooser",
+        "default": "rgba(45, 125, 179, 1)",
+        "description": "Down"
+    },
+    "network-appearance": {
+        "type": "combobox",
+        "default": "line",
+        "options": {
+            "Line": "line",
+            "Area": "areaUpDown",
+            "Bar": "bar"
+        },
+        "description": "Appearance of history graphs"
+    },
+    "network-panel-label": {
+        "type": "combobox",
+        "default": -1,
+        "options": {
+            "None": -1,
+            "Usage": 0
+        },
+        "description": "Label in the panel"
+    },
+    "network-panel-graph": {
+        "type": "combobox",
+        "default": -1,
+        "options": {
+            "None": -1,
+            "Bar": 0,
+            "History": 1
+        },
+        "description": "Graph in the panel"
+    },
+    "network-panel-width": {
+        "type": "spinbutton",
+        "default": 50,
+        "min": 5,
+        "max": 400,
+        "step": 5,
+        "units": "px",
+        "description": "Width of graph",
+        "indent": true
+    },
+    "thermal-section": {
+        "type": "separator"
+    },
+    "thermal-header": {
+        "type": "header",
+        "description": "Thermal"
+    },
+    "color-thermal": {
+        "type": "colorchooser",
+        "default": "rgba(238, 80, 29, 1)",
+        "description": "Thermal"
+    },
+    "thermal-appearance": {
+        "type": "combobox",
+        "default": "line",
+        "options": {
+            "Line": "line",
+            "Area": "area"
+        },
+        "description": "Appearance of history graphs"
+    },
+    "thermal-panel-label": {
+        "type": "combobox",
+        "default": -1,
+        "options": {
+            "None": -1,
+            "Temperature": 0
+        },
+        "description": "Label in the panel"
+    },
+    "thermal-panel-graph": {
+        "type": "combobox",
+        "default": -1,
+        "options": {
+            "None": -1,
+            "Bar": 0,
+            "History": 1
+        },
+        "description": "Graph in the panel"
+    },
+    "thermal-panel-width": {
+        "type": "spinbutton",
+        "default": 50,
+        "min": 5,
+        "max": 400,
+        "step": 5,
+        "units": "px",
+        "description": "Width of graph",
+        "indent": true
+    },
+    "thermal-warning": {
+        "type": "checkbox",
+        "default": false,
+        "description": "enable thermal warning"
+    },
+    "thermal-warning-time": {
+        "type": "spinbutton",
+        "min": 1,
+        "max": 40,
+        "default": 5,
+        "step": 1,
+        "units": "int",
+        "description": "Warning time",
+        "indent": true,
+        "dependency": "thermal-warning"
+    },
+    "thermal-warning-value": {
+        "type": "spinbutton",
+        "min": 25,
+        "max": 200,
+        "default": 50,
+        "step": 0.5,
+        "units": "\u00b0",
+        "description": "Warning temperature",
+        "indent": true,
+        "dependency": "thermal-warning"
+    }
 }
