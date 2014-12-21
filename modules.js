@@ -102,6 +102,7 @@ Base.prototype = {
     _update: function(menuOpen){
         this.menuOpen = menuOpen;
         this.panelText = [];
+        this.tooltipText = [this.display];
         this.update();
 
         if(this.panel){
@@ -111,7 +112,7 @@ Base.prototype = {
         delete this.menuOpen;
     },
     setText: function(container, label, format, value, ext){
-        if((container !== -1 && !this.menuOpen) || (container === -1 && (!this.panel || this.settings[this.name + "PanelLabel"] === -1))) return;
+        if(container === -1 && (!this.panel || this.settings[this.name + "PanelLabel"] === -1)) return;
 
         value = value || 0;
         if(format === "rate") value = this.formatRate(value, ext);
@@ -121,7 +122,9 @@ Base.prototype = {
 
         if(container === -1)
             this.panelText[label] = value;
-        else
+        if(container === 0)
+            this.tooltipText[label + 1] = value;
+        if(container > -1 && !this.menuOpen)
             this.container[container].get_children()[label].set_text(value);
     },
 
@@ -362,6 +365,8 @@ function Swap(settings, colors, time){
 Swap.prototype = {
     __proto__: Base.prototype,
 
+    display: _("Swap"),
+
     gtop: new GTop.glibtop_swap(),
 
     data: {
@@ -374,7 +379,7 @@ Swap.prototype = {
 
     build: function(){
         let labels = [100, 100, 60];
-        this.submenu = this.buildMenuItem(_("Swap"), labels);
+        this.submenu = this.buildMenuItem(this.display, labels);
     },
     getData: function(){
         GTop.glibtop_get_swap(this.gtop);

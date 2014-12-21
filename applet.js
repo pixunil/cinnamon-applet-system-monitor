@@ -247,8 +247,12 @@ SystemMonitorApplet.prototype = {
     },
     updateText: function(){
         try {
-            for(var i in this.modules)
+            let tooltipText = [_("System Monitor")];
+            for(var i in this.modules){
                 this.modules[i]._update(this.menu.isOpen);
+                tooltipText.push(this.modules[i].tooltipText.join("\t"));
+            }
+            this.set_applet_tooltip(tooltipText.join("\n"));
         } catch(e){
             global.logError(e);
         }
