@@ -404,9 +404,12 @@ CPUHistory.prototype = {
 
         for(let i = 0; i < m.cpu.count; ++i){
             this.next("cpu" + (i % 4 + 1));
-            this.line(m.cpu.history.user[i], i, m.cpu.count);
-            this.setAlpha(.75);
-            this.line(m.cpu.history.system[i], i, m.cpu.count);
+            if(this.settings.cpuSplit){
+                this.line(m.cpu.history.user[i], i, m.cpu.count);
+                this.setAlpha(.75);
+                this.line(m.cpu.history.system[i], i, m.cpu.count);
+            } else
+                this.line(m.cpu.history.usage[i], i, m.cpu.count);
         }
     }
 };

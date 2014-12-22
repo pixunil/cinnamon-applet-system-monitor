@@ -86,7 +86,7 @@ SystemMonitorApplet.prototype = {
 
             this.panelHeight = panelHeight;
 
-            let item, i, l, j, r, s, t, _appSys = Cinnamon.AppSystem.get_default();
+            let item, i, l, j, r, s, t;
 
             this.settings = {};
             this.colors = {};
@@ -100,11 +100,9 @@ SystemMonitorApplet.prototype = {
                 this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, q);
             }, this);
 
-            this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "thermal-mode", "thermalMode");
-
             //Settings with callback
             let keys = ["thermal-unit", "graph-size", "show-icon", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "color-mem", "color-swap", "color-write", "color-read", "color-up", "color-down", "color-thermal",
-                "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value", "thermal-warning", "thermal-warning-time", "thermal-warning-value", "mem-panel-mode"];
+                "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value", "thermal-mode","thermal-warning", "thermal-warning-time", "thermal-warning-value", "mem-panel-mode"];
 
             ["cpu", "mem", "disk", "network", "thermal"].forEach(function(p){
                 keys.push(p, p + "-appearance", p + "-panel-label", p + "-panel-graph", p + "-panel-width");
@@ -150,13 +148,12 @@ SystemMonitorApplet.prototype = {
             }, this);
             this.menu.addMenuItem(this.graph.submenu);
 
-            this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-            let _gsmApp = _appSys.lookup_app("gnome-system-monitor.desktop");
-            item = new PopupMenu.PopupMenuItem(_("System Monitor"));
-            item.connect("activate", function(){
-                _gsmApp.activate();
+            this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem);
+            this.menu.addAction(_("System Monitor"), function(){
+                let appSys = Cinnamon.AppSystem.get_default();
+                let gsmApp = appSys.lookup_app("gnome-system-monitor.desktop");
+                gsmApp.activate();
             });
-            this.menu.addMenuItem(item);
 
             this.onSettingsChanged();
             this.getData();

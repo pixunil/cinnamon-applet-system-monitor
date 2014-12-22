@@ -204,6 +204,7 @@ CPU.prototype = {
         system: []
     },
     history: {
+        usage: [],
         user: [],
         system: []
     },
@@ -214,6 +215,7 @@ CPU.prototype = {
         let labels = [], margin = 260 - this.count * 60;
         GTop.glibtop_get_cpu(this.gtop);
         for(var i = 0; i < this.count; ++i){
+            this.history.usage.push([]);
             this.history.user.push([]);
             this.history.system.push([]);
             this.saveRawPoint("total." + i, this.gtop.xcpu_total[i]);

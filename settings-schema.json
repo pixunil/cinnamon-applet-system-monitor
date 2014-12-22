@@ -175,6 +175,16 @@
         "description": "Appearance of history graphs",
         "dependency": "cpu"
     },
+    "cpu-split": {
+        "type": "combobox",
+        "default": false,
+        "options": {
+            "Total usage": false,
+            "User and System usage": true
+        },
+        "description": "Show which information in history graphs",
+        "dependency": "cpu"
+    },
     "cpu-panel-label": {
         "type": "combobox",
         "default": -1,
