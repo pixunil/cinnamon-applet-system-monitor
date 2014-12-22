@@ -107,7 +107,7 @@ SystemMonitorApplet.prototype = {
                 "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value", "thermal-warning", "thermal-warning-time", "thermal-warning-value", "mem-panel-mode"];
 
             ["cpu", "mem", "disk", "network", "thermal"].forEach(function(p){
-                keys.push(p + "-appearance", p + "-panel-label", p + "-panel-graph", p + "-panel-width");
+                keys.push(p, p + "-appearance", p + "-panel-label", p + "-panel-graph", p + "-panel-width");
             });
 
             keys.forEach(function(p){
@@ -178,14 +178,12 @@ SystemMonitorApplet.prototype = {
             new Graph.ArcOverview(this.canvas, this.modules, this.time, this.settings, this.colors)
         ];
 
-        this.graphs = [
-            overviewGraphs,
-            new Graph.CPUHistory(this.canvas, this.modules, this.time, this.settings, this.colors),
-            new Graph.MemorySwapHistory(this.canvas, this.modules, this.time, this.settings, this.colors),
-            new Graph.DiskHistory(this.canvas, this.modules, this.time, this.settings, this.colors),
-            new Graph.NetworkHistory(this.canvas, this.modules, this.time, this.settings, this.colors),
-            new Graph.ThermalHistory(this.canvas, this.modules, this.time, this.settings, this.colors)
-        ];
+        this.graphs = [overviewGraphs];
+
+        for(let i in this.modules){
+            if(this.modules[i].menuGraph)
+                this.graphs.push(new Graph[this.modules[i].menuGraph](this.canvas, this.modules, this.time, this.settings, this.colors));
+        }
     },
 
     initPanel: function(){
@@ -199,7 +197,7 @@ SystemMonitorApplet.prototype = {
         this.panelWidgets = {};
 
         for(var i in this.modules){
-            if(!this.modules[i].name) continue;
+            if(!this.modules[i].panelGraphs) continue;
             let widget = new PanelWidget(this.panelHeight, this.modules[i], this.modules);
             this.actor.add(widget.box);
             this.panelWidgets[i] = widget;
@@ -212,8 +210,10 @@ SystemMonitorApplet.prototype = {
             let delta = time - this.time[0];
             this.time[0] = time;
 
-            for(var i in this.modules)
-                this.modules[i].getData(delta);
+            for(var i in this.modules){
+                if(this.settings[this.modules[i].name])
+                    this.modules[i].getData(delta);
+            }
 
             this.updateText();
             this.timeout = Mainloop.timeout_add(this.settings.interval, this.getData.bind(this));
@@ -249,8 +249,10 @@ SystemMonitorApplet.prototype = {
         try {
             let tooltipText = [_("System Monitor")];
             for(var i in this.modules){
-                this.modules[i]._update(this.menu.isOpen);
-                tooltipText.push(this.modules[i].tooltipText.join("\t"));
+                if(this.settings[this.modules[i].name]){
+                    this.modules[i]._update(this.menu.isOpen);
+                    tooltipText.push(this.modules[i].tooltipText.join("\t"));
+                }
             }
             this.set_applet_tooltip(tooltipText.join("\n"));
         } catch(e){
@@ -275,15 +277,21 @@ SystemMonitorApplet.prototype = {
             }, this);
             this.canvas.set_height(this.settings.graphSize);
 
+            var j = 0;
             for(var i in this.modules){
                 if(this.modules[i].onSettingsChanged)
                     this.modules[i].onSettingsChanged();
+                if(this.modules[i].menuGraph){
+                    this.graph.items[++j].actor.visible = !!this.settings[this.modules[i].name];
+                    //if the module was deactivated, but the menu graph is active, set it to "Overview"
+                    if(!this.settings[this.modules[i].name] && this.settings.graphType === j){
+                        this.settings.graphType = 0;
+                        this.onGraphTypeChanged();
+                    }
+                }
             }
 
-            if(this.settings.showIcon)
-                this.iconBox.show();
-            else
-                this.iconBox.hide();
+            this.iconBox.visible = this.settings.showIcon;
 
             this.updateText();
         } catch(e){
@@ -296,15 +304,13 @@ SystemMonitorApplet.prototype = {
                 item.setShowDot(false);
             });
 
-            if(this.settings.graphType === -1){
-                this.graph.submenu.actor.hide();
-                this.canvasHolder.actor.hide();
-            } else {
-                this.graph.submenu.actor.show();
-                this.canvasHolder.actor.show();
+            let show = this.settings.graphType !== -1;
+            this.graph.submenu.actor.visible = show;
+            this.canvasHolder.actor.visible = show;
+            if(show){
                 this.graph.items[this.settings.graphType].setShowDot(true);
+                this.paint(true);
             }
-            this.paint(true);
         } catch(e){
             global.logError(e);
         }
@@ -313,10 +319,16 @@ SystemMonitorApplet.prototype = {
         try {
             let direction = event.get_scroll_direction();
 
-            if(direction == Clutter.ScrollDirection.DOWN && this.settings.graphType < this.graphs.length - 1)
-                this.settings.graphType++;
-            else if(direction == Clutter.ScrollDirection.UP && this.settings.graphType > 0)
-                this.settings.graphType--;
+            if(direction == Clutter.ScrollDirection.DOWN && this.settings.graphType < this.graphs.length - 1){
+                //skip not available modules
+                do {
+                    this.settings.graphType++;
+                } while(!this.graph.items[this.settings.graphType].actor.visible);
+            } else if(direction == Clutter.ScrollDirection.UP && this.settings.graphType > 0){
+                do {
+                    this.settings.graphType--;
+                } while(!this.graph.items[this.settings.graphType].actor.visible);
+            }
 
             this.onGraphTypeChanged();
         } catch(e){

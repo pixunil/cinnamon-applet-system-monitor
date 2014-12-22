@@ -124,7 +124,7 @@ Base.prototype = {
             this.panelText[label] = value;
         if(container === 0)
             this.tooltipText[label + 1] = value;
-        if(container > -1 && !this.menuOpen)
+        if(container > -1 && this.menuOpen)
             this.container[container].get_children()[label].set_text(value);
     },
 
@@ -164,22 +164,19 @@ Base.prototype = {
     },
 
     onSettingsChanged: function(){
+        if(this.unavailable)
+            this.settings[this.name] = false;
+
+        this.submenu.actor.visible = !!this.settings[this.name];
+
         if(!this.panel) return;
-        if(this.settings[this.name + "PanelLabel"] !== -1 || this.settings[this.name + "PanelGraph"] !== -1)
-            this.panel.box.show();
-        else
-            this.panel.box.hide();
 
-        if(this.settings[this.name + "PanelLabel"] !== -1)
-            this.panel.label.show();
-        else
-            this.panel.label.hide();
+        this.panel.box.visible = this.settings[this.name] && (this.settings[this.name + "PanelLabel"] !== -1 || this.settings[this.name + "PanelGraph"] !== -1);
 
-        this.panel.canvas.set_width(this.settings[this.name + "PanelWidth"]);
-        if(this.settings[this.name + "PanelGraph"] !== -1)
-            this.panel.canvas.show();
-        else
-            this.panel.canvas.hide();
+        this.panel.label.visible = this.settings[this.name] && this.settings[this.name + "PanelLabel"] !== -1;
+
+        this.panel.canvas.width = this.settings[this.name + "PanelWidth"];
+        this.panel.canvas.visible = this.settings[this.name] && this.settings[this.name + "PanelGraph"] !== -1;
     }
 };
 
@@ -292,6 +289,7 @@ CPU.prototype = {
         }
     },
 
+    menuGraph: "CPUHistory",
     panelGraphs: ["CPUBar", "CPUHistory"]
 };
 
@@ -354,6 +352,7 @@ Memory.prototype = {
         this.setText(-1, 2, "percent", this.data.usedup, this.data.total);
     },
 
+    menuGraph: "MemorySwapHistory",
     panelGraphs: ["MemoryBar", "MemoryHistory", "MemorySwapBar", "MemorySwapHistory"]
 };
 
@@ -365,6 +364,7 @@ function Swap(settings, colors, time){
 Swap.prototype = {
     __proto__: Base.prototype,
 
+    name: "mem",
     display: _("Swap"),
 
     gtop: new GTop.glibtop_swap(),
@@ -505,6 +505,7 @@ Disk.prototype = {
         this.setText(-1, this.settings.order? 1 : 0, "rate", this.data.read, false);
     },
 
+    menuGraph: "DiskHistory",
     panelGraphs: ["DiskBar", "DiskHistory"]
 };
 
@@ -605,6 +606,7 @@ Network.prototype = {
         this.setText(-1, this.settings.order? 1 : 0, "rate", this.data.down, false);
     },
 
+    menuGraph: "NetworkHistory",
     panelGraphs: ["NetworkBar", "NetworkHistory"]
 };
 
@@ -654,6 +656,8 @@ Thermal.prototype = {
                 }
             }
         }
+        if(!this.sensors.length)
+            this.unavailable = true;
     },
     getData: function(){
         let terminal = new Terminal.TerminalReader(this.path, this.parseResult.bind(this));
@@ -669,11 +673,11 @@ Thermal.prototype = {
             if(this.min > this.data[i + 1] || !this.min) this.min = this.data[i + 1];
             if(this.max < this.data[i + 1] || !this.max) this.max = this.data[i + 1];
 
-            if(this.settings.thermalMode === 1 && temp > this.data[i + 1] || temp == 0) temp = this.data[i + 1];
-            else if(this.settings.thermalMode === 2) temp += this.data[i + 1];
-            else if(this.settings.thermalMode === 3 && temp < this.data[i + 1]) temp = this.data[i + 1];
+            if(this.settings.thermalMode === 0 && temp > this.data[i + 1] || temp == 0) temp = this.data[i + 1];
+            else if(this.settings.thermalMode === 1) temp += this.data[i + 1];
+            else if(this.settings.thermalMode === 2 && temp < this.data[i + 1]) temp = this.data[i + 1];
         }
-        if(this.settings.thermalMode === 2) temp /= l;
+        if(this.settings.thermalMode === 1) temp /= l;
         this.saveDataPoint("0", temp);
 
         if(this.settings.thermalWarning && temp > this.settings.thermalWarningValue){
@@ -696,5 +700,6 @@ Thermal.prototype = {
         }
     },
 
+    menuGraph: "ThermalHistory",
     panelGraphs: ["ThermalBar", "ThermalHistory"]
 };

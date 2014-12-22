@@ -38,42 +38,51 @@ Overview.prototype = {
 
     draw: function(){
         let m = this.modules;
+        //TODO: make this value depending on the activated modules
         this.begin(m.cpu.count + 5);
 
-        if(this.settings.thermalMode){
+        if(this.settings.thermal){
             this.setColor("thermal");
             this.center((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
         }
 
-        this.setColor("write");
-        this.small(m.disk.data.write / m.disk.max, true, false);
-        this.setColor("read");
-        this.small(m.disk.data.read / m.disk.max, false, false);
-
-        if(!this.smallMerged)
-            this.next("up");
-        else
-            this.setColor("up");
-        this.small(m.network.data.up / m.network.max, true, true);
-        this.setColor("down");
-        this.small(m.network.data.down / m.network.max, false, true);
-
-        for(let i = 0; i < m.cpu.count; ++i){
-            this.next("cpu" + (i % 4 + 1));
-            this.normal(m.cpu.data.user[i], true);
-            this.setAlpha(.75);
-            this.normal(m.cpu.data.system[i], true);
+        if(this.settings.disk){
+            this.next("write");
+            this.small(m.disk.data.write / m.disk.max, true, false);
+            this.setColor("read");
+            this.small(m.disk.data.read / m.disk.max, false, false);
         }
 
-        this.next("mem");
-        this.normal(m.mem.data.usedup / m.mem.data.total, false);
-        this.setAlpha(.75);
-        this.normal(m.mem.data.cached / m.mem.data.total, false);
-        this.setAlpha(.5);
-        this.normal(m.mem.data.buffer / m.mem.data.total, false);
+        if(this.settings.network){
+            if(!this.smallMerged)
+                this.next("up");
+            else
+                this.setColor("up");
+            this.small(m.network.data.up / m.network.max, true, true);
+            this.setColor("down");
+            this.small(m.network.data.down / m.network.max, false, true);
+        }
 
-        this.next("swap");
-        this.normal(m.swap.data.used / m.swap.data.total, false);
+        if(this.settings.cpu){
+            for(let i = 0; i < m.cpu.count; ++i){
+                this.next("cpu" + (i % 4 + 1));
+                this.normal(m.cpu.data.user[i], true);
+                this.setAlpha(.75);
+                this.normal(m.cpu.data.system[i], true);
+            }
+        }
+
+        if(this.settings.mem){
+            this.next("mem");
+            this.normal(m.mem.data.usedup / m.mem.data.total, false);
+            this.setAlpha(.75);
+            this.normal(m.mem.data.cached / m.mem.data.total, false);
+            this.setAlpha(.5);
+            this.normal(m.mem.data.buffer / m.mem.data.total, false);
+
+            this.next("swap");
+            this.normal(m.swap.data.used / m.swap.data.total, false);
+        }
     },
 
     next: function(color){
