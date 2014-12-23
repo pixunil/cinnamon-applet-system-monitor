@@ -103,7 +103,7 @@ PieOverview.prototype = {
         Base.prototype.begin.call(this);
 
         this.dr = Math.min(this.w / (n - 1) / 2, this.h / (n - 1) / 2);
-        this.r = this.dr * 1.5;
+        this.r = this.dr / 2;
         this.ctx.setLineWidth(this.dr);
     },
 
@@ -148,7 +148,7 @@ ArcOverview.prototype = {
         Base.prototype.begin.call(this);
 
         this.dr = Math.min(this.w / n / 2, this.h / n);
-        this.r = this.dr * 1.5;
+        this.r = this.dr / 2;
         this.ctx.setLineWidth(this.dr);
     },
 
