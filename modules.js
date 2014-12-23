@@ -167,16 +167,17 @@ Base.prototype = {
         if(this.unavailable)
             this.settings[this.name] = false;
 
-        this.submenu.actor.visible = !!this.settings[this.name];
+        if(this.submenu)
+            this.submenu.actor.visible = !!this.settings[this.name];
 
-        if(!this.panel) return;
+        if(this.panel){
+            this.panel.box.visible = this.settings[this.name] && (this.settings[this.name + "PanelLabel"] !== -1 || this.settings[this.name + "PanelGraph"] !== -1);
 
-        this.panel.box.visible = this.settings[this.name] && (this.settings[this.name + "PanelLabel"] !== -1 || this.settings[this.name + "PanelGraph"] !== -1);
+            this.panel.label.visible = this.settings[this.name] && this.settings[this.name + "PanelLabel"] !== -1;
 
-        this.panel.label.visible = this.settings[this.name] && this.settings[this.name + "PanelLabel"] !== -1;
-
-        this.panel.canvas.width = this.settings[this.name + "PanelWidth"];
-        this.panel.canvas.visible = this.settings[this.name] && this.settings[this.name + "PanelGraph"] !== -1;
+            this.panel.canvas.width = this.settings[this.name + "PanelWidth"];
+            this.panel.canvas.visible = this.settings[this.name] && this.settings[this.name + "PanelGraph"] !== -1;
+        }
     }
 };
 
@@ -190,8 +191,6 @@ CPU.prototype = {
 
     name: "cpu",
     display: _("CPU"),
-
-    gtop: new GTop.glibtop_cpu(),
 
     raw: {
         total: [],
@@ -209,9 +208,15 @@ CPU.prototype = {
         system: []
     },
 
-    count: GTop.glibtop_get_sysinfo().ncpu,
-
     build: function(){
+        try {
+            this.gtop = new GTop.glibtop_cpu;
+            this.count = GTop.glibtop_get_sysinfo().ncpu;
+        } catch(e){
+            this.unavailable = true;
+            return;
+        }
+
         let labels = [], margin = 260 - this.count * 60;
         GTop.glibtop_get_cpu(this.gtop);
         for(var i = 0; i < this.count; ++i){
@@ -306,8 +311,6 @@ Memory.prototype = {
     name: "mem",
     display: _("Memory"),
 
-    gtop: new GTop.glibtop_mem(),
-
     data: {
         total: 1,
         used: 0,
@@ -322,6 +325,13 @@ Memory.prototype = {
     },
 
     build: function(){
+        try {
+            this.gtop = new GTop.glibtop_mem;
+        } catch(e){
+            this.unavailable = true;
+            return;
+        }
+
         let labels = [100, 100, 60];
         this.buildSubMenu(labels);
         this.buildMenuItem(_("used"), labels);
@@ -369,8 +379,6 @@ Swap.prototype = {
     name: "mem",
     display: _("Swap"),
 
-    gtop: new GTop.glibtop_swap(),
-
     data: {
         total: 1,
         used: 0
@@ -380,6 +388,13 @@ Swap.prototype = {
     },
 
     build: function(){
+        try {
+            this.gtop = new GTop.glibtop_swap;
+        } catch(e){
+            this.unavailable = true;
+            return;
+        }
+
         let labels = [100, 100, 60];
         this.submenu = this.buildMenuItem(this.display, labels);
     },
@@ -393,7 +408,10 @@ Swap.prototype = {
         this.setText(0, 0, "bytes", this.data.used);
         this.setText(0, 1, "bytes", this.data.total);
         this.setText(0, 2, "percent", this.data.used, this.data.total);
-    }
+    },
+
+    //will handled by Memory
+    onSettingsChanged: function(){}
 };
 
 
@@ -403,8 +421,6 @@ function Disk(settings, colors, time){
 
 Disk.prototype = {
     __proto__: Base.prototype,
-
-    gtop: new GTop.glibtop_fsusage(),
 
     name: "disk",
     display: _("Disk"),
@@ -427,6 +443,13 @@ Disk.prototype = {
     maxIndex: 0,
 
     build: function(){
+        try {
+            this.gtop = new GTop.glibtop_fsusage;
+        } catch(e){
+            this.unavailable = true;
+            return;
+        }
+
         let labels = [130, 130];
         this.buildSubMenu(labels);
         labels = [100, 100, 60];
@@ -522,8 +545,6 @@ Network.prototype = {
     name: "network",
     display: _("Network"),
 
-    gtop: new GTop.glibtop_netload(),
-
     raw: {
         up: [],
         down: []
@@ -543,6 +564,13 @@ Network.prototype = {
     maxIndex: 0,
 
     build: function(){
+        try {
+            this.gtop = new GTop.glibtop_netload;
+        } catch(e){
+            this.unavailable = true;
+            return;
+        }
+
         let labels = [130, 130];
         this.buildSubMenu(labels);
         let r = Cinnamon.get_file_contents_utf8_sync('/proc/net/dev').split("\n"), s;

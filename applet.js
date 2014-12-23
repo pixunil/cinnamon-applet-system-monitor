@@ -131,8 +131,10 @@ SystemMonitorApplet.prototype = {
                 thermal: new Modules.Thermal(this.settings, this.colors, this.time)
             };
 
-            for(i in this.modules)
-                this.menu.addMenuItem(this.modules[i].submenu);
+            for(i in this.modules){
+                if(!this.modules[i].unavailable)
+                    this.menu.addMenuItem(this.modules[i].submenu);
+            }
 
             this.initPanel();
             this.initGraphs();
@@ -276,8 +278,7 @@ SystemMonitorApplet.prototype = {
 
             var j = 0;
             for(var i in this.modules){
-                if(this.modules[i].onSettingsChanged)
-                    this.modules[i].onSettingsChanged();
+                this.modules[i].onSettingsChanged();
                 if(this.modules[i].menuGraph){
                     this.graph.items[++j].actor.visible = !!this.settings[this.modules[i].name];
                     //if the module was deactivated, but the menu graph is active, set it to "Overview"
