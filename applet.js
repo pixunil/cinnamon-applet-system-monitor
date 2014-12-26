@@ -5,6 +5,7 @@ const Pango = imports.gi.Pango;
 const St = imports.gi.St;
 
 const Applet = imports.ui.applet;
+const Main = imports.ui.main;
 const Panel = imports.ui.panel;
 const PopupMenu = imports.ui.popupMenu;
 const Settings = imports.ui.settings;
@@ -64,6 +65,30 @@ PanelWidget.prototype = {
     }
 };
 
+function SystemMonitorTooltip(){
+    this._init.apply(this, arguments);
+}
+
+SystemMonitorTooltip.prototype = {
+    __proto__: Tooltips.PanelItemTooltip.prototype,
+
+    _init: function(applet, orientation){
+        Tooltips.PanelItemTooltip.prototype._init.call(this, applet, "", orientation);
+
+        this._tooltip = new St.BoxLayout({name: "Tooltip", vertical: true});
+        this._tooltip.show_on_set_parent = false;
+        Main.uiGroup.add_actor(this._tooltip);
+
+        this._tooltip.get_text = function(){
+            return true;
+        };
+    },
+
+    addActor: function(actor){
+        this._tooltip.add_actor(actor);
+    }
+};
+
 
 function SystemMonitorApplet(orientation, panelHeight, instanceId){
     this._init(orientation, panelHeight, instanceId);
@@ -85,6 +110,8 @@ SystemMonitorApplet.prototype = {
             Applet.Applet.prototype._init.call(this, orientation, panelHeight);
 
             this.panelHeight = panelHeight;
+            this._applet_tooltip = new SystemMonitorTooltip(this, orientation);
+            this._applet_tooltip.addActor(new St.Label({text: _("System Monitor")}));
 
             let item, i, l, j, r, s, t;
 
@@ -132,8 +159,10 @@ SystemMonitorApplet.prototype = {
             };
 
             for(i in this.modules){
-                if(!this.modules[i].unavailable)
+                if(!this.modules[i].unavailable){
                     this.menu.addMenuItem(this.modules[i].submenu);
+                    this._applet_tooltip.addActor(this.modules[i].tooltip);
+                }
             }
 
             this.initPanel();
@@ -186,8 +215,6 @@ SystemMonitorApplet.prototype = {
     },
 
     initPanel: function(){
-        this.set_applet_tooltip(_("System monitor"));
-
         this.iconBox = new St.Bin();
         let icon = new St.Icon({icon_name: iconName, icon_type: St.IconType.SYMBOLIC, reactive: true, track_hover: true, style_class: "system-status-icon"});
         this.iconBox.child = icon;
@@ -246,14 +273,11 @@ SystemMonitorApplet.prototype = {
     },
     updateText: function(){
         try {
-            let tooltipText = [_("System Monitor")];
             for(var i in this.modules){
                 if(this.settings[this.modules[i].name]){
                     this.modules[i]._update(this.menu.isOpen);
-                    tooltipText.push(this.modules[i].tooltipText.join("\t"));
                 }
             }
-            this.set_applet_tooltip(tooltipText.join("\n"));
         } catch(e){
             global.logError(e);
         }

@@ -77,32 +77,47 @@ Base.prototype = {
     },
 
     buildMenuItem: function(name, labels, margin){
-        let item = new PopupMenu.PopupMenuItem(name, {reactive: false});
-        let box = new St.BoxLayout({margin_left: margin || 0});
-        item.addActor(box);
-        this.container.push(box);
+        let box = this._makeBox(labels, margin);
 
-        for(var i = 0, l = labels.length; i < l; ++i)
-            box.add_actor(new St.Label({width: labels[i], style: "text-align: right"}));
+        let item = new PopupMenu.PopupMenuItem(name, {reactive: false});
+        item.addActor(box);
 
         if(this.submenu)
             this.submenu.menu.addMenuItem(item);
         return item;
     },
     buildSubMenu: function(labels, margin){
-        this.submenu = new PopupMenu.PopupSubMenuMenuItem(this.display);
-        let box = new St.BoxLayout({margin_left: margin || 0});
-        this.submenu.addActor(box);
-        this.container.push(box);
+        let box = this._makeBox(labels, margin);
 
-        for(var i = 0, l = labels.length; i < l; ++i)
+        this.submenu = new PopupMenu.PopupSubMenuMenuItem(this.display);
+        this.submenu.addActor(box);
+    },
+
+    _makeBox: function(labels, margin){
+        let box = new St.BoxLayout({margin_left: margin || 0}), tooltip = false;
+        if(!this.submenu){
+            tooltip = new St.BoxLayout;
+            tooltip.add_actor(new St.Label({text: this.display, width: 85, style: "text-align: left"}));
+            this.tooltip = tooltip;
+        }
+
+        for(var i = 0, l = labels.length; i < l; ++i){
             box.add_actor(new St.Label({width: labels[i], style: "text-align: right"}));
+            if(tooltip){
+                let label = new St.Label({width: labels[i] * .75, style: "text-align: right"});
+                if(margin && i === 0)
+                    label.set_margin_left(margin * .75);
+                tooltip.add_actor(label);
+            }
+        }
+
+        this.container.push(box);
+        return box;
     },
 
     _update: function(menuOpen){
         this.menuOpen = menuOpen;
         this.panelText = [];
-        this.tooltipText = [this.display];
         this.update();
 
         if(this.panel){
@@ -123,7 +138,7 @@ Base.prototype = {
         if(container === -1)
             this.panelText[label] = value;
         if(container === 0)
-            this.tooltipText[label + 1] = value;
+            this.tooltip.get_children()[label + 1].set_text(value);
         if(container > -1 && this.menuOpen)
             this.container[container].get_children()[label].set_text(value);
     },
@@ -167,8 +182,10 @@ Base.prototype = {
         if(this.unavailable)
             this.settings[this.name] = false;
 
-        if(this.submenu)
+        if(this.submenu){
             this.submenu.actor.visible = !!this.settings[this.name];
+            this.tooltip.visible = !!this.settings[this.name];
+        }
 
         if(this.panel){
             this.panel.box.visible = this.settings[this.name] && (this.settings[this.name + "PanelLabel"] !== -1 || this.settings[this.name + "PanelGraph"] !== -1);
