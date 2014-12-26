@@ -119,11 +119,11 @@ PieOverview.prototype = {
         this.ctx.stroke();
     },
     small: function(angle, dir, side){
+        var a = -Math.PI;
         if(side){
-            var a = 0;
+            a = 0;
             dir = !dir;
-        } else
-            var a = -Math.PI;
+        }
         angle *= Math.PI / 2;
 
         if(dir)

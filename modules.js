@@ -6,8 +6,6 @@ const Main = imports.ui.main;
 const MessageTray = imports.ui.messageTray;
 const PopupMenu = imports.ui.popupMenu;
 
-const Lang = imports.lang;
-
 const messageTray = Main.messageTray;
 
 const uuid = "system-monitor@pixunil";
@@ -470,11 +468,11 @@ Disk.prototype = {
         let labels = [130, 130];
         this.buildSubMenu(labels);
         labels = [100, 100, 60];
-        let mountFile = Cinnamon.get_file_contents_utf8_sync('/etc/mtab').split("\n");
+        let mountFile = Cinnamon.get_file_contents_utf8_sync("/etc/mtab").split("\n");
         var mount;
         for(let mountLine in mountFile){
             mount = mountFile[mountLine].split(" ");
-            if(mount[0].indexOf("/dev/") == 0){
+            if(mount[0].indexOf("/dev/") === 0){
                 GTop.glibtop_get_fsusage(this.gtop, mount[1]);
                 this.dev.push({
                     path: mount[1],
@@ -590,7 +588,7 @@ Network.prototype = {
 
         let labels = [130, 130];
         this.buildSubMenu(labels);
-        let r = Cinnamon.get_file_contents_utf8_sync('/proc/net/dev').split("\n"), s;
+        let r = Cinnamon.get_file_contents_utf8_sync("/proc/net/dev").split("\n"), s;
         for(var i = 2, l = r.length; i < l; ++i){
             s = r[i].match(/^\s*(\w+)/);
             if(s !== null){
@@ -682,13 +680,13 @@ Thermal.prototype = {
         let labels = [80], margin = 180;
         this.buildSubMenu(labels, 180);
         let r = GLib.spawn_command_line_sync("which sensors");
-        if(r[0] && r[3] == 0){
+        if(r[0] && r[3] === 0){
             this.path = r[1].toString().split("\n", 1)[0];
             r = GLib.spawn_command_line_sync(this.path)[1].toString().split("\n");
             for(var i = 0, l = r.length, s; i < l; ++i){
-                if(r[i].substr(0, 8) == "Adapter:" && !r[i].match(/virtual/i)){
+                if(r[i].substr(0, 8) === "Adapter:" && !r[i].match(/virtual/i)){
                     s = r[i].substr(9);
-                    for(++i; r[i] && r[i].substr(0, 8) != "Adapter:"; ++i){
+                    for(++i; r[i] && r[i].substr(0, 8) !== "Adapter:"; ++i){
                         if(r[i].match(/\d+.\d+\xb0C/)){
                             t = r[i].match(/[^:]+/)[0];
 
@@ -720,7 +718,7 @@ Thermal.prototype = {
             if(this.min > this.data[i + 1] || !this.min) this.min = this.data[i + 1];
             if(this.max < this.data[i + 1] || !this.max) this.max = this.data[i + 1];
 
-            if(this.settings.thermalMode === 0 && temp > this.data[i + 1] || temp == 0) temp = this.data[i + 1];
+            if(this.settings.thermalMode === 0 && temp > this.data[i + 1] || temp === 0) temp = this.data[i + 1];
             else if(this.settings.thermalMode === 1) temp += this.data[i + 1];
             else if(this.settings.thermalMode === 2 && temp < this.data[i + 1]) temp = this.data[i + 1];
         }

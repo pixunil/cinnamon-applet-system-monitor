@@ -6,7 +6,6 @@ const St = imports.gi.St;
 
 const Applet = imports.ui.applet;
 const Main = imports.ui.main;
-const Panel = imports.ui.panel;
 const PopupMenu = imports.ui.popupMenu;
 const Settings = imports.ui.settings;
 const Tooltips = imports.ui.tooltips;
@@ -27,7 +26,6 @@ function PanelWidget(panelHeight, module, modules){
 PanelWidget.prototype = {
     _init: function(panelHeight, module, modules){
         this.box = new St.BoxLayout();
-        let tooltip = new Tooltips.Tooltip(this.box, module.display);
 
         this.label = new St.Label({reactive: true, track_hover: true, style_class: "applet-label"});
         this.label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
@@ -113,8 +111,6 @@ SystemMonitorApplet.prototype = {
             this._applet_tooltip = new SystemMonitorTooltip(this, orientation);
             this._applet_tooltip.addActor(new St.Label({text: _("System Monitor")}));
 
-            let item, i, l, j, r, s, t;
-
             this.settings = {};
             this.colors = {};
             this.settingProvider = new Settings.AppletSettings(this.settings, uuid, instanceId);
@@ -158,7 +154,7 @@ SystemMonitorApplet.prototype = {
                 thermal: new Modules.Thermal(this.settings, this.colors, this.time)
             };
 
-            for(i in this.modules){
+            for(let i in this.modules){
                 if(!this.modules[i].unavailable){
                     this.menu.addMenuItem(this.modules[i].submenu);
                     this._applet_tooltip.addActor(this.modules[i].tooltip);
@@ -340,17 +336,21 @@ SystemMonitorApplet.prototype = {
     onScroll: function(actor, event){
         try {
             let direction = event.get_scroll_direction();
+            let graphType = this.settings.graphType;
 
-            if(direction == Clutter.ScrollDirection.DOWN && this.settings.graphType < this.graphs.length - 1){
+            if(direction === Clutter.ScrollDirection.DOWN && graphType < this.graphs.length - 1){
                 //skip not available modules
                 do {
-                    this.settings.graphType++;
-                } while(!this.graph.items[this.settings.graphType].actor.visible);
-            } else if(direction == Clutter.ScrollDirection.UP && this.settings.graphType > 0){
+                    if(++graphType === this.graphs.length)
+                        return;
+                } while(!this.graph.items[graphType].actor.visible);
+            } else if(direction === Clutter.ScrollDirection.UP && graphType > 0){
                 do {
-                    this.settings.graphType--;
-                } while(!this.graph.items[this.settings.graphType].actor.visible);
+                    graphType--;
+                } while(!this.graph.items[graphType].actor.visible);
             }
+
+            this.settings.graphType = graphType;
 
             this.onGraphTypeChanged();
         } catch(e){
