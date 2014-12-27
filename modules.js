@@ -63,15 +63,54 @@ Base.prototype = {
     saveDataPoint: function(name, value, raw){
         setProperty(this.data, name, value);
 
-        let history;
-        if(!!(history = getProperty(this.history, name))){
+        let history = getProperty(this.history, name);
+        if(history){
             history.push(value);
             while(history.length > this.settings.graphSteps + 2)
                 history.shift();
+
+            if(this.min !== undefined && (!this.min || this.min > value)){
+                this.min = value;
+                this.minIndex = history.length;
+            }
+            if(this.max !== undefined && (!this.max || this.max < value)){
+                this.max = value;
+                this.maxIndex = history.length;
+            }
         }
 
         if(raw)
             setProperty(this.raw, name, raw);
+    },
+
+    updateMinMax: function(){
+        if(this.min !== undefined && --this.minIndex <= 0){
+            this.min = null;
+            this.minIndex = 0;
+            for(let i in this.history){
+                for(let j = 0, l = this.history[i].length; j < l; ++j){
+                    let value = this.history[i][j];
+                    if(this.min === null || this.min > value){
+                        this.min = value;
+                        this.minIndex = j;
+                    }
+                }
+            }
+        }
+
+        if(this.max !== undefined && --this.maxIndex <= 0){
+            this.max = 1;
+            this.maxIndex = 0;
+            for(let i in this.history){
+                for(let j = 0, l = this.history[i].length; j < l; ++j){
+                    let value = this.history[i][j];
+                    if(this.max < value){
+                        this.max = value;
+                        this.maxIndex = j;
+                    }
+                }
+            }
+        }
     },
 
     buildMenuItem: function(name, labels, margin){
@@ -522,31 +561,7 @@ Disk.prototype = {
             this.saveDataPoint("write", (write - this.raw.write) / delta);
             this.saveDataPoint("read", (read - this.raw.read) / delta);
 
-            if(this.max <= this.data.write){
-                this.max = this.data.write;
-                this.maxIndex = 0;
-            }
-
-            if(this.max <= this.data.read){
-                this.max = this.data.read;
-                this.maxIndex = 0;
-            }
-
-            if(++this.maxIndex > this.settings.graphSteps + 1){
-                this.max = Math.max(this.data.write, this.data.read, 1);
-                this.maxIndex = 0;
-                var l;
-                for(i = 1, l = this.history.write.length; i < l; ++i){
-                    if(this.max < this.history.write[i]){
-                        this.max = this.history.write[i];
-                        this.maxIndex = i;
-                    }
-                    if(this.max < this.history.read[i]){
-                        this.max = this.history.read[i];
-                        this.maxIndex = i;
-                    }
-                }
-            }
+            this.updateMinMax();
         }
 
         this.saveRawPoint("write", write);
@@ -632,30 +647,7 @@ Network.prototype = {
             this.saveDataPoint("up", this.raw.up? (up - this.raw.up) / delta : 0);
             this.saveDataPoint("down", this.raw.down? (down - this.raw.down) / delta : 0);
 
-            if(this.max <= this.data.up){
-                this.max = this.data.up;
-                this.maxIndex = 0;
-            }
-
-            if(this.max <= this.data.down){
-                this.max = this.data.down;
-                this.maxIndex = 0;
-            }
-
-            if(++this.maxIndex > this.settings.graphSteps + 1){
-                this.max = Math.max(this.data.up, this.data.down, 1);
-                this.maxIndex = 0;
-                for(i = 1, l = this.history.up.length; i < l; ++i){
-                    if(this.max < this.history.up[i]){
-                        this.max = this.history.up[i];
-                        this.maxIndex = i;
-                    }
-                    if(this.max < this.history.down[i]){
-                        this.max = this.history.down[i];
-                        this.maxIndex = i;
-                    }
-                }
-            }
+            this.updateMinMax();
         }
 
         this.saveRawPoint("up", up);
@@ -711,12 +703,13 @@ Thermal.prototype = {
                     s = r[i].substr(9);
                     for(++i; r[i] && r[i].substr(0, 8) !== "Adapter:"; ++i){
                         if(r[i].match(/\d+.\d+\xb0C/)){
-                            t = r[i].match(/[^:]+/)[0];
+                            let name = r[i].match(/[^:]+/)[0];
+                            let coreMatch = name.match(/core\s*(\d)/i);
 
-                            if((j = t.match(/core\s*(\d)/i)) !== null) this.colorRef.push(parseInt(j[1]) % 4 + 1);
+                            if(coreMatch !== null) this.colorRef.push(parseInt(coreMatch[1]) % 4 + 1);
                             else this.colorRef.push(null);
 
-                            this.buildMenuItem(t, labels, margin);
+                            this.buildMenuItem(name, labels, margin);
                             this.sensors.push(i);
                             this.history.push([]);
                         }
@@ -738,8 +731,6 @@ Thermal.prototype = {
         let temp = 0;
         for(var i = 0, l = this.sensors.length; i < l; ++i){
             this.saveDataPoint(i + 1, parseFloat(result[this.sensors[i]].match(/\d+\.\d+/)));
-            if(this.min > this.data[i + 1] || !this.min) this.min = this.data[i + 1];
-            if(this.max < this.data[i + 1] || !this.max) this.max = this.data[i + 1];
 
             if(this.settings.thermalMode === 0 && temp > this.data[i + 1] || temp === 0) temp = this.data[i + 1];
             else if(this.settings.thermalMode === 1) temp += this.data[i + 1];
@@ -747,6 +738,7 @@ Thermal.prototype = {
         }
         if(this.settings.thermalMode === 1) temp /= l;
         this.saveDataPoint("0", temp);
+        this.updateMinMax();
 
         if(this.settings.thermalWarning)
             this.checkWarning(temp, "Temperature was over %s for %fsec");
