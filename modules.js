@@ -127,11 +127,7 @@ Base.prototype = {
     setText: function(container, label, format, value, ext){
         if(container === -1 && (!this.panel || this.settings[this.name + "PanelLabel"] === -1)) return;
 
-        value = value || 0;
-        if(format === "rate") value = this.formatRate(value, ext);
-        if(format === "percent") value = this.formatPercent(value, ext);
-        if(format === "thermal") value = this.formatThermal(value);
-        if(format === "bytes") value = this.formatBytes(value);
+        value = this.format(format, value, ext);
 
         if(container === -1)
             this.panelText[label] = value;
@@ -141,6 +137,25 @@ Base.prototype = {
             this.container[container].get_children()[label].set_text(value);
     },
 
+    checkWarning: function(value, body, index){
+        if(value >= this.settings[this.name + "WarningValue"]){
+            var notify = false;
+            if(index !== undefined)
+                notify = --this.notifications[index] === 0;
+            else
+                notify = --this.notifications === 0;
+
+            if(notify){
+                let value = this.format(this.notificationFormat, this.settings[this.name + "WarningValue"]);
+                this.notify("Warning:", body.format(value, this.settings[this.name + "WarningTime"] * this.settings.interval / 1000));
+            }
+        } else {
+            if(index !== undefined)
+                this.notifications[index] = this.settings[this.name + "WarningTime"];
+            else
+                this.notifications = this.settings[this.name + "WarningTime"];
+        }
+    },
     notify: function(summary, body){
         let source = new MessageTray.SystemNotificationSource();
         messageTray.add(source);
@@ -150,6 +165,19 @@ Base.prototype = {
         let notification = new MessageTray.Notification(source, summary, body, {icon: icon});
         notification.setTransient(true);
         source.notify(notification);
+    },
+
+    format: function(format, value, ext){
+        value = value || 0;
+        if(format === "rate")
+            return this.formatRate(value, ext);
+        if(format === "percent")
+            return this.formatPercent(value, ext);
+        if(format === "thermal")
+            return this.formatThermal(value);
+        if(format === "bytes")
+            return this.formatBytes(value);
+        return value;
     },
     formatBytes: function(bytes){
         let prefix = " KMGTPEZY";
@@ -223,6 +251,8 @@ CPU.prototype = {
         system: []
     },
 
+    notificationFormat: "percent",
+
     build: function(){
         try {
             this.gtop = new GTop.glibtop_cpu;
@@ -264,23 +294,13 @@ CPU.prototype = {
             if(this.settings.cpuWarning){
                 if(this.settings.cpuWarningMode)
                     r += this.data.usage[i];
-                else {
-                    if(this.data.usage[i] >= this.settings.cpuWarningValue / 100){
-                        if(--this.notifications[i] === 0)
-                            this.notify("Warning:", "CPU core " + (i + 1) + " usage was over " + this.settings.cpuWarningValue + "% for " + this.settings.cpuWarningTime * this.settings.interval / 1000 + "sec");
-                    } else
-                        this.notifications[i] = this.settings.cpuWarningTime;
-                }
+                else
+                    this.checkWarning(this.data.usage[i], "CPU core " + (i + 1) + " usage was over %s for %fsec", i);
             }
         }
 
-        if(this.settings.cpuWarning && this.settings.cpuWarningMode){
-                if(r / this.count >= this.settings.cpuWarningValue / 100){
-                    if(--this.notifications === 0)
-                        this.notify("Warning:", "CPU usage was over " + this.settings.cpuWarningValue + "% for " + this.settings.cpuWarningTime * this.settings.interval / 1000 + "sec");
-                } else
-                    this.notifications = this.settings.cpuWarningTime;
-            }
+        if(this.settings.cpuWarning && this.settings.cpuWarningMode)
+            this.checkWarning(r / this.count, "CPU usage was over %s for %fsec");
     },
     update: function(){
         let r = 0;
@@ -308,6 +328,7 @@ CPU.prototype = {
                 for(var i = 0; i < this.count; ++i)
                     this.notifications.push(this.settings.cpuWarningTime);
             }
+            this.settings.cpuWarningValue /= 100;
         }
     },
 
@@ -676,6 +697,8 @@ Thermal.prototype = {
     min: null,
     max: null,
 
+    notificationFormat: "thermal",
+
     build: function(){
         let labels = [80], margin = 180;
         this.buildSubMenu(labels, 180);
@@ -725,11 +748,8 @@ Thermal.prototype = {
         if(this.settings.thermalMode === 1) temp /= l;
         this.saveDataPoint("0", temp);
 
-        if(this.settings.thermalWarning && temp > this.settings.thermalWarningValue){
-            if(--this.notifications === 0)
-                this.notify("Warning:", "Temperature was over " + this.formatThermal(this.settings.thermalWarningValue) + " for " + this.settings.thermalWarningTime * this.settings.interval / 1000 + "sec");
-        } else
-            this.notifications = this.settings.thermalWarningTime;
+        if(this.settings.thermalWarning)
+            this.checkWarning(temp, "Temperature was over %s for %fsec");
     },
     update: function(){
         for(var i = 0, l = this.data.length; i < l; ++i)
