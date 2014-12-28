@@ -239,13 +239,17 @@ SystemMonitorApplet.prototype = {
 
             this.updateText();
             this.timeout = Mainloop.timeout_add(this.settings.interval, this.getData.bind(this));
+
+            if(this.settings.graphType === 0)
+                this.canvas.queue_repaint();
         } catch(e){
             global.logError(e);
         }
     },
     paint: function(once){
         try {
-            if(this.menu.isOpen)
+            //do not repaint Overview graph (it is handled by getData), but the graphType is updated
+            if(this.menu.isOpen && (this.settings.graphType !== 0 || once))
                 this.canvas.queue_repaint();
 
             for(var i in this.panelWidgets)

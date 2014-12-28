@@ -36,13 +36,15 @@ function Overview(canvas, modules, time, settings, colors){
 Overview.prototype = {
     __proto__: Base.prototype,
 
+    xScale: .5,
+    yScale: .5,
+
     draw: function(){
         let m = this.modules;
-        //TODO: make this value depending on the activated modules
-        this.begin(m.cpu.count + 5);
+        this.begin();
 
         if(this.settings.thermal){
-            this.setColor("thermal");
+            this.next("thermal");
             this.center((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
         }
 
@@ -85,6 +87,35 @@ Overview.prototype = {
         }
     },
 
+    begin: function(){
+        Base.prototype.begin.call(this);
+
+        let count = {
+            center: 0,
+            small: 0,
+            normal: 0
+        };
+
+        if(this.settings.thermal)
+            count.center++;
+        if(this.settings.disk)
+            count.small++;
+        if(this.settings.network)
+            count.small++;
+        if(this.settings.cpu)
+            count.normal += this.modules.cpu.count;
+        if(this.settings.mem)
+            count.normal += 2;
+
+        if(this.smallMerged && count.small)
+            count.small = 1;
+        let n = count.center + count.small + count.normal;
+
+        this.dr = Math.min(this.w / n * this.xScale, this.h / n * this.yScale);
+        this.r = -this.dr / 2;
+        this.ctx.setLineWidth(this.dr);
+    },
+
     next: function(color){
         this.a = this.startA;
         this.r += this.dr;
@@ -98,14 +129,6 @@ function PieOverview(canvas, modules, time, settings, colors){
 }
 PieOverview.prototype = {
     __proto__: Overview.prototype,
-
-    begin: function(n){
-        Base.prototype.begin.call(this);
-
-        this.dr = Math.min(this.w / (n - 1) / 2, this.h / (n - 1) / 2);
-        this.r = this.dr / 2;
-        this.ctx.setLineWidth(this.dr);
-    },
 
     startA: -Math.PI / 2,
     smallMerged: true,
@@ -144,15 +167,8 @@ function ArcOverview(canvas, modules, time, settings, colors){
 ArcOverview.prototype = {
     __proto__: Overview.prototype,
 
-    begin: function(n){
-        Base.prototype.begin.call(this);
-
-        this.dr = Math.min(this.w / n / 2, this.h / n);
-        this.r = this.dr / 2;
-        this.ctx.setLineWidth(this.dr);
-    },
-
     startA: 0,
+    yScale: 1,
 
     normal: function(angle){
         angle *= Math.PI / 2;
