@@ -4,6 +4,8 @@ const GLib = imports.gi.GLib;
 const Pango = imports.gi.Pango;
 const St = imports.gi.St;
 
+const Util = imports.misc.util;
+
 const Applet = imports.ui.applet;
 const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
@@ -360,6 +362,10 @@ SystemMonitorApplet.prototype = {
         } catch(e){
             global.logError(e);
         }
+    },
+    
+    launchReadme: function(){
+        Util.spawnCommandLine("xdg-open https://github.com/pixunil/cinnamon-applet-system-monitor/blob/master/README.md#settings");
     }
 };
 

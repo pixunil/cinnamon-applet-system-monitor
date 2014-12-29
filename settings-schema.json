@@ -221,26 +221,8 @@
     "cpu-warning": {
         "type": "checkbox",
         "default": false,
-        "description": "enable CPU warning",
+        "description": "Warning",
         "dependency": "cpu"
-    },
-    "cpu-warning-time": {
-        "type": "spinbutton",
-        "min": 1,
-        "max": 40,
-        "default": 5,
-        "step": 1,
-        "units": "int",
-        "description": "Warning time",
-        "indent": true,
-        "dependency": "cpu-warning"
-    },
-    "cpu-warning-mode": {
-        "type": "checkbox",
-        "default": true,
-        "description": "Use average CPU usage",
-        "indent": true,
-        "dependency": "cpu-warning"
     },
     "cpu-warning-value": {
         "type": "spinbutton",
@@ -249,7 +231,29 @@
         "default": 100,
         "step": 0.5,
         "units": "%",
-        "description": "Warning CPU usage",
+        "description": "Trigger value",
+        "indent": true,
+        "dependency": "cpu-warning"
+    },
+    "cpu-warning-time": {
+        "type": "spinbutton",
+        "min": 1,
+        "max": 40,
+        "default": 5,
+        "step": 1,
+        "units": "int",
+        "description": "Time",
+        "indent": true,
+        "dependency": "cpu-warning"
+    },
+    "cpu-warning-mode": {
+        "type": "combobox",
+        "default": true,
+        "options": {
+            "Cores": false,
+            "Average": true
+        },
+        "description": "Mode",
         "indent": true,
         "dependency": "cpu-warning"
     },
@@ -523,19 +527,8 @@
     "thermal-warning": {
         "type": "checkbox",
         "default": false,
-        "description": "enable thermal warning",
+        "description": "Warning",
         "dependency": "thermal"
-    },
-    "thermal-warning-time": {
-        "type": "spinbutton",
-        "min": 1,
-        "max": 40,
-        "default": 5,
-        "step": 1,
-        "units": "int",
-        "description": "Warning time",
-        "indent": true,
-        "dependency": "thermal-warning"
     },
     "thermal-warning-value": {
         "type": "spinbutton",
@@ -544,8 +537,25 @@
         "default": 50,
         "step": 0.5,
         "units": "\u00b0",
-        "description": "Warning temperature",
+        "description": "Trigger temperature",
         "indent": true,
         "dependency": "thermal-warning"
+    },
+    "thermal-warning-time": {
+        "type": "spinbutton",
+        "min": 1,
+        "max": 40,
+        "default": 5,
+        "step": 1,
+        "units": "int",
+        "description": "Time",
+        "indent": true,
+        "dependency": "thermal-warning"
+    },
+    "help": {
+        "type": "button",
+        "description": "Read Readme",
+        "tooltip": "Get useful information about the settings and the applet",
+        "callback": "launchReadme"
     }
 }

@@ -1,8 +1,10 @@
 System Monitor Applet for Cinnamon
 
-###Installation
+# Installation
 
-####Dependencies
+### Dependency
+You need the `GTop` bindings to use the modules CPU, Memory, Swap, Disk and Network.
+
 - Ubuntu: `gir1.2-gtop`
 - Fedora: `libgtop2-devel`
 - Arch: `libgtop`
@@ -14,129 +16,102 @@ Install the latest version via Cinnamon Applet Settings, or:
 3. Copy the files in this directory
 4. Activate the applet in Cinnamon Settings
 
+# Modules
+This applet offers information about five modules. These are:
 
-###Settings
+- **CPU** - multi-core CPU usage (total, user and system)
+- **Memory and Swap** - usage of the Memory (used, cached and buffered) and of the Swap
+- **Disk** - read / write and space usage of the disk
+- **Network** - up / down usage and total traffic
+- **Thermal** - temperature of some compenents
 
-#### General
-- **Interval**: the interval the applet refreshes data in milliseconds
-- **Bytes unit**: the bytes unit for memory, swap etc.
-    * Bytes with binary prefix: B, KiB, MiB, GiB... (1024B = 1KiB)
-    * Bytes with decimal prefix: B, KB, MB, GB... (1000B = 1KB)
-- **Rates unit**: the rates unit for disk and network
-    * Bytes with binary prefix per second: B/s, KiB/s MiB/s GiB/s... (1024B/s = 1KiB/s)
-    * Bytes with decimal prefix per second: B/s, KB/s MB/s GB/s... (1000B/s = 1KB/s)
-    * Bits with binary prefix per second: bit/s, Kibit/s Mibit/s Gibit/s... (1024bit/s = 1Kibit/s)
-    * Bits with decimal prefix per second: bit/s, Kbit/s Mbit/s Gbit/s... (1000bit/s = 1Kbit/s)
-- **Thermal unit**: the temperature unit for thermal
-    * °C: Celsius
-    * °F: Fahrenheit
-- **Maximal size**: the highest value of a byte or rate before the prefix is incremented
-- **Order of Disk and Network items**
-    * Read - Write / Down - Up: Display the data received first
-    * Write - Read / Up - Down: Display the data send first
-- **Thermal calculation mode**: how the thermal value is calculated
-    * Disabled: disables thermal submenu and thermal graphs
-    * Maximum: the highest value
-    * Average: the average value
-    * Minimum: the minimum value
+The Thermal modules gets its information from the command `sensors`. If it doesn't show up, you should check by running the command and look if you see a line like `--.-°C`.
 
-===============
-#### Graphs
+# Settings
 
-- **Type of graph**
-    * None: no chart, also disables the graphs menu in the applet
-    * Overview: a chart showing you the current status of all modules
-    * ... History: a chart showing you only one modul, but as a history
-- **Height of graph**: How big the chart is
-- **Amount of history steps**: How many steps will be saved for history graphs
-- **Appearance of overview graphs**
-    * Pie: every value is a full circle
-    * Arc: every value is a half circle
-- **Appearance of history graphs**
-    * Line: all points of a history are connected and stroked, the histories are combined
-    * Area: all points of a history are connected and filled, the histories are separated
-    * Bar: every point is represented by a bar, the histories are combined
-- **Connection type for Line or Area**
-    * Line: a normal line
-    * Straight: a line like steps
-    * Curve: a bézier curve
-- **History graphs draw interval**: The interval, in which the history graphs refreshes
+## General
+**Interval** - The interval the applet refreshes data in milliseconds
 
-===============
-#### CPU
+**Bytes unit** - The bytes unit for memory, swap, disk space usage and total network usage
+* Bytes with binary prefix: B, KiB, MiB, GiB... (1024B = 1KiB)
+* Bytes with decimal prefix: B, KB, MB, GB... (1000B = 1KB)
+    
+**Rate unit** - The rate unit for disk and network usage
+* Bytes with binary prefix per second: B/s, KiB/s MiB/s GiB/s... (1024B/s = 1KiB/s)
+* Bytes with decimal prefix per second: B/s, KB/s MB/s GB/s... (1000B/s = 1KB/s)
+* Bits with binary prefix per second: bit/s, Kibit/s Mibit/s Gibit/s... (1024bit/s = 1Kibit/s, 8bit = 1B)
+* Bits with decimal prefix per second: bit/s, Kbit/s Mbit/s Gbit/s... (1000bit/s = 1Kbit/s)
+    
+**Thermal unit** - the temperature unit for thermal
+* °C: Celsius
+* °F: Fahrenheit
+    
+**Maximal size** - the highest value of a byte or rate before the prefix is incremented
 
-- **CPU _X_**: color for the CPU core _X_
-- **Label in the Panel**
-    * None: show nothing
-    * Average: show average percentage
-    * All cores: show the percentage of all cores
-- **Graph in the panel**
-    * None: show nothing
-    * Bar: show bars representing the current usage for each core
-    * History: show usage histories for each core
-- **Width of graph**: the width of the graph
-- **enable CPU warning**: show a notification if the usage is higher than a trigger value
-- **Warning time**: in how many intervals the usage must be higher than the trigger value
-- **Use average CPU usage**: if selected, the average CPU usage will be taken, if not, every core will be monitored
-- **Warning CPU usage**: the trigger usage
+**Order of Disk and Network items**
+* Read - Write / Down - Up: Display the data received first
+* Write - Read / Up - Down: Display the data send first
 
-===============
-#### Memory and Swap
+## Graphs
+**Type of graph** - The graph shown in the menu
+* None: no chart, also disables the graphs menu in the applet
+* Overview: a chart showing you the current status of all modules
+* _..._ History: a chart showing you only one modul, but as a history
 
-**Memory**: color for memory
-**Swap**: color for swap
-- **Label in the Panel**
-    * None: show nothing
-    * Percent: show usage percentage of memory
-- **Graph in the panel**
-    * None: show nothing
-    * Bar: show bars representing the current usage
-    * History: show usage histories
-- **Mode of graph**
-    * only Memory: show only information about memory
-    * Memory and Swap: show information about both memory and swap
-- **Width of graph**: the width of the graph
+_Note:_ If the vailable module is deactivated, this setting will be set to "Overview"  
+_Hint:_ You can change the type also by scrolling on the graph or by selecting it in the graphs submenu
 
-===============
-#### Disk
+**Height of graph** - How big the chart is in pixels
 
-**Write**: color for write activities
-**Read**: color for read activities
-- **Label in the Panel**
-    * None: show nothing
-    * Usage: show usage
-- **Graph in the panel**
-    * None: show nothing
-    * Bar: show bars representing the current usage
-    * History: show usage histories
-- **Width of graph**: the width of the graph
+**Amount of history steps** - How many steps will be saved for history graphs
 
-===============
-#### Network
+**Appearance of overview graph** - How the Overview graph looks
+* Pie - every value is a full circle
+* Arc - every value is a half circle
+    
+**Connection type for history graphs**
+* Line - a normal line
+* Straight - a line like steps
+* Curve - a bézier curve
+    
+**History graphs draw interval** - The interval, in which the history graphs refreshes
 
-**Up**: color for up (send) activities
-**Down**: color for down (receive) activities
-- **Label in the Panel**
-    * None: show nothing
-    * Usage: show usage
-- **Graph in the panel**
-    * None: show nothing
-    * Bar: show bars representing the current usage
-    * History: show usage histories
-- **Width of graph**: the width of the graph
+## Modules
 
-===============
-#### Thermal
+The following sections are each for every module.
+They are layouted identically:
 
-- **Thermal**: color for Thermal _Note_: if the thermal sensor is labelled with core_x_, the matching CPU color will be used
-- **Label in the Panel**
-    * None: show nothing
-    * Temperature: show the temperature
-- **Graph in the panel**
-    * None: show nothing
-    * Bar: show bars representing the current usage for each core
-    * History: show usage histories for each core
-- **Width of graph**: the width of the graph
-- **enable thermal warning**: show a notification if the temperature is higher than a trigger value
-- **Warning time**: in how many intervals the temperature must be higher than the trigger value
-- **Warning temperature**: the trigger temperature
+_**Module**_ - A checkbox with which you can enable or disable the module
+
+_**Colors**_ - The color widgets let you set the color for the graphs
+
+**Appearance of history graphs** - How history graphs of the module looks
+* Line - all points of a history are connected and stroked, the histories are combined
+* Area - all points of a history are connected and filled, the histories are separated
+* Stack - all points of a history are connected and filled, the histories are stacked - only available for CPU
+* Bar - every point is represented by a bar, the histories are combined - only available for CPU, Disk and Network
+
+**Label in the panel** - Which information the applet should show directly in the panel
+
+**Graph in the panel** - Which graph the applet should show directly in the panel
+* None - No Graph
+* Bar - Show the current usage
+* History - Show the history
+
+**Mode of Graph** - Wheter to show swap usage also in graph - only for Memory and Swap
+
+**Width of graph** - How big the panel graph is
+
+### Warnings
+The CPU and Thermal module also offers you warnings
+
+**Warnings** - With the checkbox you can enable or disbale the warnings
+
+**Trigger value** - The trigger value  
+_Note_: the thermal unit is equal the unit you set before
+
+**Time** - After how many intervals the warning is displayed
+
+**Mode** - How it should warn - only for CPU
+* Cores - warns if a core is over the trigger value
+* Average - warns if the average value is over the trigger value
