@@ -1,3 +1,5 @@
+const Cairo = imports.cairo;
+
 const GLib = imports.gi.GLib;
 
 function Base(canvas, modules, time, settings, colors){
@@ -373,9 +375,15 @@ History.prototype = {
         this.max = max || 1;
 
         this.line = this._line[this.settings[this.name + "Appearance"]];
-        if(!this.line) this.line = this._line.line;
+        if(!this.line)
+            this.line = this._line.line;
+        if(this.settings[this.name + "Appearance"] === "line")
+            this.ctx.setLineJoin(Cairo.LineJoin.ROUND);
+
         this.connection = this._connection[this.settings.graphConnection];
-        if(!this.connection) this.connection = this._connection.line;
+        if(!this.connection)
+            this.connection = this._connection.line;
+
         this.last = [];
     },
     next: function(color){

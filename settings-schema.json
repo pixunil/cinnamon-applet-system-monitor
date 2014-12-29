@@ -165,7 +165,7 @@
     },
     "cpu-appearance": {
         "type": "combobox",
-        "default": "line",
+        "default": "area",
         "options": {
             "Line": "line",
             "Area": "area",
@@ -275,7 +275,7 @@
     },
     "mem-appearance": {
         "type": "combobox",
-        "default": "line",
+        "default": "area",
         "options": {
             "Line": "line",
             "Area": "area"
@@ -349,7 +349,7 @@
     },
     "disk-appearance": {
         "type": "combobox",
-        "default": "line",
+        "default": "areaUpDown",
         "options": {
             "Line": "line",
             "Area": "areaUpDown",
@@ -412,7 +412,7 @@
     },
     "network-appearance": {
         "type": "combobox",
-        "default": "line",
+        "default": "areaUpDown",
         "options": {
             "Line": "line",
             "Area": "areaUpDown",
@@ -480,7 +480,7 @@
     },
     "thermal-appearance": {
         "type": "combobox",
-        "default": "line",
+        "default": "area",
         "options": {
             "Line": "line",
             "Area": "area"
