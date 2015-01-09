@@ -25,7 +25,16 @@ This applet offers information about five modules. These are:
 - **Network** - up / down usage and total traffic
 - **Thermal** - temperature of some compenents
 
-The Thermal modules gets its information from the command `sensors`. If it doesn't show up, you should check by running the command and look if you see a line like `--.-°C`.
+# FAQ
+
+### I want to see the information also in the panel.
+You can choose for every module a panel label and graph.
+Go to settings and select in the ComboBox next to "Label in the panel" the information you want to see.
+With the ComboBox "Graph in the panel" you can choose a graph.
+
+### The Thermal module is not working.
+The Thermal modules gets its information from the command `sensors`.
+If it doesn't show up, you should check by running the command and look if you see a line including `--.-°C`.
 
 # Settings
 
