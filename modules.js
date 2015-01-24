@@ -6,6 +6,8 @@ const Main = imports.ui.main;
 const MessageTray = imports.ui.messageTray;
 const PopupMenu = imports.ui.popupMenu;
 
+const Mainloop = imports.mainloop;
+
 const messageTray = Main.messageTray;
 
 const uuid = "system-monitor@pixunil";
@@ -512,7 +514,6 @@ Disk.prototype = {
         write: [],
         read: []
     },
-    dev: [],
 
     max: 1,
     maxIndex: 0,
@@ -525,13 +526,16 @@ Disk.prototype = {
             return;
         }
 
-        let labels = [130, 130];
-        this.buildSubMenu(labels);
-        labels = [100, 100, 60];
+        this.buildSubMenu([130, 130]);
+
+        this._updateDevices();
+    },
+    _updateDevices: function(){
+        this.dev = [];
+        
         let mountFile = Cinnamon.get_file_contents_utf8_sync("/etc/mtab").split("\n");
-        var mount;
         for(let mountLine in mountFile){
-            mount = mountFile[mountLine].split(" ");
+            let mount = mountFile[mountLine].split(" ");
             if(mount[0].indexOf("/dev/") === 0){
                 GTop.glibtop_get_fsusage(this.gtop, mount[1]);
                 this.dev.push({
@@ -540,9 +544,10 @@ Disk.prototype = {
                     free: this.gtop.bfree,
                     blocks: this.gtop.blocks
                 });
-                this.buildMenuItem(mount[1], labels);
+                this.buildMenuItem(mount[1], [100, 100, 60]);
             }
         }
+        Mainloop.timeout_add(30000, this._updateDevices.bind(this));
     },
     getData: function(delta){
         let write = 0, read = 0;
