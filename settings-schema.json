@@ -186,13 +186,8 @@
         "dependency": "cpu"
     },
     "cpu-panel-label": {
-        "type": "combobox",
-        "default": -1,
-        "options": {
-            "None": -1,
-            "Average": 0,
-            "All Cores": 1
-        },
+        "type": "entry",
+        "default": "",
         "description": "Label in the panel",
         "dependency": "cpu"
     },
@@ -288,12 +283,8 @@
         "dependency": "mem"
     },
     "mem-panel-label": {
-        "type": "combobox",
-        "default": -1,
-        "options": {
-            "None": -1,
-            "Percent": 0
-        },
+        "type": "entry",
+        "default": "",
         "description": "Label in the panel",
         "dependency": "mem"
     },
@@ -363,12 +354,8 @@
         "dependency": "disk"
     },
     "disk-panel-label": {
-        "type": "combobox",
-        "default": -1,
-        "options": {
-            "None": -1,
-            "Usage": 0
-        },
+        "type": "entry",
+        "default": "",
         "description": "Label in the panel",
         "dependency": "disk"
     },
@@ -426,12 +413,8 @@
         "dependency": "network"
     },
     "network-panel-label": {
-        "type": "combobox",
-        "default": -1,
-        "options": {
-            "None": -1,
-            "Usage": 0
-        },
+        "type": "entry",
+        "default": "",
         "description": "Label in the panel",
         "dependency": "network"
     },
@@ -493,12 +476,8 @@
         "dependency": "thermal"
     },
     "thermal-panel-label": {
-        "type": "combobox",
-        "default": -1,
-        "options": {
-            "None": -1,
-            "Temperature": 0
-        },
+        "type": "entry",
+        "default": "",
         "description": "Label in the panel",
         "dependency": "thermal"
     },

@@ -100,7 +100,8 @@ _**Colors**_ - The color widgets let you set the color for the graphs
 * Stack - all points of a history are connected and filled, the histories are stacked - only available for CPU
 * Bar - every point is represented by a bar, the histories are combined - only available for CPU, Disk and Network
 
-**Label in the panel** - Which information the applet should show directly in the panel
+**Label in the panel** - Text which is displayed in the panel    
+You should use placeholders to display data.
 
 **Graph in the panel** - Which graph the applet should show directly in the panel
 * None - No Graph
@@ -124,3 +125,63 @@ _Note_: the thermal unit is equal the unit you set before
 **Mode** - How it should warn - only for CPU
 * Cores - warns if a core is over the trigger value
 * Average - warns if the average value is over the trigger value
+
+### Placeholders
+All placeholders are written as `%mn`
+`%%` will become `%` (useful for escaping)
+#### CPU
+  m  | Function
+:---:| --------
+  t  | total usage
+  u  | user usage
+  s  | system usage
+
+  n  | Function
+:---:| --------
+  a  | Average usage
+_digit_ | Usage of the core (begins with 0)
+
+##### Examples
+`CPU: %ta` - Displays "CPU: " followed by the average usage  
+`%t0 %t1 %t2 %t3` - Displays the usage of all four cores
+
+#### Memory
+  m  | Function
+:---:| --------
+  b  | usage / size in bytes
+  p  | usage in percent
+  
+  n  | Function
+:---:| --------
+  u  | usedup
+  c  | cached
+  b  | buffered
+  U  | used (usedup + cached + buffered)
+  t  | total
+  
+##### Examples
+`%pu (%bu / %bt)` - Displays the usage of Memory in percent followed by the size of the usage and the total capacity in bytes
+
+#### Disk
+`m` is always `r`
+  
+  n  | Function
+:---:| --------
+  w  | write usage
+  r  | read usage
+  
+#### Network
+`m` is always `r`
+  
+  n  | Function
+:---:| --------
+  u  | up usage
+  d  | down usage
+  
+#### Thermal
+`m` is always `t`
+  
+  n  | Function
+:---:| --------
+  0  | value specified in **Thermal mode**
+_digit_ | sensor

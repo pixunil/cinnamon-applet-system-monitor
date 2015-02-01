@@ -6,6 +6,7 @@ const Main = imports.ui.main;
 const MessageTray = imports.ui.messageTray;
 const PopupMenu = imports.ui.popupMenu;
 
+const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 
 const messageTray = Main.messageTray;
@@ -156,25 +157,27 @@ Base.prototype = {
 
     _update: function(menuOpen){
         this.menuOpen = menuOpen;
-        this.panelText = [];
         this.update();
 
         if(this.panel){
-            this.panel.label.set_text(this.panelText.join(" "));
-            this.panel.label.set_margin_left(this.panelText.length? 6 : 0);
+            let text = this.settings[this.name + "PanelLabel"].replace(/%(.)(.)/g, Lang.bind(this, function(s, m, n){
+                if(this.panelLabel[m])
+                    return this.panelLabel[m].call(this, n) || s;
+                if(m === "%")
+                    return m + n;
+                return s;
+            }));
+            this.panel.label.set_text(text);
+            this.panel.label.set_margin_left(text.length? 6 : 0);
         }
         delete this.menuOpen;
     },
     setText: function(container, label, format, value, ext){
-        if(container === -1 && (!this.panel || this.settings[this.name + "PanelLabel"] === -1)) return;
-
         value = this.format(format, value, ext);
 
-        if(container === -1)
-            this.panelText[label] = value;
         if(container === 0)
             this.tooltip.get_children()[label + 1].set_text(value);
-        if(container > -1 && this.menuOpen)
+        if(this.menuOpen)
             this.container[container].get_children()[label].set_text(value);
     },
 
@@ -255,12 +258,12 @@ Base.prototype = {
         }
 
         if(this.panel){
-            this.panel.box.visible = this.settings[this.name] && (this.settings[this.name + "PanelLabel"] !== -1 || this.settings[this.name + "PanelGraph"] !== -1);
-
-            this.panel.label.visible = this.settings[this.name] && this.settings[this.name + "PanelLabel"] !== -1;
+            this.panel.label.visible = this.settings[this.name] && this.settings[this.name + "PanelLabel"] !== "";
 
             this.panel.canvas.width = this.settings[this.name + "PanelWidth"];
             this.panel.canvas.visible = this.settings[this.name] && this.settings[this.name + "PanelGraph"] !== -1;
+            
+            this.panel.box.visible = this.panel.label.visible || this.panel.canvas.visible;
         }
     }
 };
@@ -349,15 +352,28 @@ CPU.prototype = {
             this.setText(0, i, "percent", this.data.usage[i]);
             this.setText(1, i, "percent", this.data.user[i]);
             this.setText(2, i, "percent", this.data.system[i]);
-
-            if(this.settings.cpuPanelLabel === 0)
-                r += this.data.usage[i];
-            else if(this.settings.cpuPanelLabel === 1)
-                this.setText(-1, i, "percent", this.data.usage[i]);
         }
-
-        if(this.settings.cpuPanelLabel === 0)
-            this.setText(-1, 0, "percent", r / this.count);
+    },
+    panelLabel: {
+        _percent: function(n, prop){
+            if(n === "a"){
+                let value = 0;
+                for(var i = 0; i < this.count; ++i)
+                    value += this.data[prop][i] / this.count;
+                return this.format("percent", value);
+            } else if(n - 0 > -1 && n - 0 < this.count)
+                return this.format("percent", this.data[prop][n - 0]);
+        },
+        
+        t: function(n){
+            return this.panelLabel._percent.call(this, n, "usage");
+        },
+        u: function(n){
+            return this.panelLabel._percent.call(this, n, "user");
+        },
+        s: function(n){
+            return this.panelLabel._percent.call(this, n, "system");
+        }
     },
     onSettingsChanged: function(){
         Base.prototype.onSettingsChanged.call(this);
@@ -437,8 +453,22 @@ Memory.prototype = {
 
         this.setText(3, 0, "bytes", this.data.buffer);
         this.setText(3, 2, "percent", this.data.buffer, this.data.total);
-
-        this.setText(-1, 2, "percent", this.data.usedup, this.data.total);
+    },
+    panelLabel: {
+        _prop: {
+            u: "usedup",
+            U: "used",
+            c: "cached",
+            b: "buffer",
+            t: "total"
+        },
+        
+        b: function(n){
+            return this.format("bytes", this.data[this.panelLabel._prop[n]]);
+        },
+        p: function(n){
+            return this.format("percent", this.data[this.panelLabel._prop[n]], this.data.total);
+        }
     },
 
     menuGraph: "MemorySwapHistory",
@@ -531,6 +561,8 @@ Disk.prototype = {
         this._updateDevices();
     },
     _updateDevices: function(){
+        this.container.splice(1, this.container.length - 1);
+        this.submenu.menu.removeAll();
         this.dev = [];
         
         let mountFile = Cinnamon.get_file_contents_utf8_sync("/etc/mtab").split("\n");
@@ -581,9 +613,14 @@ Disk.prototype = {
             this.setText(i + 1, 1, "bytes", this.dev[i].blocks * this.dev[i].size);
             this.setText(i + 1, 2, "percent", this.dev[i].blocks - this.dev[i].free, this.dev[i].blocks);
         }
-
-        this.setText(-1, this.settings.order? 0 : 1, "rate", this.data.write, true);
-        this.setText(-1, this.settings.order? 1 : 0, "rate", this.data.read, false);
+    },
+    panelLabel: {
+        r: function(n){
+            if(n === "w")
+                return this.format("rate", this.data.write, true);
+            if(n === "r")
+                return this.format("rate", this.data.read, false);
+        }
     },
 
     menuGraph: "DiskHistory",
@@ -664,9 +701,14 @@ Network.prototype = {
 
         this.setText(1, this.settings.order? 0 : 1, "bytes", this.raw.up);
         this.setText(1, this.settings.order? 1 : 0, "bytes", this.raw.down);
-
-        this.setText(-1, this.settings.order? 0 : 1, "rate", this.data.up, true);
-        this.setText(-1, this.settings.order? 1 : 0, "rate", this.data.down, false);
+    },
+    panelLabel: {
+        r: function(n){
+            if(n === "u")
+                return this.format("rate", this.data.up, true);
+            if(n === "d")
+                return this.format("rate", this.data.down, false);
+        }
     },
 
     menuGraph: "NetworkHistory",
@@ -751,8 +793,11 @@ Thermal.prototype = {
     update: function(){
         for(var i = 0, l = this.data.length; i < l; ++i)
             this.setText(i, 0, "thermal", this.data[i]);
-
-        this.setText(-1, 0, "thermal", this.data[0]);
+    },
+    panelLabel: {
+        t: function(n){
+            return this.format("thermal", this.data[n - 0]);
+        }
     },
     onSettingsChanged: function(){
         Base.prototype.onSettingsChanged.call(this);
