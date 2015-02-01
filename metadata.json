@@ -1,6 +1,8 @@
 {
-    "description": "Display system informations in Cinnamon panel, such as CPU usage, mem and swap usage, disk and network rates, disk space with a graph\u2026",
+    "description": "Display CPU, Memory and Swap usage, Disk and Network rates with graphs in a menu and in panel",
     "uuid": "system-monitor@pixunil",
-    "name": "System monitor",
-    "icon": "utilities-system-monitor"
+    "name": "System monitor with graphs",
+    "icon": "utilities-system-monitor",
+    "version": 3.3,
+    "url": "https://github.com/pixunil/cinnamon-applet-system-monitor"
 }
