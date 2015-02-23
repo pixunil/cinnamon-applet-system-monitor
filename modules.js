@@ -157,6 +157,7 @@ Base.prototype = {
 
     _update: function(menuOpen){
         this.menuOpen = menuOpen;
+
         this.update();
 
         if(this.panel){
@@ -262,7 +263,7 @@ Base.prototype = {
 
             this.panel.canvas.width = this.settings[this.name + "PanelWidth"];
             this.panel.canvas.visible = this.settings[this.name] && this.settings[this.name + "PanelGraph"] !== -1;
-            
+
             this.panel.box.visible = this.panel.label.visible || this.panel.canvas.visible;
         }
     }
@@ -363,8 +364,10 @@ CPU.prototype = {
                 return this.format("percent", value);
             } else if(n - 0 > -1 && n - 0 < this.count)
                 return this.format("percent", this.data[prop][n - 0]);
+
+            return "~ ERROR: Invalid core " + n + " ~";
         },
-        
+
         t: function(n){
             return this.panelLabel._percent.call(this, n, "usage");
         },
@@ -462,7 +465,7 @@ Memory.prototype = {
             b: "buffer",
             t: "total"
         },
-        
+
         b: function(n){
             return this.format("bytes", this.data[this.panelLabel._prop[n]]);
         },
@@ -564,7 +567,7 @@ Disk.prototype = {
         this.container.splice(1, this.container.length - 1);
         this.submenu.menu.removeAll();
         this.dev = [];
-        
+
         let mountFile = Cinnamon.get_file_contents_utf8_sync("/etc/mtab").split("\n");
         for(let mountLine in mountFile){
             let mount = mountFile[mountLine].split(" ");
@@ -620,6 +623,7 @@ Disk.prototype = {
                 return this.format("rate", this.data.write, true);
             if(n === "r")
                 return this.format("rate", this.data.read, false);
+            return "~ ERROR: Invalid " + n + " ~";
         }
     },
 
@@ -708,6 +712,7 @@ Network.prototype = {
                 return this.format("rate", this.data.up, true);
             if(n === "d")
                 return this.format("rate", this.data.down, false);
+            return "~ ERROR: Invalid " + n + " ~";
         }
     },
 

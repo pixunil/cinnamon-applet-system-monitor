@@ -2,6 +2,10 @@ const Cairo = imports.cairo;
 
 const GLib = imports.gi.GLib;
 
+function process(number){
+    return number > 0 && !isNaN(number) && isFinite(number);
+}
+
 function Base(canvas, modules, time, settings, colors){
     this._init(canvas, modules, time, settings, colors);
 }
@@ -136,6 +140,8 @@ PieOverview.prototype = {
     smallMerged: true,
 
     normal: function(angle, dir){
+        if(!process(angle)) return;
+
         angle *= Math.PI * 2;
         if(dir)
             this.ctx.arc(this.w / 2, this.h / 2, this.r, this.a, this.a += angle);
@@ -144,6 +150,8 @@ PieOverview.prototype = {
         this.ctx.stroke();
     },
     small: function(angle, dir, side){
+        if(!process(angle)) return;
+
         var a = -Math.PI;
         if(side){
             a = 0;
@@ -158,6 +166,8 @@ PieOverview.prototype = {
         this.ctx.stroke();
     },
     center: function(radius){
+        if(!process(radius)) return;
+
         this.ctx.arc(this.w / 2, this.h / 2, radius * this.dr, 0, Math.PI * 2);
         this.ctx.fill();
     }
@@ -173,6 +183,8 @@ ArcOverview.prototype = {
     yScale: 1,
 
     normal: function(angle){
+        if(!process(angle)) return;
+
         angle *= Math.PI / 2;
         if(this.a === 0){
             this.a = angle;
@@ -186,6 +198,8 @@ ArcOverview.prototype = {
         this.ctx.stroke();
     },
     small: function(angle, dir){
+        if(!process(angle)) return;
+
         angle *= Math.PI / 2;
 
         if(dir)
@@ -195,6 +209,8 @@ ArcOverview.prototype = {
         this.ctx.stroke();
     },
     center: function(radius){
+        if(!process(radius)) return;
+
         this.ctx.arc(this.w / 2, this.h, radius * this.dr, -Math.PI, Math.PI);
         this.ctx.fill();
     }

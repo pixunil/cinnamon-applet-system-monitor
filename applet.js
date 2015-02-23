@@ -363,7 +363,7 @@ SystemMonitorApplet.prototype = {
             global.logError(e);
         }
     },
-    
+
     launchReadme: function(){
         Util.spawnCommandLine("xdg-open https://github.com/pixunil/cinnamon-applet-system-monitor/blob/master/README.md#settings");
     }
