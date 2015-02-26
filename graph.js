@@ -540,7 +540,7 @@ MemorySwapHistory.prototype = {
         this.max = m.swap.data.total;
 
         this.next("swap");
-        this.line(m.swap.history, 1, 2);
+        this.line(m.swap.history.used, 1, 2);
     }
 };
 
