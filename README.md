@@ -39,23 +39,23 @@ If it doesn't show up, you should check by running the command and look if you s
 # Settings
 
 ## General
-**Interval** - The interval the applet refreshes data in milliseconds
+**Interval** - Interval in which the applet refreshes data in milliseconds
 
-**Bytes unit** - The bytes unit for memory, swap, disk space usage and total network usage
+**Bytes unit** - Unit for memory, swap, disk space usage and total network usage
 * Bytes with binary prefix: B, KiB, MiB, GiB... (1024B = 1KiB)
 * Bytes with decimal prefix: B, KB, MB, GB... (1000B = 1KB)
-    
-**Rate unit** - The rate unit for disk and network usage
+
+**Rate unit** - Unit for disk and network usage
 * Bytes with binary prefix per second: B/s, KiB/s MiB/s GiB/s... (1024B/s = 1KiB/s)
 * Bytes with decimal prefix per second: B/s, KB/s MB/s GB/s... (1000B/s = 1KB/s)
 * Bits with binary prefix per second: bit/s, Kibit/s Mibit/s Gibit/s... (1024bit/s = 1Kibit/s, 8bit = 1B)
 * Bits with decimal prefix per second: bit/s, Kbit/s Mbit/s Gbit/s... (1000bit/s = 1Kbit/s)
-    
-**Thermal unit** - the temperature unit for thermal
+
+**Thermal unit** - Unit for thermal data
 * °C: Celsius
 * °F: Fahrenheit
-    
-**Maximal size** - the highest value of a byte or rate before the prefix is incremented
+
+**Maximal size** - The highest value of a byte or rate before the prefix is incremented
 
 **Order of Disk and Network items**
 * Read - Write / Down - Up: Display the data received first
@@ -77,13 +77,13 @@ _Hint:_ You can change the type also by scrolling on the graph or by selecting i
 **Appearance of overview graph** - How the Overview graph looks
 * Pie - every value is a full circle
 * Arc - every value is a half circle
-    
+
 **Connection type for history graphs**
 * Line - a normal line
 * Straight - a line like steps
 * Curve - a bézier curve
-    
-**History graphs draw interval** - The interval, in which the history graphs refreshes
+
+**History graphs draw interval** - Interval in which history graphs refresh
 
 ## Modules
 
@@ -148,9 +148,12 @@ _digit_ | Usage of the core (begins with 0)
 #### Memory
   m  | Function
 :---:| --------
-  b  | usage / size in bytes
-  p  | usage in percent
-  
+  m  | memory usage / size in bytes
+  p  | memory usage in percent
+  s  | swap usage
+
+For `m` = `m` or `p` (memory):
+
   n  | Function
 :---:| --------
   u  | usedup
@@ -158,29 +161,37 @@ _digit_ | Usage of the core (begins with 0)
   b  | buffered
   U  | used (usedup + cached + buffered)
   t  | total
-  
+
+For `m` = `s` (swap):
+
+  n  | Function
+:---:| --------
+  u  | usage in bytes
+  t  | total size in bytes
+  p  | usage in percent
+
 ##### Examples
 `%pu (%bu / %bt)` - Displays the usage of Memory in percent followed by the size of the usage and the total capacity in bytes
 
 #### Disk
 `m` is always `r`
-  
+
   n  | Function
 :---:| --------
   w  | write usage
   r  | read usage
-  
+
 #### Network
 `m` is always `r`
-  
+
   n  | Function
 :---:| --------
   u  | up usage
   d  | down usage
-  
+
 #### Thermal
 `m` is always `t`
-  
+
   n  | Function
 :---:| --------
   0  | value specified in **Thermal mode**

@@ -156,6 +156,8 @@ SystemMonitorApplet.prototype = {
                 thermal: new Modules.Thermal(this.settings, this.colors, this.time)
             };
 
+            this.modules.mem.swap = this.modules.swap;
+
             for(let i in this.modules){
                 if(!this.modules[i].unavailable){
                     this.menu.addMenuItem(this.modules[i].submenu);

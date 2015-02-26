@@ -15,7 +15,8 @@
         "max": 5000,
         "step": 20,
         "units": "ms",
-        "description": "Interval"
+        "description": "Interval",
+        "tooltip": "Interval in which the applet refreshes data"
     },
     "byte-unit": {
         "type": "combobox",
@@ -24,7 +25,8 @@
             "Bytes with binary prefix": true,
             "Bytes with decimal prefix": false
         },
-        "description": "Bytes unit"
+        "description": "Bytes unit",
+        "tooltip": "Unit for memory, swap, disk space and total network usage"
     },
     "rate-unit": {
         "type": "combobox",
@@ -35,7 +37,8 @@
             "Bits with binary prefix per second": 3,
             "Bits with decimal prefix per second": 2
         },
-        "description": "Rates unit"
+        "description": "Rates unit",
+        "tooltip": "Unit for disk and network usage"
     },
     "thermal-unit": {
         "type": "combobox",
@@ -44,7 +47,8 @@
             "\u00b0C": true,
             "\u00b0F": false
         },
-        "description": "Thermal unit"
+        "description": "Thermal unit",
+        "tooltip": "Unit for thermal data"
     },
     "maxsize": {
         "type": "spinbutton",
@@ -53,7 +57,8 @@
         "max": 10000,
         "step": 100,
         "units": " ",
-        "description": "Maximal size"
+        "description": "Maximal size",
+        "tooltip": "The highest value of a byte or rate before the prefix is incremented"
     },
     "order": {
         "type": "combobox",
@@ -83,7 +88,8 @@
             "Network History": 4,
             "Thermal History": 5
         },
-        "description": "Type of graph"
+        "description": "Type of graph",
+        "tooltip": "The graph shown in the menu"
     },
     "graph-size": {
         "type": "spinbutton",
@@ -101,7 +107,8 @@
         "max": 200,
         "step": 5,
         "units": " ",
-        "description": "Number of history steps"
+        "description": "Number of history steps",
+        "tooltip": "How many steps will be saved for history graphs"
     },
     "graph-overview": {
         "type": "combobox",
@@ -129,7 +136,8 @@
         "max": 5000,
         "step": 20,
         "units": "ms",
-        "description": "History graphs draw interval"
+        "description": "History graphs draw interval",
+        "tooltip": "Interval in which history graphs refresh"
     },
     "cpu-section": {
         "type": "separator"
@@ -189,7 +197,8 @@
         "type": "entry",
         "default": "",
         "description": "Label in the panel",
-        "dependency": "cpu"
+        "dependency": "cpu",
+        "tooltip": "Common placeholders: \n %tn \t usage of core n (replace n with a number) \n %ta \t average usage"
     },
     "cpu-panel-graph": {
         "type": "combobox",
@@ -286,7 +295,8 @@
         "type": "entry",
         "default": "",
         "description": "Label in the panel",
-        "dependency": "mem"
+        "dependency": "mem",
+        "tooltip": "Common placeholders: \n %mu \t memory usage in bytes \n %pa \t memory usage in percent \n %su \t swap usage in bytes \n %sp \t swap usage in bytes"
     },
     "mem-panel-graph": {
         "type": "combobox",
@@ -357,7 +367,8 @@
         "type": "entry",
         "default": "",
         "description": "Label in the panel",
-        "dependency": "disk"
+        "dependency": "disk",
+        "tooltip": "Common placeholders: \n %rw \t write usage \n %rr \t read usage"
     },
     "disk-panel-graph": {
         "type": "combobox",
@@ -416,7 +427,8 @@
         "type": "entry",
         "default": "",
         "description": "Label in the panel",
-        "dependency": "network"
+        "dependency": "network",
+        "tooltip": "Common placeholders: \n %ru \t up usage \n %rd \t down usage"
     },
     "network-panel-graph": {
         "type": "combobox",
@@ -479,7 +491,8 @@
         "type": "entry",
         "default": "",
         "description": "Label in the panel",
-        "dependency": "thermal"
+        "dependency": "thermal",
+        "tooltip": "Common placeholders: \n %t0 \t thermal value (specified in \"Thermal Mode\") \n %tn \t sensor temperature (replace n with a number)"
     },
     "thermal-panel-graph": {
         "type": "combobox",

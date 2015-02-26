@@ -162,9 +162,11 @@ Base.prototype = {
 
         if(this.panel){
             let text = this.settings[this.name + "PanelLabel"].replace(/%(.)(.)/g, Lang.bind(this, function(s, m, n){
-                if(this.panelLabel[m])
-                    return this.panelLabel[m].call(this, n) || s;
-                if(m === "%")
+                if(this.panelLabel[m]){
+                    let output = this.panelLabel[m].call(this, n);
+                    if(output)
+                        return output;
+                } else if(m === "%")
                     return m + n;
                 return s;
             }));
@@ -364,8 +366,7 @@ CPU.prototype = {
                 return this.format("percent", value);
             } else if(n - 0 > -1 && n - 0 < this.count)
                 return this.format("percent", this.data[prop][n - 0]);
-
-            return "~ ERROR: Invalid core " + n + " ~";
+            return false;
         },
 
         t: function(n){
@@ -458,19 +459,34 @@ Memory.prototype = {
         this.setText(3, 2, "percent", this.data.buffer, this.data.total);
     },
     panelLabel: {
-        _prop: {
+        _mem: {
             u: "usedup",
             U: "used",
             c: "cached",
             b: "buffer",
             t: "total"
         },
+        _swap: {
+            u: "used",
+            t: "total"
+        },
 
-        b: function(n){
-            return this.format("bytes", this.data[this.panelLabel._prop[n]]);
+        m: function(n){
+            if(this.panelLabel._mem[n])
+                return this.format("bytes", this.data[this.panelLabel._mem[n]]);
+            return false;
+        },
+        s: function(n){
+            if(n === "p")
+                return this.format("percent", this.swap.data.used, this.swap.data.total);
+            if(this.panelLabel._swap[n])
+                return this.format("bytes", this.swap.data[this.panelLabel._swap[n]]);
+            return false;
         },
         p: function(n){
-            return this.format("percent", this.data[this.panelLabel._prop[n]], this.data.total);
+            if(this.panelLabel._mem[n])
+                return this.format("percent", this.data[this.panelLabel._mem[n]], this.data.total);
+            return false;
         }
     },
 
@@ -623,7 +639,7 @@ Disk.prototype = {
                 return this.format("rate", this.data.write, true);
             if(n === "r")
                 return this.format("rate", this.data.read, false);
-            return "~ ERROR: Invalid " + n + " ~";
+            return false;
         }
     },
 
@@ -712,7 +728,7 @@ Network.prototype = {
                 return this.format("rate", this.data.up, true);
             if(n === "d")
                 return this.format("rate", this.data.down, false);
-            return "~ ERROR: Invalid " + n + " ~";
+            return false;
         }
     },
 
@@ -801,7 +817,9 @@ Thermal.prototype = {
     },
     panelLabel: {
         t: function(n){
-            return this.format("thermal", this.data[n - 0]);
+            if(this.data[n - 0])
+                return this.format("thermal", this.data[n - 0]);
+            return false;
         }
     },
     onSettingsChanged: function(){
