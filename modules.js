@@ -282,22 +282,6 @@ CPU.prototype = {
     name: "cpu",
     display: _("CPU"),
 
-    raw: {
-        total: [],
-        user: [],
-        system: []
-    },
-    data: {
-        usage: [],
-        user: [],
-        system: []
-    },
-    history: {
-        usage: [],
-        user: [],
-        system: []
-    },
-
     notificationFormat: "percent",
 
     build: function(){
@@ -308,6 +292,22 @@ CPU.prototype = {
             this.unavailable = true;
             return;
         }
+
+        this.raw = {
+            total: [],
+            user: [],
+            system: []
+        };
+        this.data = {
+            usage: [],
+            user: [],
+            system: []
+        };
+        this.history = {
+            usage: [],
+            user: [],
+            system: []
+        };
 
         let labels = [], margin = 260 - this.count * 60;
         GTop.glibtop_get_cpu(this.gtop);
@@ -408,19 +408,6 @@ Memory.prototype = {
     name: "mem",
     display: _("Memory"),
 
-    data: {
-        total: 1,
-        used: 0,
-        usedup: 0,
-        cached: 0,
-        buffer: 0
-    },
-    history: {
-        usedup: [],
-        cached: [],
-        buffer: []
-    },
-
     build: function(){
         try {
             this.gtop = new GTop.glibtop_mem;
@@ -428,6 +415,19 @@ Memory.prototype = {
             this.unavailable = true;
             return;
         }
+
+        this.data = {
+            total: 1,
+            used: 0,
+            usedup: 0,
+            cached: 0,
+            buffer: 0
+        };
+        this.history = {
+            usedup: [],
+            cached: [],
+            buffer: []
+        };
 
         let labels = [100, 100, 60];
         this.buildSubMenu(labels);
@@ -505,14 +505,6 @@ Swap.prototype = {
     name: "mem",
     display: _("Swap"),
 
-    data: {
-        total: 1,
-        used: 0
-    },
-    history: {
-        used: []
-    },
-
     build: function(){
         try {
             this.gtop = new GTop.glibtop_swap;
@@ -520,6 +512,14 @@ Swap.prototype = {
             this.unavailable = true;
             return;
         }
+
+        this.data = {
+            total: 1,
+            used: 0
+        };
+        this.history = {
+            used: []
+        };
 
         let labels = [100, 100, 60];
         this.submenu = this.buildMenuItem(this.display, labels);
@@ -551,19 +551,6 @@ Disk.prototype = {
     name: "disk",
     display: _("Disk"),
 
-    raw: {
-        write: 0,
-        read: 0
-    },
-    data: {
-        write: 0,
-        read: 0
-    },
-    history: {
-        write: [],
-        read: []
-    },
-
     max: 1,
     maxIndex: 0,
 
@@ -574,6 +561,19 @@ Disk.prototype = {
             this.unavailable = true;
             return;
         }
+
+        this.raw = {
+            write: 0,
+            read: 0
+        };
+        this.data = {
+            write: 0,
+            read: 0
+        };
+        this.history = {
+            write: [],
+            read: []
+        };
 
         this.buildSubMenu([130, 130]);
 
@@ -658,21 +658,6 @@ Network.prototype = {
     name: "network",
     display: _("Network"),
 
-    raw: {
-        up: [],
-        down: []
-    },
-    data: {
-        up: [],
-        down: []
-    },
-    history: {
-        up: [],
-        down: []
-    },
-
-    dev: [],
-
     max: 1,
     maxIndex: 0,
 
@@ -683,6 +668,21 @@ Network.prototype = {
             this.unavailable = true;
             return;
         }
+
+        this.raw = {
+            up: [],
+            down: []
+        };
+        this.data = {
+            up: [],
+            down: []
+        };
+        this.history = {
+            up: [],
+            down: []
+        };
+
+        this.dev = [];
 
         let labels = [130, 130];
         this.buildSubMenu(labels);
@@ -751,15 +751,15 @@ Thermal.prototype = {
     colorRef: [],
     path: "",
 
-    data: [],
-    history: [[]],
-
     min: null,
     max: null,
 
     notificationFormat: "thermal",
 
     build: function(){
+        this.data = [];
+        this.history = [[]];
+
         let labels = [80], margin = 180;
         this.buildSubMenu(labels, 180);
         let r = GLib.spawn_command_line_sync("which sensors");

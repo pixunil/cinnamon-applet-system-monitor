@@ -96,15 +96,6 @@ function SystemMonitorApplet(orientation, panelHeight, instanceId){
 SystemMonitorApplet.prototype = {
     __proto__: Applet.Applet.prototype,
 
-    time: [],
-
-    graph: {
-        submenu: new PopupMenu.PopupSubMenuMenuItem(_("Graph")),
-        items: [new PopupMenu.PopupMenuItem(_("Overview")), new PopupMenu.PopupMenuItem(_("CPU History")), new PopupMenu.PopupMenuItem(_("Memory History")),
-            new PopupMenu.PopupMenuItem(_("Disk History")), new PopupMenu.PopupMenuItem(_("Network History")), new PopupMenu.PopupMenuItem(_("Thermal History"))]
-    },
-    graphs: [],
-
     _init: function(orientation, panelHeight, instanceId){
         try {
             Applet.Applet.prototype._init.call(this, orientation, panelHeight);
@@ -112,6 +103,15 @@ SystemMonitorApplet.prototype = {
             this.panelHeight = panelHeight;
             this._applet_tooltip = new SystemMonitorTooltip(this, orientation);
             this._applet_tooltip.addActor(new St.Label({text: _("System Monitor")}));
+
+            this.time = [];
+
+            this.graph = {
+                submenu: new PopupMenu.PopupSubMenuMenuItem(_("Graph")),
+                items: [new PopupMenu.PopupMenuItem(_("Overview")), new PopupMenu.PopupMenuItem(_("CPU History")), new PopupMenu.PopupMenuItem(_("Memory History")),
+                    new PopupMenu.PopupMenuItem(_("Disk History")), new PopupMenu.PopupMenuItem(_("Network History")), new PopupMenu.PopupMenuItem(_("Thermal History"))]
+            };
+            this.graphs = [];
 
             this.settings = {};
             this.colors = {};
