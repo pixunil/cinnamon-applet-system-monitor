@@ -248,7 +248,9 @@ Base.prototype = {
         return (100 * part / (total || 1)).toFixed(1) + "%";
     },
     formatThermal: function(celsius){
-        return (this.settings.thermalUnit? celsius : celsius * 1.8 + 32).toFixed(1) + "\u00b0" + (this.settings.thermalUnit? "C" : "F");
+        let number = this.settings.thermalUnit? celsius : celsius * 1.8 + 32;
+        let unit = this.settings.thermalUnit? "\u2103" : "\u2109"; //2103: Celsius, 2109: Fahrenheit
+        return number.toFixed(1) + unit;
     },
 
     onSettingsChanged: function(){
@@ -350,7 +352,6 @@ CPU.prototype = {
             this.checkWarning(r / this.count, "CPU usage was over %s for %fsec");
     },
     update: function(){
-        let r = 0;
         for(var i = 0; i < this.count; ++i){
             this.setText(0, i, "percent", this.data.usage[i]);
             this.setText(1, i, "percent", this.data.user[i]);

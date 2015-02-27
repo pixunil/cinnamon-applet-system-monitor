@@ -44,8 +44,8 @@
         "type": "combobox",
         "default": true,
         "options": {
-            "\u00b0C": true,
-            "\u00b0F": false
+            "\u2103": true,
+            "\u2109": false
         },
         "description": "Thermal unit",
         "tooltip": "Unit for thermal data"
