@@ -52,7 +52,7 @@ TerminalReader.prototype = {
                 }
             } catch(err){
                 if(err.code === GLib.SpawnError.G_SPAWN_ERROR_NOENT){
-                    err.message = _("Command not found.");
+                    err.message = "Command not found.";
                 } else {
                     // The exception from gjs contains an error string like:
                     //   Error invoking GLib.spawn_command_line_async: Failed to

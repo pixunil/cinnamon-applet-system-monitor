@@ -6,25 +6,24 @@ const Main = imports.ui.main;
 const MessageTray = imports.ui.messageTray;
 const PopupMenu = imports.ui.popupMenu;
 
-const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 
 const messageTray = Main.messageTray;
 
 const uuid = "system-monitor@pixunil";
-const iconName = "utilities-system-monitor";
+imports.ui.appletManager.applets[uuid].init.init("modules");
 
-const Terminal = imports.ui.appletManager.applets[uuid].terminal;
+const Terminal = appletDirectory.terminal;
 
 try {
     const GTop = imports.gi.GTop;
 } catch(e){
     let icon = new St.Icon({icon_name: iconName, icon_type: St.IconType.FULLCOLOR, icon_size: 24});
-    Main.criticalNotify(_("Dependence missing"), _("Please install the GTop package\n" +
-        "\tUbuntu / Mint: gir1.2-gtop-2.0\n" +
-        "\tFedora: libgtop2-devel\n" +
-        "\tArch: libgtop\n" +
-        "to use the applet " + uuid), icon);
+    Main.criticalNotify(_("Dependence missing"), _("Please install the GTop package\n\
+\tUbuntu / Mint: gir1.2-gtop-2.0\n\
+\tFedora: libgtop2-devel\n\
+\tArch: libgtop\n\
+to use the applet %s".format(uuid)), icon);
 }
 
 function getProperty(obj, str){
@@ -161,7 +160,7 @@ Base.prototype = {
         this.update();
 
         if(this.panel){
-            let text = this.settings[this.name + "PanelLabel"].replace(/%(.)(.)/g, Lang.bind(this, function(s, m, n){
+            let text = this.settings[this.name + "PanelLabel"].replace(/%(.)(.)/g, bind(function(s, m, n){
                 if(this.panelLabel[m]){
                     let output = this.panelLabel[m].call(this, n);
                     if(output)
@@ -169,7 +168,7 @@ Base.prototype = {
                 } else if(m === "%")
                     return m + n;
                 return s;
-            }));
+            }), this);
             this.panel.label.set_text(text);
             this.panel.label.set_margin_left(text.length? 6 : 0);
         }
@@ -599,7 +598,7 @@ Disk.prototype = {
                 this.buildMenuItem(mount[1], [100, 100, 60]);
             }
         }
-        Mainloop.timeout_add(30000, this._updateDevices.bind(this));
+        Mainloop.timeout_add(30000, bind(this._updateDevices, this));
     },
     getData: function(delta){
         let write = 0, read = 0;
@@ -790,7 +789,7 @@ Thermal.prototype = {
             this.unavailable = true;
     },
     getData: function(){
-        let terminal = new Terminal.TerminalReader(this.path, this.parseResult.bind(this));
+        let terminal = new Terminal.TerminalReader(this.path, bind(this.parseResult, this));
         terminal.executeReader();
     },
     parseResult: function(command, sucess, result){

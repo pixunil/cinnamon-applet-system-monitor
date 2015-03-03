@@ -22,8 +22,8 @@
         "type": "combobox",
         "default": true,
         "options": {
-            "Bytes with binary prefix": true,
-            "Bytes with decimal prefix": false
+            "B, KiB, MiB": true,
+            "B, KB, MB": false
         },
         "description": "Bytes unit",
         "tooltip": "Unit for memory, swap, disk space and total network usage"
@@ -32,10 +32,10 @@
         "type": "combobox",
         "default": 1,
         "options": {
-            "Bytes with binary prefix per second": 1,
-            "Bytes with decimal prefix per second": 0,
-            "Bits with binary prefix per second": 3,
-            "Bits with decimal prefix per second": 2
+            "B/s, KiB/s, MiB/s": 1,
+            "B/s, KB/s, MB/s": 0,
+            "bit/s Kibit/s, Mibit/s": 3,
+            "bit/s Kbit/s, Mbit/s": 2
         },
         "description": "Rates unit",
         "tooltip": "Unit for disk and network usage"
@@ -47,8 +47,7 @@
             "\u2103": true,
             "\u2109": false
         },
-        "description": "Thermal unit",
-        "tooltip": "Unit for thermal data"
+        "description": "Thermal unit"
     },
     "maxsize": {
         "type": "spinbutton",
@@ -83,7 +82,7 @@
             "None": -1,
             "Overview": 0,
             "CPU History": 1,
-            "Memory History": 2,
+            "Memory and Swap History": 2,
             "Disk History": 3,
             "Network History": 4,
             "Thermal History": 5
@@ -245,7 +244,7 @@
         "max": 40,
         "default": 5,
         "step": 1,
-        "units": "int",
+        "units": "intervals",
         "description": "Time",
         "indent": true,
         "dependency": "cpu-warning"
@@ -539,7 +538,7 @@
         "max": 40,
         "default": 5,
         "step": 1,
-        "units": "int",
+        "units": "intervals",
         "description": "Time",
         "indent": true,
         "dependency": "thermal-warning"

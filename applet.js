@@ -12,14 +12,13 @@ const PopupMenu = imports.ui.popupMenu;
 const Settings = imports.ui.settings;
 const Tooltips = imports.ui.tooltips;
 
-const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 
 const uuid = "system-monitor@pixunil";
-const iconName = "utilities-system-monitor";
+imports.ui.appletManager.applets[uuid].init.init("applet");
 
-const Graph = imports.ui.appletManager.applets[uuid].graph;
-const Modules = imports.ui.appletManager.applets[uuid].modules;
+const Graph = appletDirectory.graph;
+const Modules = appletDirectory.modules;
 
 
 function PanelWidget(panelHeight, module, modules){
@@ -34,7 +33,7 @@ PanelWidget.prototype = {
         this.box.add(this.label, {y_align: St.Align.MIDDLE, y_fill: false});
 
         this.canvas = new St.DrawingArea({height: panelHeight});
-        this.canvas.connect("repaint", this.draw.bind(this));
+        this.canvas.connect("repaint", bind(this.draw, this));
         this.box.add_actor(this.canvas);
 
         this.graphs = [];
@@ -49,16 +48,12 @@ PanelWidget.prototype = {
         this.module = module;
     },
     draw: function(){
-        try {
-            if(this.module.settings[this.module.name + "PanelGraph"] === -1) return;
+        if(this.module.settings[this.module.name + "PanelGraph"] === -1) return;
 
-            let graph = this.module.settings[this.module.name + "PanelGraph"];
-            if(this.module.settings[this.module.name + "PanelMode"])
-                graph += this.module.settings[this.module.name + "PanelMode"];
-            this.graphs[graph].draw();
-        } catch(e){
-            global.logError(e);
-        }
+        let graph = this.module.settings[this.module.name + "PanelGraph"];
+        if(this.module.settings[this.module.name + "PanelMode"])
+            graph += this.module.settings[this.module.name + "PanelMode"];
+        this.graphs[graph].draw();
     },
     paint: function(){
         this.canvas.queue_repaint();
@@ -97,107 +92,103 @@ SystemMonitorApplet.prototype = {
     __proto__: Applet.Applet.prototype,
 
     _init: function(orientation, panelHeight, instanceId){
-        try {
-            Applet.Applet.prototype._init.call(this, orientation, panelHeight);
+        Applet.Applet.prototype._init.call(this, orientation, panelHeight);
 
-            this.panelHeight = panelHeight;
-            this._applet_tooltip = new SystemMonitorTooltip(this, orientation);
-            this._applet_tooltip.addActor(new St.Label({text: _("System Monitor")}));
+        this.panelHeight = panelHeight;
+        this._applet_tooltip = new SystemMonitorTooltip(this, orientation);
+        this._applet_tooltip.addActor(new St.Label({text: _("System Monitor")}));
 
-            this.time = [];
+        this.time = [];
 
-            this.graph = {
-                submenu: new PopupMenu.PopupSubMenuMenuItem(_("Graph")),
-                items: [new PopupMenu.PopupMenuItem(_("Overview")), new PopupMenu.PopupMenuItem(_("CPU History")), new PopupMenu.PopupMenuItem(_("Memory History")),
-                    new PopupMenu.PopupMenuItem(_("Disk History")), new PopupMenu.PopupMenuItem(_("Network History")), new PopupMenu.PopupMenuItem(_("Thermal History"))]
-            };
-            this.graphs = [];
+        this.graph = {
+            submenu: new PopupMenu.PopupSubMenuMenuItem(_("Graph")),
+            items: [new PopupMenu.PopupMenuItem(_("Overview")), new PopupMenu.PopupMenuItem(_("CPU History")), new PopupMenu.PopupMenuItem(_("Memory and Swap History")),
+                new PopupMenu.PopupMenuItem(_("Disk History")), new PopupMenu.PopupMenuItem(_("Network History")), new PopupMenu.PopupMenuItem(_("Thermal History"))]
+        };
+        this.graphs = [];
 
-            this.settings = {};
-            this.colors = {};
-            this.settingProvider = new Settings.AppletSettings(this.settings, uuid, instanceId);
-            ["interval", "byte-unit", "rate-unit", "maxsize", "order",
-                "graph-overview", "graph-connection", "graph-interval", "graph-steps"].forEach(function(p){
-                var q = p.replace(/-(.)/g, function(m, c){
-                    return c.toUpperCase();
-                });
-
-                this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, q);
-            }, this);
-
-            //Settings with callback
-            let keys = ["thermal-unit", "graph-size", "show-icon", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "color-mem", "color-swap", "color-write", "color-read", "color-up", "color-down", "color-thermal",
-                "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value", "thermal-mode","thermal-warning", "thermal-warning-time", "thermal-warning-value", "mem-panel-mode"];
-
-            ["cpu", "mem", "disk", "network", "thermal"].forEach(function(p){
-                keys.push(p, p + "-appearance", p + "-panel-label", p + "-panel-graph", p + "-panel-width");
+        this.settings = {};
+        this.colors = {};
+        this.settingProvider = new Settings.AppletSettings(this.settings, uuid, instanceId);
+        ["interval", "byte-unit", "rate-unit", "maxsize", "order",
+            "graph-overview", "graph-connection", "graph-interval", "graph-steps"].forEach(function(p){
+            var q = p.replace(/-(.)/g, function(m, c){
+                return c.toUpperCase();
             });
 
-            keys.forEach(function(p){
-                var q = p.replace(/-(.)/g, function(m, c){
-                    return c.toUpperCase();
-                });
+            this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, q);
+        }, this);
 
-                this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, q, this.onSettingsChanged.bind(this));
-            }, this);
+        //Settings with callback
+        let keys = ["thermal-unit", "graph-size", "show-icon", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "color-mem", "color-swap", "color-write", "color-read", "color-up", "color-down", "color-thermal",
+            "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value", "thermal-mode","thermal-warning", "thermal-warning-time", "thermal-warning-value", "mem-panel-mode"];
 
-            this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", this.onGraphTypeChanged.bind(this));
+        ["cpu", "mem", "disk", "network", "thermal"].forEach(function(p){
+            keys.push(p, p + "-appearance", p + "-panel-label", p + "-panel-graph", p + "-panel-width");
+        });
 
-            this.menuManager = new PopupMenu.PopupMenuManager(this);
-            this.menu = new Applet.AppletPopupMenu(this, orientation);
-            this.menuManager.addMenu(this.menu);
+        keys.forEach(function(p){
+            var q = p.replace(/-(.)/g, function(m, c){
+                return c.toUpperCase();
+            });
 
-            this.modules = {
-                cpu: new Modules.CPU(this.settings, this.colors, this.time),
-                mem: new Modules.Memory(this.settings, this.colors, this.time),
-                swap: new Modules.Swap(this.settings, this.colors, this.time),
-                disk: new Modules.Disk(this.settings, this.colors, this.time),
-                network: new Modules.Network(this.settings, this.colors, this.time),
-                thermal: new Modules.Thermal(this.settings, this.colors, this.time)
-            };
+            this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, q, bind(this.onSettingsChanged, this));
+        }, this);
 
-            this.modules.mem.swap = this.modules.swap;
+        this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", bind(this.onGraphTypeChanged, this));
 
-            for(let i in this.modules){
-                if(!this.modules[i].unavailable){
-                    this.menu.addMenuItem(this.modules[i].submenu);
-                    this._applet_tooltip.addActor(this.modules[i].tooltip);
-                }
+        this.menuManager = new PopupMenu.PopupMenuManager(this);
+        this.menu = new Applet.AppletPopupMenu(this, orientation);
+        this.menuManager.addMenu(this.menu);
+
+        this.modules = {
+            cpu: new Modules.CPU(this.settings, this.colors, this.time),
+            mem: new Modules.Memory(this.settings, this.colors, this.time),
+            swap: new Modules.Swap(this.settings, this.colors, this.time),
+            disk: new Modules.Disk(this.settings, this.colors, this.time),
+            network: new Modules.Network(this.settings, this.colors, this.time),
+            thermal: new Modules.Thermal(this.settings, this.colors, this.time)
+        };
+
+        this.modules.mem.swap = this.modules.swap;
+
+        for(let i in this.modules){
+            if(!this.modules[i].unavailable){
+                this.menu.addMenuItem(this.modules[i].submenu);
+                this._applet_tooltip.addActor(this.modules[i].tooltip);
             }
-
-            this.initPanel();
-            this.initGraphs();
-
-            this.onGraphTypeChanged();
-            this.graph.items.forEach(function(item, i){
-                //To supress menu from closing
-                item.activate = Lang.bind(this, function(){
-                    this.settings.graphType = i;
-                    this.onGraphTypeChanged();
-                });
-                this.graph.submenu.menu.addMenuItem(item);
-            }, this);
-            this.menu.addMenuItem(this.graph.submenu);
-
-            this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem);
-            this.menu.addAction(_("System Monitor"), function(){
-                let appSys = Cinnamon.AppSystem.get_default();
-                let gsmApp = appSys.lookup_app("gnome-system-monitor.desktop");
-                gsmApp.activate();
-            });
-
-            this.onSettingsChanged();
-            this.getData();
-            this.paint();
-        } catch(e){
-            global.logError(e);
         }
+
+        this.initPanel();
+        this.initGraphs();
+
+        this.onGraphTypeChanged();
+        this.graph.items.forEach(function(item, i){
+            //To supress menu from closing
+            item.activate = bind(function(){
+                this.settings.graphType = i;
+                this.onGraphTypeChanged();
+            }, this);
+            this.graph.submenu.menu.addMenuItem(item, {span: -1, expand: true});
+        }, this);
+        this.menu.addMenuItem(this.graph.submenu);
+
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem);
+        this.menu.addAction(_("System Monitor"), function(){
+            let appSys = Cinnamon.AppSystem.get_default();
+            let gsmApp = appSys.lookup_app("gnome-system-monitor.desktop");
+            gsmApp.activate();
+        });
+
+        this.onSettingsChanged();
+        this.getData();
+        this.paint();
     },
     initGraphs: function(){
         this.canvas = new St.DrawingArea({height: this.settings.graphSize});
-        this.canvas.connect("repaint", this.draw.bind(this));
+        this.canvas.connect("repaint", bind(this.draw, this));
         this.canvasHolder = new PopupMenu.PopupBaseMenuItem({activate: false, sensitive: false});
-        this.canvasHolder.actor.connect("scroll-event", this.onScroll.bind(this));
+        this.canvasHolder.actor.connect("scroll-event", bind(this.onScroll, this));
         this.canvasHolder.addActor(this.canvas, {span: -1, expand: true});
         this.menu.addMenuItem(this.canvasHolder);
 
@@ -231,59 +222,43 @@ SystemMonitorApplet.prototype = {
     },
 
     getData: function(){
-        try {
-            let time = GLib.get_monotonic_time() / 1e6;
-            let delta = time - this.time[0];
-            this.time[0] = time;
+        let time = GLib.get_monotonic_time() / 1e6;
+        let delta = time - this.time[0];
+        this.time[0] = time;
 
-            for(var i in this.modules){
-                if(this.settings[this.modules[i].name])
-                    this.modules[i].getData(delta);
-            }
-
-            this.updateText();
-            this.timeout = Mainloop.timeout_add(this.settings.interval, this.getData.bind(this));
-
-            if(this.settings.graphType === 0)
-                this.canvas.queue_repaint();
-        } catch(e){
-            global.logError(e);
+        for(var i in this.modules){
+            if(this.settings[this.modules[i].name])
+                this.modules[i].getData(delta);
         }
+
+        this.updateText();
+        this.timeout = Mainloop.timeout_add(this.settings.interval, bind(this.getData, this));
+
+        if(this.settings.graphType === 0)
+            this.canvas.queue_repaint();
     },
     paint: function(once){
-        try {
-            //do not repaint Overview graph (it is handled by getData), but the graphType is updated
-            if(this.menu.isOpen && (this.settings.graphType !== 0 || once))
-                this.canvas.queue_repaint();
+        //do not repaint Overview graph (it is handled by getData), but the graphType is updated
+        if(this.menu.isOpen && (this.settings.graphType !== 0 || once))
+            this.canvas.queue_repaint();
 
-            for(var i in this.panelWidgets)
-                this.panelWidgets[i].paint();
+        for(var i in this.panelWidgets)
+            this.panelWidgets[i].paint();
 
-            if(!once)
-                this.paintTimeout = Mainloop.timeout_add(this.settings.graphInterval, this.paint.bind(this));
-        } catch(e){
-            global.logError(e);
-        }
+        if(!once)
+            this.paintTimeout = Mainloop.timeout_add(this.settings.graphInterval, bind(this.paint, this));
     },
     draw: function(){
-        try {
-            if(this.settings.graphType === 0)
-                this.graphs[0][this.settings.graphOverview].draw();
-            else
-                this.graphs[this.settings.graphType].draw();
-        } catch(e){
-            global.logError(e);
-        }
+        if(this.settings.graphType === 0)
+            this.graphs[0][this.settings.graphOverview].draw();
+        else
+            this.graphs[this.settings.graphType].draw();
     },
     updateText: function(){
-        try {
-            for(var i in this.modules){
-                if(this.settings[this.modules[i].name]){
-                    this.modules[i]._update(this.menu.isOpen);
-                }
+        for(var i in this.modules){
+            if(this.settings[this.modules[i].name]){
+                this.modules[i]._update(this.menu.isOpen);
             }
-        } catch(e){
-            global.logError(e);
         }
     },
     on_applet_clicked: function(){
@@ -295,75 +270,63 @@ SystemMonitorApplet.prototype = {
         Mainloop.source_remove(this.paintTimeout);
     },
     onSettingsChanged: function(){
-        try {
-            ["cpu1", "cpu2", "cpu3", "cpu4", "mem", "swap", "write", "read", "up", "down", "thermal"].forEach(function(p){
-                let c = this.settings["color" + p[0].toUpperCase() + p.substr(1)].split(","), i;
-                for(i = 0; i < 3; ++i)
-                    c[i] = parseInt(c[i].match(/\d+/)) / 255; //rgba[0-255] -> rgb[0-1]
-                this.colors[p] = c;
-            }, this);
-            this.canvas.set_height(this.settings.graphSize);
+        ["cpu1", "cpu2", "cpu3", "cpu4", "mem", "swap", "write", "read", "up", "down", "thermal"].forEach(function(p){
+            let c = this.settings["color" + p[0].toUpperCase() + p.substr(1)].split(","), i;
+            for(i = 0; i < 3; ++i)
+                c[i] = parseInt(c[i].match(/\d+/)) / 255; //rgba[0-255] -> rgb[0-1]
+            this.colors[p] = c;
+        }, this);
+        this.canvas.set_height(this.settings.graphSize);
 
-            var j = 0;
-            for(var i in this.modules){
-                this.modules[i].onSettingsChanged();
-                if(this.modules[i].menuGraph){
-                    this.graph.items[++j].actor.visible = !!this.settings[this.modules[i].name];
-                    //if the module was deactivated, but the menu graph is active, set it to "Overview"
-                    if(!this.settings[this.modules[i].name] && this.settings.graphType === j){
-                        this.settings.graphType = 0;
-                        this.onGraphTypeChanged();
-                    }
+        var j = 0;
+        for(var i in this.modules){
+            this.modules[i].onSettingsChanged();
+            if(this.modules[i].menuGraph){
+                this.graph.items[++j].actor.visible = !!this.settings[this.modules[i].name];
+                //if the module was deactivated, but the menu graph is active, set it to "Overview"
+                if(!this.settings[this.modules[i].name] && this.settings.graphType === j){
+                    this.settings.graphType = 0;
+                    this.onGraphTypeChanged();
                 }
             }
-
-            this.iconBox.visible = this.settings.showIcon;
-
-            this.updateText();
-        } catch(e){
-            global.logError(e);
         }
+
+        this.iconBox.visible = this.settings.showIcon;
+
+        this.updateText();
     },
     onGraphTypeChanged: function(){
-        try {
-            this.graph.items.forEach(function(item){
-                item.setShowDot(false);
-            });
+        this.graph.items.forEach(function(item){
+            item.setShowDot(false);
+        });
 
-            let show = this.settings.graphType !== -1;
-            this.graph.submenu.actor.visible = show;
-            this.canvasHolder.actor.visible = show;
-            if(show){
-                this.graph.items[this.settings.graphType].setShowDot(true);
-                this.paint(true);
-            }
-        } catch(e){
-            global.logError(e);
+        let show = this.settings.graphType !== -1;
+        this.graph.submenu.actor.visible = show;
+        this.canvasHolder.actor.visible = show;
+        if(show){
+            this.graph.items[this.settings.graphType].setShowDot(true);
+            this.paint(true);
         }
     },
     onScroll: function(actor, event){
-        try {
-            let direction = event.get_scroll_direction();
-            let graphType = this.settings.graphType;
+        let direction = event.get_scroll_direction();
+        let graphType = this.settings.graphType;
 
-            if(direction === Clutter.ScrollDirection.DOWN && graphType < this.graphs.length - 1){
-                //skip not available modules
-                do {
-                    if(++graphType === this.graphs.length)
-                        return;
-                } while(!this.graph.items[graphType].actor.visible);
-            } else if(direction === Clutter.ScrollDirection.UP && graphType > 0){
-                do {
-                    graphType--;
-                } while(!this.graph.items[graphType].actor.visible);
-            }
-
-            this.settings.graphType = graphType;
-
-            this.onGraphTypeChanged();
-        } catch(e){
-            global.logError(e);
+        if(direction === Clutter.ScrollDirection.DOWN && graphType < this.graphs.length - 1){
+            //skip not available modules
+            do {
+                if(++graphType === this.graphs.length)
+                    return;
+            } while(!this.graph.items[graphType].actor.visible);
+        } else if(direction === Clutter.ScrollDirection.UP && graphType > 0){
+            do {
+                graphType--;
+            } while(!this.graph.items[graphType].actor.visible);
         }
+
+        this.settings.graphType = graphType;
+
+        this.onGraphTypeChanged();
     },
 
     launchReadme: function(){
@@ -372,6 +335,10 @@ SystemMonitorApplet.prototype = {
 };
 
 function main(metadata, orientation, panelHeight, instanceId){
-    let systemMonitorApplet = new SystemMonitorApplet(orientation, panelHeight, instanceId);
+    try {
+        var systemMonitorApplet = new SystemMonitorApplet(orientation, panelHeight, instanceId);
+    } catch(e){
+        global.logError(e);
+    }
     return systemMonitorApplet;
 }
