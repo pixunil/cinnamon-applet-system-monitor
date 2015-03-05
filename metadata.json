@@ -3,7 +3,7 @@
     "uuid": "system-monitor@pixunil",
     "name": "System monitor with graphs",
     "icon": "utilities-system-monitor",
-    "version": 3.4,
+    "version": "3.4",
     "url": "https://github.com/pixunil/cinnamon-applet-system-monitor",
     "max-instances": 10
 }

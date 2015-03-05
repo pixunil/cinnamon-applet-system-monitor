@@ -19,11 +19,11 @@ try {
     const GTop = imports.gi.GTop;
 } catch(e){
     let icon = new St.Icon({icon_name: iconName, icon_type: St.IconType.FULLCOLOR, icon_size: 24});
-    Main.criticalNotify(_("Dependence missing"), _("Please install the GTop package\n\
-\tUbuntu / Mint: gir1.2-gtop-2.0\n\
-\tFedora: libgtop2-devel\n\
-\tArch: libgtop\n\
-to use the applet %s".format(uuid)), icon);
+    Main.criticalNotify(_("Dependence missing"), _("Please install the GTop package\n" +
+        "\tUbuntu / Mint: gir1.2-gtop-2.0\n" +
+        "\tFedora: libgtop2-devel\n" +
+        "\tArch: libgtop\n" +
+        "to use the applet %s".format(uuid)), icon);
 }
 
 function getProperty(obj, str){
