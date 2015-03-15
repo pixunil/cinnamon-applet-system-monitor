@@ -789,10 +789,9 @@ Thermal.prototype = {
             this.unavailable = true;
     },
     getData: function(){
-        let terminal = new Terminal.TerminalReader(this.path, bind(this.parseResult, this));
-        terminal.executeReader();
+        Terminal.call(this.path, bind(this.parseResult, this));
     },
-    parseResult: function(command, sucess, result){
+    parseResult: function(result){
         this.time[1] = GLib.get_monotonic_time() / 1e6;
 
         result = result.split("\n");

@@ -1,10 +1,21 @@
-//Credits go to lestcape (https://github.com/lestcape)
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 
 const Main = imports.ui.main;
 
+const Util = imports.misc.util;
+
+function call(command, callback){
+    if(Util.spawn_async)
+        Util.spawn_async(command, callback);
+    else {
+        let terminal = new TerminalReader(command, callback);
+        terminal.executeReader();
+    }
+}
+
+//Credits for the TerminalReader class go to lestcape (https://github.com/lestcape)
 function TerminalReader(command, callback){
     this._init(command, callback);
 }
@@ -112,7 +123,7 @@ TerminalReader.prototype = {
                     if(this.resOut === 0){
                         let val = stream.peek_buffer().toString();
                         if(val !== "")
-                            this._callbackPipe(this._commandPipe, true, val);
+                            this._callbackPipe(val);
                         this._stdout.close(this._cancellableStdout);
                     } else {
                         // Try to read more
@@ -135,7 +146,7 @@ TerminalReader.prototype = {
                     if(this.resErr === 0){ // end of file
                         let val = stream.peek_buffer().toString();
                         if(val !== "")
-                            this._callbackPipe(this._commandPipe, false, val);
+                            this._callbackPipe(val);
                         this._stderr.close(null);
                     } else {
                         this._stderrStream.set_buffer_size(2 * this._stderrStream.get_buffer_size());
