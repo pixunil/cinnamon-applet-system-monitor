@@ -212,8 +212,8 @@ class Main:
             args += arguments
             subprocess.call(args)
         except:
-            print command + " not found"
-            quit
+            print "ERROR: command %s not found" % command
+            quit()
 
 if __name__ == "__main__":
     Main()

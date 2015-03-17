@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: system-monitor@pixunil 3.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-03-17 10:57+0100\n"
+"POT-Creation-Date: 2015-03-17 16:35+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: \n"
 
-#: applet.js:99 applet.js:178
+#: applet.js:99 applet.js:176
 msgid "System Monitor"
 msgstr ""
 

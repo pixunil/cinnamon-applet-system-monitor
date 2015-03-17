@@ -110,18 +110,16 @@ SystemMonitorApplet.prototype = {
         this.settings = {};
         this.colors = {};
         this.settingProvider = new Settings.AppletSettings(this.settings, uuid, instanceId);
-        ["interval", "byte-unit", "rate-unit", "maxsize", "order",
-            "graph-overview", "graph-connection", "graph-interval", "graph-steps"].forEach(function(p){
-            var q = p.replace(/-(.)/g, function(m, c){
-                return c.toUpperCase();
-            });
 
-            this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, q);
-        }, this);
-
-        //Settings with callback
-        let keys = ["thermal-unit", "graph-size", "show-icon", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "color-mem", "color-swap", "color-write", "color-read", "color-up", "color-down", "color-thermal",
-            "load", "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value", "mem-panel-mode", "thermal-mode","thermal-warning", "thermal-warning-time", "thermal-warning-value"];
+        //Settings keys
+        let keys = [
+            "show-icon", "interval", "byte-unit", "rate-unit", "thermal-unit", "maxsize", "order",
+            "graph-size", "graph-steps", "graph-overview", "graph-connection", "graph-interval",
+            "load", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value",
+            "color-mem", "color-swap", "mem-panel-mode",
+            "color-write", "color-read", "color-up", "color-down",
+            "color-thermal", "thermal-mode","thermal-warning", "thermal-warning-time", "thermal-warning-value"
+        ];
 
         ["cpu", "mem", "disk", "network", "thermal"].forEach(function(p){
             keys.push(p, p + "-appearance", p + "-panel-label", p + "-panel-graph", p + "-panel-width");
@@ -336,8 +334,9 @@ SystemMonitorApplet.prototype = {
 };
 
 function main(metadata, orientation, panelHeight, instanceId){
+    var systemMonitorApplet;
     try {
-        var systemMonitorApplet = new SystemMonitorApplet(orientation, panelHeight, instanceId);
+        systemMonitorApplet = new SystemMonitorApplet(orientation, panelHeight, instanceId);
     } catch(e){
         global.logError(e);
     }

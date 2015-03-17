@@ -6,15 +6,6 @@ const Main = imports.ui.main;
 
 const Util = imports.misc.util;
 
-function call(command, callback){
-    if(Util.spawn_async)
-        Util.spawn_async(command, callback);
-    else {
-        let terminal = new TerminalReader(command, callback);
-        terminal.executeReader();
-    }
-}
-
 //Credits for the TerminalReader class go to lestcape (https://github.com/lestcape)
 function TerminalReader(command, callback){
     this._init(command, callback);
@@ -159,3 +150,12 @@ TerminalReader.prototype = {
         }));
     }
 };
+
+function call(command, callback){
+    if(Util.spawn_async)
+        Util.spawn_async(command, callback);
+    else {
+        let terminal = new TerminalReader(command, callback);
+        terminal.executeReader();
+    }
+}
