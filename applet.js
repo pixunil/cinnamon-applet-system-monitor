@@ -121,7 +121,7 @@ SystemMonitorApplet.prototype = {
 
         //Settings with callback
         let keys = ["thermal-unit", "graph-size", "show-icon", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "color-mem", "color-swap", "color-write", "color-read", "color-up", "color-down", "color-thermal",
-            "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value", "thermal-mode","thermal-warning", "thermal-warning-time", "thermal-warning-value", "mem-panel-mode"];
+            "load", "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value", "mem-panel-mode", "thermal-mode","thermal-warning", "thermal-warning-time", "thermal-warning-value"];
 
         ["cpu", "mem", "disk", "network", "thermal"].forEach(function(p){
             keys.push(p, p + "-appearance", p + "-panel-label", p + "-panel-graph", p + "-panel-width");
@@ -142,6 +142,7 @@ SystemMonitorApplet.prototype = {
         this.menuManager.addMenu(this.menu);
 
         this.modules = {
+            load: new Modules.LoadAvg(this.settings, this.colors, this.time),
             cpu: new Modules.CPU(this.settings, this.colors, this.time),
             mem: new Modules.Memory(this.settings, this.colors, this.time),
             swap: new Modules.Swap(this.settings, this.colors, this.time),

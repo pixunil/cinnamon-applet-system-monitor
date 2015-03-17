@@ -138,6 +138,14 @@
         "description": "History graphs draw interval",
         "tooltip": "Interval in which history graphs refresh"
     },
+    "load-section": {
+        "type": "separator"
+    },
+    "load": {
+        "type": "checkbox",
+        "default": true,
+        "description": "Load averages"
+    },
     "cpu-section": {
         "type": "separator"
     },

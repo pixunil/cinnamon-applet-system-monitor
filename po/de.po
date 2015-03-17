@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: system-monitor@pixunil 3.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-03-05 20:12+0100\n"
-"PO-Revision-Date: 2015-03-05 20:33+0100\n"
+"POT-Creation-Date: 2015-03-17 10:57+0100\n"
+"PO-Revision-Date: 2015-03-17 10:58+0100\n"
 "Last-Translator: pixunil <pixunil@gmx.de>\n"
 "Language-Team: German\n"
 "MIME-Version: 1.0\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: applet.js:99 applet.js:177
+#: applet.js:99 applet.js:178
 msgid "System Monitor"
 msgstr "Systemüberwachung"
 
@@ -75,57 +75,57 @@ msgstr ""
 "um das Applet %s nutzen zu können"
 
 #. settings->cpu->description
-#: modules.js:284
+#: modules.js:323
 msgid "CPU"
 msgstr "CPU"
 
-#: modules.js:326
+#: modules.js:365
 msgid "User"
 msgstr "Benutzer"
 
-#: modules.js:327
+#: modules.js:366
 msgid "System"
 msgstr "System"
 
 #. settings->color-mem->description
-#: modules.js:409
+#: modules.js:448
 msgid "Memory"
 msgstr "Arbeitsspeicher"
 
-#: modules.js:434
+#: modules.js:473
 msgid "used"
 msgstr "benutzt"
 
-#: modules.js:435
+#: modules.js:474
 msgid "cached"
 msgstr "gecached"
 
-#: modules.js:436
+#: modules.js:475
 msgid "buffered"
 msgstr "gepuffert"
 
 #. settings->color-swap->description
-#: modules.js:506
+#: modules.js:545
 msgid "Swap"
 msgstr "Swap"
 
 #. settings->disk->description
-#: modules.js:552
+#: modules.js:591
 msgid "Disk"
 msgstr "Festplatte"
 
 #. settings->network->description
-#: modules.js:659
+#: modules.js:698
 msgid "Network"
 msgstr "Netzwerk"
 
-#: modules.js:698
+#: modules.js:737
 msgid "Total"
 msgstr "Gesamt"
 
 #. settings->thermal->description
 #. settings->color-thermal->description
-#: modules.js:748
+#: modules.js:787
 msgid "Thermal"
 msgstr "Temperatur"
 
@@ -137,8 +137,8 @@ msgstr "Typ des Graphen"
 msgid "only Memory"
 msgstr "nur Arbeitsspeicher"
 
-#. settings->mem-panel-mode->options
 #. settings->mem->description
+#. settings->mem-panel-mode->options
 msgid "Memory and Swap"
 msgstr "Arbeitsspeicher und Auslagerung"
 
@@ -534,3 +534,8 @@ msgstr "Modus"
 #. settings->cpu-warning-mode->options
 msgid "Cores"
 msgstr "Kerne"
+
+#. settings->load->description
+#: modules.js:288
+msgid "Load averages"
+msgstr "Durchschnittslast"

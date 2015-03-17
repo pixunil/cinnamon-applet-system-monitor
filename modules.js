@@ -215,6 +215,8 @@ Base.prototype = {
 
     format: function(format, value, ext){
         value = value || 0;
+        if(format === "number")
+            return this.formatNumber(value);
         if(format === "rate")
             return this.formatRate(value, ext);
         if(format === "percent")
@@ -224,6 +226,9 @@ Base.prototype = {
         if(format === "bytes")
             return this.formatBytes(value);
         return value;
+    },
+    formatNumber: function(number){
+        return number.toFixed(2);
     },
     formatBytes: function(bytes){
         let prefix = " KMGTPEZY";
@@ -272,6 +277,40 @@ Base.prototype = {
     }
 };
 
+function LoadAvg(settings, colors, time){
+    this._init(settings, colors, time);
+}
+
+LoadAvg.prototype = {
+    __proto__: Base.prototype,
+
+    name: "load",
+    display: _("Load averages"),
+
+    build: function(){
+        try {
+            this.gtop = new GTop.glibtop_loadavg;
+        } catch(e){
+            this.unavailable = true;
+            return;
+        }
+
+        this.data = [];
+
+        let labels = [100, 100, 60];
+        this.submenu = this.buildMenuItem(this.display, labels);
+    },
+    getData: function(){
+        GTop.glibtop_get_loadavg(this.gtop);
+
+        this.data = this.gtop.loadavg;
+    },
+    update: function(){
+        this.setText(0, 0, "number", this.data[0]);
+        this.setText(0, 1, "number", this.data[1]);
+        this.setText(0, 2, "number", this.data[2]);
+    }
+};
 
 function CPU(settings, colors, time){
     this._init(settings, colors, time);
