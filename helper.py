@@ -7,6 +7,7 @@ import subprocess
 from gi.repository import GLib
 from argparse import ArgumentParser
 from glob import glob
+from zipfile import ZipFile
 try:
     import polib
 except:
@@ -45,10 +46,9 @@ def remove_empty_folders(path):
 class Main:
     def __init__(self):
         try:
-            file = open(os.path.join(os.getcwd(), "metadata.json"), "r")
-            raw = file.read()
+            file = open("metadata.json")
+            self.md = json.load(file)
             file.close()
-            self.md = json.loads(raw)
         except Exception, detail:
             print "Failed to get metadata - missing, corrupt, or incomplete metadata.json file"
             print detail
@@ -60,11 +60,12 @@ class Main:
         sub = parser.add_subparsers(dest = "action")
         subparser = sub.add_parser("makepot", help = "Create and update .pot file")
         subparser.add_argument("-u", "--update", action = "store_true", help = "Update all .po files")
-        subparser = sub.add_parser("update", help = "Update all .po files")
+        sub.add_parser("update", help = "Update all .po files")
         subparser = sub.add_parser("create", help = "Create a new .po file")
         subparser.add_argument("locale", help = "The locale for the .po file")
         sub.add_parser("install", help = "Compiles and installs all .po files")
         sub.add_parser("remove", help = "Removes all compiled .po files")
+        sub.add_parser("release", help = "Asks for a new version number and builds a zip file")
 
         args = parser.parse_args()
 
@@ -80,6 +81,8 @@ class Main:
             self.install()
         elif args.action == "remove":
             self.remove()
+        elif args.action == "release":
+            self.release()
 
     def create(self, locale):
         options = {
@@ -114,7 +117,7 @@ class Main:
 
         print "Scanning settings-schema.json..."
         try:
-            file = open("settings-schema.json", "r")
+            file = open("settings-schema.json")
             raw = file.read()
             file.close()
             data = json.loads(raw)
@@ -203,6 +206,23 @@ class Main:
             print "Removal complete for domain %s" % self.md["uuid"]
         else:
             print "Nothing to remove"
+
+    def release(self):
+        print "Current version is " + self.md["version"]
+        self.md["version"] = raw_input("New version number ")
+
+        file = open("metadata.json", "w")
+        json.dump(self.md, file, indent = 4, separators = (",", ": "))
+        file.close()
+
+        zip = ZipFile(self.md["uuid"] + ".zip", "w")
+
+        for file in glob("*.js") + glob("po/*.po") + ["metadata.json", "settings-schema.json"]:
+            zip.write(file, "%s/%s" % (self.md["uuid"], file))
+
+        zip.close()
+
+        print "Zip file %s created" % (self.md["uuid"] + ".zip")
 
     def call(self, command, options = {}, arguments = ()):
         try:
