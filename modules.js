@@ -159,20 +159,21 @@ Base.prototype = {
 
         this.update();
 
-        if(this.panel){
-            let text = this.settings[this.name + "PanelLabel"].replace(/%(.)(.)/g, bind(function(s, m, n){
-                if(this.panelLabel[m]){
-                    let output = this.panelLabel[m].call(this, n);
-                    if(output)
-                        return output;
-                } else if(m === "%")
-                    return m + n;
-                return s;
-            }), this);
+        if(this.panel && this.settings[this.name + "PanelLabel"]){
+            let text = this.settings[this.name + "PanelLabel"].replace(/%(\w)(\w)/g, bind(this.panelLabelReplace, this));
             this.panel.label.set_text(text);
             this.panel.label.set_margin_left(text.length? 6 : 0);
         }
         delete this.menuOpen;
+    },
+    panelLabelReplace: function(match, main, sub){
+        if(this.panelLabel[main]){
+            let output = this.panelLabel[main].call(this, sub);
+            if(output)
+                return output;
+        } else if(m === "%")
+            return main + sub;
+        return match;
     },
     setText: function(container, label, format, value, ext){
         value = this.format(format, value, ext);

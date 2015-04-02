@@ -13,9 +13,10 @@ function _(str){
 function bind(func, context){
     function callback(){
         try {
-            func.apply(context, arguments);
+            return func.apply(context, arguments);
         } catch(e){
             global.logError(e);
+            return null;
         }
     }
 
