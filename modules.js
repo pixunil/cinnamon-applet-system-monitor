@@ -11,6 +11,7 @@ const Mainloop = imports.mainloop;
 const messageTray = Main.messageTray;
 
 const uuid = "system-monitor@pixunil";
+const MAXSIZE = 1500;
 imports.ui.appletManager.applets[uuid].init.init("modules");
 
 const Terminal = appletDirectory.terminal;
@@ -145,7 +146,7 @@ Base.prototype = {
             if(tooltip){
                 let label = new St.Label({width: labels[i] * .75, style: "text-align: right"});
                 if(margin && i === 0)
-                    label.set_margin_left(margin * .75);
+                    label.margin_left = margin * .75;
                 tooltip.add_actor(label);
             }
         }
@@ -162,7 +163,7 @@ Base.prototype = {
         if(this.panel && this.settings[this.name + "PanelLabel"]){
             let text = this.settings[this.name + "PanelLabel"].replace(/%(\w)(\w)/g, bind(this.panelLabelReplace, this));
             this.panel.label.set_text(text);
-            this.panel.label.set_margin_left(text.length? 6 : 0);
+            this.panel.label.margin_left = text.length? 6 : 0;
         }
         delete this.menuOpen;
     },
@@ -234,7 +235,7 @@ Base.prototype = {
     formatBytes: function(bytes){
         let prefix = " KMGTPEZY";
         let a = 1, j = 0;
-        while(bytes / a > this.settings.maxsize){
+        while(bytes / a > MAXSIZE){
             a *= this.settings.byteUnit? 1024 : 1000;
             ++j;
         }
@@ -243,7 +244,7 @@ Base.prototype = {
     formatRate: function(bytes, dir){
         let prefix = " KMGTPEZY";
         let a = (this.settings.rateUnit < 2? 1 : .125), j = 0;
-        while(bytes / a > this.settings.maxsize){
+        while(bytes / a > MAXSIZE){
             a *= this.settings.rateUnit & 1? 1024 : 1000;
             ++j;
         }

@@ -113,7 +113,7 @@ SystemMonitorApplet.prototype = {
 
         //Settings keys
         let keys = [
-            "show-icon", "interval", "byte-unit", "rate-unit", "thermal-unit", "maxsize", "order",
+            "show-icon", "interval", "byte-unit", "rate-unit", "thermal-unit", "order",
             "graph-size", "graph-steps", "graph-overview", "graph-connection",
             "load", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value",
             "color-mem", "color-swap", "mem-panel-mode",

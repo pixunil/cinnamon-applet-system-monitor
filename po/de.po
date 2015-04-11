@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: system-monitor@pixunil 3.4\n"
+"Project-Id-Version: system-monitor@pixunil 3.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-03-17 16:35+0100\n"
+"POT-Creation-Date: 2015-04-11 22:13+0200\n"
 "PO-Revision-Date: 2015-03-17 10:58+0100\n"
 "Last-Translator: pixunil <pixunil@gmx.de>\n"
 "Language-Team: German\n"
@@ -55,11 +55,11 @@ msgstr "Netzwerkchronik"
 msgid "Thermal History"
 msgstr "Temperaturchronik"
 
-#: modules.js:22
+#: modules.js:23
 msgid "Dependence missing"
 msgstr "Abhängigkeit nicht erfüllt"
 
-#: modules.js:22
+#: modules.js:23
 #, javascript-format
 msgid ""
 "Please install the GTop package\n"
@@ -75,57 +75,57 @@ msgstr ""
 "um das Applet %s nutzen zu können"
 
 #. settings->cpu->description
-#: modules.js:323
+#: modules.js:325
 msgid "CPU"
 msgstr "CPU"
 
-#: modules.js:365
+#: modules.js:367
 msgid "User"
 msgstr "Benutzer"
 
-#: modules.js:366
+#: modules.js:368
 msgid "System"
 msgstr "System"
 
 #. settings->color-mem->description
-#: modules.js:448
+#: modules.js:450
 msgid "Memory"
 msgstr "Arbeitsspeicher"
 
-#: modules.js:473
+#: modules.js:475
 msgid "used"
 msgstr "benutzt"
 
-#: modules.js:474
+#: modules.js:476
 msgid "cached"
 msgstr "gecached"
 
-#: modules.js:475
+#: modules.js:477
 msgid "buffered"
 msgstr "gepuffert"
 
 #. settings->color-swap->description
-#: modules.js:545
+#: modules.js:547
 msgid "Swap"
 msgstr "Swap"
 
 #. settings->disk->description
-#: modules.js:591
+#: modules.js:593
 msgid "Disk"
 msgstr "Festplatte"
 
 #. settings->network->description
-#: modules.js:698
+#: modules.js:700
 msgid "Network"
 msgstr "Netzwerk"
 
-#: modules.js:737
+#: modules.js:739
 msgid "Total"
 msgstr "Gesamt"
 
 #. settings->thermal->description
 #. settings->color-thermal->description
-#: modules.js:787
+#: modules.js:789
 msgid "Thermal"
 msgstr "Temperatur"
 
@@ -233,15 +233,6 @@ msgstr "Triggerwert"
 msgid "%"
 msgstr "%"
 
-#. settings->graph-interval->description
-msgid "History graphs draw interval"
-msgstr "Aktualisierungsintervall von Chronikgraphen"
-
-#. settings->graph-interval->tooltip
-msgid "Interval in which history graphs refresh"
-msgstr "Intervall, in welchem die Chronikgraphen aktualisiert werden"
-
-#. settings->graph-interval->units
 #. settings->interval->units
 msgid "ms"
 msgstr "ms"
@@ -295,14 +286,6 @@ msgstr "Warnung"
 #. settings->thermal-warning-value->description
 msgid "Trigger temperature"
 msgstr "Triggertemperatur"
-
-#. settings->maxsize->description
-msgid "Maximal size"
-msgstr "Maximale Größe"
-
-#. settings->maxsize->tooltip
-msgid "The highest value of a byte or rate before the prefix is incremented"
-msgstr "Der höchste Wert für Bytes oder Raten, bevor das Präfix erhöht wird"
 
 #. settings->thermal-mode->options
 #. settings->cpu-warning-mode->options
@@ -536,6 +519,18 @@ msgid "Cores"
 msgstr "Kerne"
 
 #. settings->load->description
-#: modules.js:288
+#: modules.js:290
 msgid "Load averages"
 msgstr "Durchschnittslast"
+
+#~ msgid "History graphs draw interval"
+#~ msgstr "Aktualisierungsintervall von Chronikgraphen"
+
+#~ msgid "Interval in which history graphs refresh"
+#~ msgstr "Intervall, in welchem die Chronikgraphen aktualisiert werden"
+
+#~ msgid "Maximal size"
+#~ msgstr "Maximale Größe"
+
+#~ msgid "The highest value of a byte or rate before the prefix is incremented"
+#~ msgstr "Der höchste Wert für Bytes oder Raten, bevor das Präfix erhöht wird"

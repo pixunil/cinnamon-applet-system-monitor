@@ -213,6 +213,7 @@ class Main:
 
         file = open("metadata.json", "w")
         json.dump(self.md, file, indent = 4, separators = (",", ": "))
+        file.write("\n")
         file.close()
 
         zip = ZipFile(self.md["uuid"] + ".zip", "w")

@@ -4,6 +4,6 @@
     "uuid": "system-monitor@pixunil",
     "name": "System monitor with graphs",
     "max-instances": 10,
-    "version": "3.5",
+    "version": "3.6",
     "icon": "utilities-system-monitor"
 }

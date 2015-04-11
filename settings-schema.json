@@ -49,16 +49,6 @@
         },
         "description": "Thermal unit"
     },
-    "maxsize": {
-        "type": "spinbutton",
-        "default": 2000,
-        "min": 1000,
-        "max": 10000,
-        "step": 100,
-        "units": " ",
-        "description": "Maximal size",
-        "tooltip": "The highest value of a byte or rate before the prefix is incremented"
-    },
     "order": {
         "type": "combobox",
         "default": true,
@@ -92,7 +82,7 @@
     },
     "graph-size": {
         "type": "spinbutton",
-        "default": 100,
+        "default": 200,
         "min": 100,
         "max": 400,
         "step": 10,
