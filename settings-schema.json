@@ -128,16 +128,6 @@
         },
         "description": "Connection type for History graphs"
     },
-    "graph-interval": {
-        "type": "spinbutton",
-        "default": 1000,
-        "min": 20,
-        "max": 5000,
-        "step": 20,
-        "units": "ms",
-        "description": "History graphs draw interval",
-        "tooltip": "Interval in which history graphs refresh"
-    },
     "load-section": {
         "type": "separator"
     },

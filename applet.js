@@ -114,7 +114,7 @@ SystemMonitorApplet.prototype = {
         //Settings keys
         let keys = [
             "show-icon", "interval", "byte-unit", "rate-unit", "thermal-unit", "maxsize", "order",
-            "graph-size", "graph-steps", "graph-overview", "graph-connection", "graph-interval",
+            "graph-size", "graph-steps", "graph-overview", "graph-connection",
             "load", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value",
             "color-mem", "color-swap", "mem-panel-mode",
             "color-write", "color-read", "color-up", "color-down",
@@ -181,7 +181,10 @@ SystemMonitorApplet.prototype = {
 
         this.onSettingsChanged();
         this.getData();
-        this.paint();
+
+        this.paintTimeline = new Clutter.Timeline({duration: 100, repeat_count: -1});
+        this.paintTimeline.connect("new-frame", bind(this.paint, this));
+        this.paintTimeline.start();
     },
     initGraphs: function(){
         this.canvas = new St.DrawingArea({height: this.settings.graphSize});
@@ -236,16 +239,13 @@ SystemMonitorApplet.prototype = {
         if(this.settings.graphType === 0)
             this.canvas.queue_repaint();
     },
-    paint: function(once){
-        //do not repaint Overview graph (it is handled by getData), but the graphType is updated
+    paint: function(timeline, t, once){
+        //do not repaint Overview graph (it is handled by getData), but when the graphType is updated
         if(this.menu.isOpen && (this.settings.graphType !== 0 || once))
             this.canvas.queue_repaint();
 
         for(var i in this.panelWidgets)
             this.panelWidgets[i].paint();
-
-        if(!once)
-            this.paintTimeout = Mainloop.timeout_add(this.settings.graphInterval, bind(this.paint, this));
     },
     draw: function(){
         if(this.settings.graphType === 0)
@@ -266,7 +266,8 @@ SystemMonitorApplet.prototype = {
     },
     on_applet_removed_from_panel: function(){
         Mainloop.source_remove(this.timeout);
-        Mainloop.source_remove(this.paintTimeout);
+        this.paintTimeline.run_dispose();
+        this.settingProvider.finalize();
     },
     onSettingsChanged: function(){
         ["cpu1", "cpu2", "cpu3", "cpu4", "mem", "swap", "write", "read", "up", "down", "thermal"].forEach(function(p){
@@ -304,7 +305,7 @@ SystemMonitorApplet.prototype = {
         this.canvasHolder.actor.visible = show;
         if(show){
             this.graph.items[this.settings.graphType].setShowDot(true);
-            this.paint(true);
+            this.paint(this.paintTimeline, 0, true);
         }
     },
     onScroll: function(actor, event){
