@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # This file is put in the public domain.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
@@ -443,7 +443,7 @@ msgstr ""
 msgid ""
 "Common placeholders: \n"
 " %mu \t memory usage in bytes \n"
-" %pa \t memory usage in percent \n"
+" %pu \t memory usage in percent \n"
 " %su \t swap usage in bytes \n"
 " %sp \t swap usage in bytes"
 msgstr ""

@@ -283,7 +283,7 @@
         "default": "",
         "description": "Label in the panel",
         "dependency": "mem",
-        "tooltip": "Common placeholders: \n %mu \t memory usage in bytes \n %pa \t memory usage in percent \n %su \t swap usage in bytes \n %sp \t swap usage in bytes"
+        "tooltip": "Common placeholders: \n %mu \t memory usage in bytes \n %pu \t memory usage in percent \n %su \t swap usage in bytes \n %sp \t swap usage in bytes"
     },
     "mem-panel-graph": {
         "type": "combobox",
