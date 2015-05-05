@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: system-monitor@pixunil 3.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-04-11 22:13+0200\n"
+"POT-Creation-Date: 2015-05-05 17:02+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -126,6 +126,16 @@ msgstr ""
 #. settings->color-thermal->description
 #: modules.js:789
 msgid "Thermal"
+msgstr ""
+
+#. metadata->description
+msgid ""
+"Display CPU, Memory and Swap usage, Disk and Network rates as text and "
+"graphs"
+msgstr ""
+
+#. metadata->name
+msgid "System monitor with graphs"
 msgstr ""
 
 #. settings->graph-steps->description

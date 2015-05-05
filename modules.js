@@ -299,7 +299,7 @@ LoadAvg.prototype = {
 
         this.data = [];
 
-        let labels = [100, 100, 60];
+        let labels = [90, 90, 80];
         this.submenu = this.buildMenuItem(this.display, labels);
     },
     getData: function(){

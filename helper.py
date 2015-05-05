@@ -3,11 +3,13 @@
 import sys
 import os
 import json
+from collections import OrderedDict
 import subprocess
 from gi.repository import GLib
 from argparse import ArgumentParser
 from glob import glob
 from zipfile import ZipFile
+
 try:
     import polib
 except:
@@ -47,7 +49,7 @@ class Main:
     def __init__(self):
         try:
             file = open("metadata.json")
-            self.md = json.load(file)
+            self.md = json.load(file, object_pairs_hook = OrderedDict)
             file.close()
         except Exception, detail:
             print "Failed to get metadata - missing, corrupt, or incomplete metadata.json file"
@@ -115,18 +117,23 @@ class Main:
 
         self.pot = polib.pofile(self.potname)
 
-        print "Scanning settings-schema.json..."
+        print "metadata.json..."
+        for key in self.md:
+            if key in ("name", "description"):
+                comment = "metadata->%s" % key
+                self.save_entry(self.md[key], comment)
+
         try:
             file = open("settings-schema.json")
-            raw = file.read()
+            print "Scanning settings-schema.json..."
+
+            data = json.load(file)
             file.close()
-            data = json.loads(raw)
-        except Exception, detail:
-            print "Failed to get settings schema - missing, corrupt, or incomplete settings-schema.json file"
-            print detail
-            quit()
-        for key in data:
-            self.extract_strings(data[key], key)
+
+            for key in data:
+                self.extract_strings(data[key], key)
+        except IOError:
+            pass
 
         self.pot.save()
 
@@ -178,8 +185,8 @@ class Main:
         done_one = False
         for file in os.listdir("po"):
             parts = os.path.splitext(file)
-            if parts[1] == '.po':
-                this_locale_dir = os.path.join(locale_inst, parts[0], 'LC_MESSAGES')
+            if parts[1] == ".po":
+                this_locale_dir = os.path.join(locale_inst, parts[0], "LC_MESSAGES")
                 GLib.mkdir_with_parents(this_locale_dir, 0755)
                 arguments = (
                     "--check",

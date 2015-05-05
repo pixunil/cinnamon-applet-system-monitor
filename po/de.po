@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: system-monitor@pixunil 3.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-04-11 22:13+0200\n"
-"PO-Revision-Date: 2015-03-17 10:58+0100\n"
+"POT-Creation-Date: 2015-05-05 17:02+0200\n"
+"PO-Revision-Date: 2015-05-05 17:03+0100\n"
 "Last-Translator: pixunil <pixunil@gmx.de>\n"
 "Language-Team: German\n"
 "MIME-Version: 1.0\n"
@@ -522,6 +522,17 @@ msgstr "Kerne"
 #: modules.js:290
 msgid "Load averages"
 msgstr "Durchschnittslast"
+
+#. metadata->name
+msgid "System monitor with graphs"
+msgstr "Systemüberwachung mit Graphen"
+
+#. metadata->description
+msgid ""
+"Display CPU, Memory and Swap usage, Disk and Network rates as text and graphs"
+msgstr ""
+"Zeigt CPU, Arbeitsspeicher- und Auslagerungsauslastung, Festplatten- und "
+"Netzwerkraten als Text und in Graphen"
 
 #~ msgid "History graphs draw interval"
 #~ msgstr "Aktualisierungsintervall von Chronikgraphen"
