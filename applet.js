@@ -15,11 +15,20 @@ const Tooltips = imports.ui.tooltips;
 const Mainloop = imports.mainloop;
 
 const uuid = "system-monitor@pixunil";
-imports.ui.appletManager.applets[uuid].init.init("applet");
+const path = imports.ui.appletManager.appletMeta[uuid].path;
 
-const Graph = appletDirectory.graph;
-const Modules = appletDirectory.modules;
+if(imports.searchPath.indexOf(path) === -1)
+    imports.searchPath.push(path);
 
+const _ = imports._;
+const bind = imports.bind;
+
+const iconName = imports.iconName;
+
+const Graph = imports.graph;
+const Modules = imports.modules;
+
+imports.searchPath.splice(imports.searchPath.indexOf(path), 1);
 
 function PanelWidget(panelHeight, module, modules){
     this._init(panelHeight, module, modules);

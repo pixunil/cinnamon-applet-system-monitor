@@ -10,11 +10,15 @@ const Mainloop = imports.mainloop;
 
 const messageTray = Main.messageTray;
 
-const uuid = "system-monitor@pixunil";
-const MAXSIZE = 1500;
-imports.ui.appletManager.applets[uuid].init.init("modules");
+const uuid = imports.uuid;
+const iconName = imports.iconName;
 
-const Terminal = appletDirectory.terminal;
+const _ = imports._;
+const bind = imports.bind;
+
+const MAXSIZE = 1500;
+
+const Terminal = imports.terminal;
 
 try {
     const GTop = imports.gi.GTop;
