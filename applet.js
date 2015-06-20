@@ -94,13 +94,14 @@ SystemMonitorTooltip.prototype = {
 };
 
 
-function SystemMonitorApplet(orientation, panelHeight, instanceId){
-    this._init(orientation, panelHeight, instanceId);
+function SystemMonitorApplet(){
+    this.init.apply(this, arguments);
 }
+
 SystemMonitorApplet.prototype = {
     __proto__: Applet.Applet.prototype,
 
-    _init: function(orientation, panelHeight, instanceId){
+    init: function(orientation, panelHeight, instanceId){
         Applet.Applet.prototype._init.call(this, orientation, panelHeight);
 
         this.panelHeight = panelHeight;
@@ -114,6 +115,7 @@ SystemMonitorApplet.prototype = {
             items: [new PopupMenu.PopupMenuItem(_("Overview")), new PopupMenu.PopupMenuItem(_("CPU History")), new PopupMenu.PopupMenuItem(_("Memory and Swap History")),
                 new PopupMenu.PopupMenuItem(_("Disk History")), new PopupMenu.PopupMenuItem(_("Network History")), new PopupMenu.PopupMenuItem(_("Thermal History"))]
         };
+
         this.graphs = [];
 
         this.settings = {};
@@ -148,24 +150,18 @@ SystemMonitorApplet.prototype = {
         this.menu = new Applet.AppletPopupMenu(this, orientation);
         this.menuManager.addMenu(this.menu);
 
-        this.modules = {
-            load: new Modules.LoadAvg(this.settings, this.colors, this.time),
-            cpu: new Modules.CPU(this.settings, this.colors, this.time),
-            mem: new Modules.Memory(this.settings, this.colors, this.time),
-            swap: new Modules.Swap(this.settings, this.colors, this.time),
-            disk: new Modules.Disk(this.settings, this.colors, this.time),
-            network: new Modules.Network(this.settings, this.colors, this.time),
-            thermal: new Modules.Thermal(this.settings, this.colors, this.time)
-        };
+        this.modules = {};
+        for(let module in Modules.modules){
+            let Module = Modules.modules[module].Module;
+            this.modules[module] = new Module(this.settings, this.colors, this.time);
 
-        this.modules.mem.swap = this.modules.swap;
-
-        for(let i in this.modules){
-            if(!this.modules[i].unavailable){
-                this.menu.addMenuItem(this.modules[i].submenu);
-                this._applet_tooltip.addActor(this.modules[i].tooltip);
+            if(!this.modules[module].unavailable){
+                this.menu.addMenuItem(this.modules[module].submenu);
+                this._applet_tooltip.addActor(this.modules[module].tooltip);
             }
         }
+
+        this.modules.mem.swap = this.modules.swap;
 
         this.initPanel();
         this.initGraphs();
@@ -195,6 +191,7 @@ SystemMonitorApplet.prototype = {
         this.paintTimeline.connect("new-frame", bind(this.paint, this));
         this.paintTimeline.start();
     },
+
     initGraphs: function(){
         this.canvas = new St.DrawingArea({height: this.settings.graphSize});
         this.canvas.connect("repaint", bind(this.draw, this));
@@ -248,36 +245,42 @@ SystemMonitorApplet.prototype = {
         if(this.settings.graphType === 0)
             this.canvas.queue_repaint();
     },
+
     paint: function(timeline, t, once){
-        //do not repaint Overview graph (it is handled by getData), but when the graphType is updated
+        // do not repaint Overview graph (it is handled by getData), but when the graphType is updated
         if(this.menu.isOpen && (this.settings.graphType !== 0 || once))
             this.canvas.queue_repaint();
 
         for(var i in this.panelWidgets)
             this.panelWidgets[i].paint();
     },
+
     draw: function(){
         if(this.settings.graphType === 0)
             this.graphs[0][this.settings.graphOverview].draw();
         else
             this.graphs[this.settings.graphType].draw();
     },
+
     updateText: function(){
         for(var i in this.modules){
             if(this.settings[this.modules[i].name]){
-                this.modules[i]._update(this.menu.isOpen);
+                this.modules[i].doUpdate(this.menu.isOpen);
             }
         }
     },
+
     on_applet_clicked: function(){
         this.menu.toggle();
         if(this.menu.isOpen) this.updateText();
     },
+
     on_applet_removed_from_panel: function(){
         Mainloop.source_remove(this.timeout);
         this.paintTimeline.run_dispose();
         this.settingProvider.finalize();
     },
+
     onSettingsChanged: function(){
         ["cpu1", "cpu2", "cpu3", "cpu4", "mem", "swap", "write", "read", "up", "down", "thermal"].forEach(function(p){
             let c = this.settings["color" + p[0].toUpperCase() + p.substr(1)].split(","), i;
@@ -292,7 +295,7 @@ SystemMonitorApplet.prototype = {
             this.modules[i].onSettingsChanged();
             if(this.modules[i].menuGraph){
                 this.graph.items[++j].actor.visible = !!this.settings[this.modules[i].name];
-                //if the module was deactivated, but the menu graph is active, set it to "Overview"
+                // if the module was deactivated, but the menu graph is active, set it to "Overview"
                 if(!this.settings[this.modules[i].name] && this.settings.graphType === j){
                     this.settings.graphType = 0;
                     this.onGraphTypeChanged();
@@ -304,6 +307,7 @@ SystemMonitorApplet.prototype = {
 
         this.updateText();
     },
+
     onGraphTypeChanged: function(){
         this.graph.items.forEach(function(item){
             item.setShowDot(false);
@@ -317,6 +321,7 @@ SystemMonitorApplet.prototype = {
             this.paint(this.paintTimeline, 0, true);
         }
     },
+
     onScroll: function(actor, event){
         let direction = event.get_scroll_direction();
         let graphType = this.settings.graphType;
@@ -344,11 +349,5 @@ SystemMonitorApplet.prototype = {
 };
 
 function main(metadata, orientation, panelHeight, instanceId){
-    var systemMonitorApplet;
-    try {
-        systemMonitorApplet = new SystemMonitorApplet(orientation, panelHeight, instanceId);
-    } catch(e){
-        global.logError(e);
-    }
-    return systemMonitorApplet;
+    return new SystemMonitorApplet(orientation, panelHeight, instanceId);
 }

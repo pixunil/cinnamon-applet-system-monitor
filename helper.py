@@ -117,11 +117,20 @@ class Main:
 
         self.pot = polib.pofile(self.potname)
 
-        print "metadata.json..."
+        print "Scanning metadata.json..."
         for key in self.md:
-            if key in ("name", "description"):
+            if key in ("name", "description", "comments"):
                 comment = "metadata->%s" % key
                 self.save_entry(self.md[key], comment)
+            elif key == "contributors":
+                comment = "metadata->%s" % key
+
+                values = self.md[key]
+                if isinstance(values, basestring):
+                    values = values.split(",")
+
+                for value in values:
+                    self.save_entry(value.strip(), comment)
 
         try:
             file = open("settings-schema.json")
