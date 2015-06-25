@@ -1,7 +1,6 @@
 const Cinnamon = imports.gi.Cinnamon;
 const Clutter = imports.gi.Clutter;
 const GLib = imports.gi.GLib;
-const Pango = imports.gi.Pango;
 const St = imports.gi.St;
 
 const Util = imports.misc.util;
@@ -26,48 +25,18 @@ const bind = imports.bind;
 const iconName = imports.iconName;
 
 const Graph = imports.graph;
-const Modules = imports.modules;
+
+const Modules = {
+    loadAvg: imports.modules.loadAvg,
+    cpu: imports.modules.cpu,
+    mem: imports.modules.mem,
+    swap: imports.modules.swap,
+    disk: imports.modules.disk,
+    network: imports.modules.network,
+    thermal: imports.modules.thermal
+};
 
 imports.searchPath.splice(imports.searchPath.indexOf(path), 1);
-
-function PanelWidget(panelHeight, module, modules){
-    this._init(panelHeight, module, modules);
-}
-PanelWidget.prototype = {
-    _init: function(panelHeight, module, modules){
-        this.box = new St.BoxLayout();
-
-        this.label = new St.Label({reactive: true, track_hover: true, style_class: "applet-label"});
-        this.label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
-        this.box.add(this.label, {y_align: St.Align.MIDDLE, y_fill: false});
-
-        this.canvas = new St.DrawingArea({height: panelHeight});
-        this.canvas.connect("repaint", bind(this.draw, this));
-        this.box.add_actor(this.canvas);
-
-        this.graphs = [];
-        let graph;
-        for(var i = 0, l = module.panelGraphs.length; i < l; ++i){
-            graph = new Graph[module.panelGraphs[i]](this.canvas, modules, module.time, module.settings, module.colors);
-            graph.packDir = false;
-            this.graphs.push(graph);
-        }
-
-        module.panel = this;
-        this.module = module;
-    },
-    draw: function(){
-        if(this.module.settings[this.module.name + "PanelGraph"] === -1) return;
-
-        let graph = this.module.settings[this.module.name + "PanelGraph"];
-        if(this.module.settings[this.module.name + "PanelMode"])
-            graph += this.module.settings[this.module.name + "PanelMode"];
-        this.graphs[graph].draw();
-    },
-    paint: function(){
-        this.canvas.queue_repaint();
-    }
-};
 
 function SystemMonitorTooltip(){
     this._init.apply(this, arguments);
@@ -122,11 +91,11 @@ SystemMonitorApplet.prototype = {
         this.colors = {};
         this.settingProvider = new Settings.AppletSettings(this.settings, uuid, instanceId);
 
-        //Settings keys
+        // Settings keys
         let keys = [
             "show-icon", "interval", "byte-unit", "rate-unit", "thermal-unit", "order",
             "graph-size", "graph-steps", "graph-overview", "graph-connection",
-            "load", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value",
+            "loadAvg", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value",
             "color-mem", "color-swap", "mem-panel-mode",
             "color-write", "color-read", "color-up", "color-down",
             "color-thermal", "thermal-mode","thermal-warning", "thermal-warning-time", "thermal-warning-value"
@@ -151,8 +120,8 @@ SystemMonitorApplet.prototype = {
         this.menuManager.addMenu(this.menu);
 
         this.modules = {};
-        for(let module in Modules.modules){
-            let Module = Modules.modules[module].Module;
+        for(let module in Modules){
+            let Module = Modules[module].Module;
             this.modules[module] = new Module(this.settings, this.colors, this.time);
 
             if(!this.modules[module].unavailable){
@@ -168,7 +137,7 @@ SystemMonitorApplet.prototype = {
 
         this.onGraphTypeChanged();
         this.graph.items.forEach(function(item, i){
-            //To supress menu from closing
+            // supress menu from closing
             item.activate = bind(function(){
                 this.settings.graphType = i;
                 this.onGraphTypeChanged();
@@ -201,15 +170,18 @@ SystemMonitorApplet.prototype = {
         this.menu.addMenuItem(this.canvasHolder);
 
         let overviewGraphs = [
-            new Graph.PieOverview(this.canvas, this.modules, this.time, this.settings, this.colors),
-            new Graph.ArcOverview(this.canvas, this.modules, this.time, this.settings, this.colors)
+            new Graph.PieOverview(this.canvas, this.modules, this.settings, this.colors),
+            new Graph.ArcOverview(this.canvas, this.modules, this.settings, this.colors)
         ];
 
         this.graphs = [overviewGraphs];
 
-        for(let i in this.modules){
-            if(this.modules[i].menuGraph)
-                this.graphs.push(new Graph[this.modules[i].menuGraph](this.canvas, this.modules, this.time, this.settings, this.colors));
+        for(let module in this.modules){
+            module = this.modules[module];
+            let graph = module.import.HistoryGraph;
+
+            if(graph)
+                this.graphs.push(new graph(this.canvas, module, this.time, this.settings, this.colors));
         }
     },
 
@@ -219,13 +191,11 @@ SystemMonitorApplet.prototype = {
         this.iconBox.child = icon;
         this.actor.add(this.iconBox, {y_align: St.Align.MIDDLE, y_fill: false});
 
-        this.panelWidgets = {};
+        for(let module in this.modules){
+            let panelWidget = this.modules[module].buildPanelWidget();
 
-        for(var i in this.modules){
-            if(!this.modules[i].panelGraphs) continue;
-            let widget = new PanelWidget(this.panelHeight, this.modules[i], this.modules);
-            this.actor.add(widget.box);
-            this.panelWidgets[i] = widget;
+            if(panelWidget)
+                this.actor.add(panelWidget.box);
         }
     },
 
@@ -242,17 +212,21 @@ SystemMonitorApplet.prototype = {
         this.updateText();
         this.timeout = Mainloop.timeout_add(this.settings.interval, bind(this.getData, this));
 
+        // refresh independently of the drawing timeline the Overview graph
         if(this.settings.graphType === 0)
             this.canvas.queue_repaint();
     },
 
-    paint: function(timeline, t, once){
+    paint: function(timeline, time, once){
         // do not repaint Overview graph (it is handled by getData), but when the graphType is updated
         if(this.menu.isOpen && (this.settings.graphType !== 0 || once))
             this.canvas.queue_repaint();
 
-        for(var i in this.panelWidgets)
-            this.panelWidgets[i].paint();
+        for(let module in this.modules){
+            let panelWidget = this.modules[module].panel;
+            if(panelWidget)
+                panelWidget.paint();
+        }
     },
 
     draw: function(){
@@ -264,9 +238,7 @@ SystemMonitorApplet.prototype = {
 
     updateText: function(){
         for(var i in this.modules){
-            if(this.settings[this.modules[i].name]){
-                this.modules[i].doUpdate(this.menu.isOpen);
-            }
+            this.modules[i].doUpdate(this.menu.isOpen);
         }
     },
 
@@ -327,7 +299,7 @@ SystemMonitorApplet.prototype = {
         let graphType = this.settings.graphType;
 
         if(direction === Clutter.ScrollDirection.DOWN && graphType < this.graphs.length - 1){
-            //skip not available modules
+            // skip not available modules
             do {
                 if(++graphType === this.graphs.length)
                     return;

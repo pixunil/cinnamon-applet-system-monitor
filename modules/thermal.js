@@ -1,6 +1,7 @@
 const GLib = imports.gi.GLib;
 
 const _ = imports._;
+const Graph = imports.graph;
 const bind = imports.bind;
 const Terminal = imports.terminal;
 const Base = imports.modules.Base;
@@ -107,13 +108,57 @@ Module.prototype = {
 
     onSettingsChanged: function(){
         Base.prototype.onSettingsChanged.call(this);
+
         if(this.settings.thermalWarning){
             this.notifications = this.settings.thermalWarningTime;
             if(!this.settings.thermalUnit)
                 this.settings.thermalWarningValue = (this.settings.thermalWarningValue - 32) * 5 / 9; // Fahrenheit => Celsius
         }
     },
+};
 
-    menuGraph: "ThermalHistory",
-    panelGraphs: ["ThermalBar", "ThermalHistory"]
+function BarGraph(){
+    this.init.apply(this, arguments);
+}
+
+BarGraph.prototype = {
+    __proto__: Graph.Bar.prototype,
+
+    draw: function(){
+        this.begin(1);
+
+        this.next("thermal");
+        this.bar((this.data[0] - this.module.min) / (this.module.max - this.module.min));
+    }
+};
+
+function HistoryGraph(){
+    this.init.apply(this, arguments);
+}
+
+HistoryGraph.prototype = {
+    __proto__: Graph.History.prototype,
+
+    draw: function(){
+        this.begin(this.history[0].length, 1, this.module.max, this.module.min);
+
+        // first draw the sensors
+        for(let i = 1, l = this.history.length; i < l; ++i){
+            // if this sensor is labelled after a cpu core, use a cpu color
+            if(this.module.colorRef[i])
+                this.next("cpu" + this.module.colorRef[i]);
+            // otherwise the normal thermal color
+            else {
+                this.next("thermal");
+                this.setAlpha((l - i / 4) / l);
+            }
+
+            this.line(this.history[i], i, l);
+        }
+
+        // then the min / average / max data
+        this.next("thermal");
+        this.ctx.setDash([5, 5], 0);
+        this.line(this.history[0], 0, this.history.length);
+    }
 };

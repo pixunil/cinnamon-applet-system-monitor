@@ -1,4 +1,5 @@
 const _ = imports._;
+const Graph = imports.graph;
 const Base = imports.modules.Base;
 const GTop = imports.modules.GTop;
 
@@ -144,8 +145,48 @@ Module.prototype = {
             }
             this.settings.cpuWarningValue /= 100;
         }
-    },
+    }
+};
 
-    menuGraph: "CPUHistory",
-    panelGraphs: ["CPUBar", "CPUHistory"]
+function BarGraph(){
+    this.init.apply(this, arguments);
+}
+
+BarGraph.prototype = {
+    __proto__: Graph.Bar.prototype,
+
+    draw: function(){
+        this.begin(this.module.count);
+
+        for(let i = 0; i < this.module.count; ++i){
+            this.next("cpu" + (i % 4 + 1));
+            this.bar(this.data.user[i]);
+
+            this.setAlpha(.75);
+            this.bar(this.data.system[i]);
+        }
+    }
+};
+
+function HistoryGraph(){
+    this.init.apply(this, arguments);
+}
+
+HistoryGraph.prototype = {
+    __proto__: Graph.History.prototype,
+
+    draw: function(){
+        this.begin(this.history.user[0].length);
+
+        for(let i = 0; i < this.module.count; ++i){
+            this.next("cpu" + (i % 4 + 1));
+
+            if(this.settings.cpuSplit){
+                this.line(this.history.user[i], i, this.module.count);
+                this.setAlpha(.75);
+                this.line(this.history.system[i], i, this.module.count);
+            } else
+                this.line(this.history.usage[i], i, this.module.count);
+        }
+    }
 };

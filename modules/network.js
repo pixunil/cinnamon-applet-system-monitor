@@ -1,6 +1,7 @@
 const Cinnamon = imports.gi.Cinnamon;
 
 const _ = imports._;
+const Graph = imports.graph;
 const Base = imports.modules.Base;
 const GTop = imports.modules.GTop;
 
@@ -93,8 +94,41 @@ Module.prototype = {
 
             return false;
         }
-    },
+    }
+};
 
-    menuGraph: "NetworkHistory",
-    panelGraphs: ["NetworkBar", "NetworkHistory"]
+function BarGraph(){
+    this.init.apply(this, arguments);
+}
+
+BarGraph.prototype = {
+    __proto__: Graph.Bar.prototype,
+
+    draw: function(){
+        this.begin(2);
+
+        this.next("up");
+        this.bar(this.data.up / this.module.max);
+
+        this.next("down");
+        this.bar(this.data.down / this.module.max);
+    }
+};
+
+function HistoryGraph(){
+    this.init.apply(this, arguments);
+}
+
+HistoryGraph.prototype = {
+    __proto__: Graph.History.prototype,
+
+    draw: function(){
+        this.begin(this.history.up.length, 0, this.module.max);
+
+        this.next("up");
+        this.line(this.history.up, 0, 2);
+
+        this.next("down");
+        this.line(this.history.down, 1, 2);
+    }
 };

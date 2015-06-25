@@ -3,6 +3,7 @@ const Cinnamon = imports.gi.Cinnamon;
 const Mainloop = imports.mainloop;
 
 const _ = imports._;
+const Graph = imports.graph;
 const bind = imports.bind;
 const Base = imports.modules.Base;
 const GTop = imports.modules.GTop;
@@ -115,8 +116,39 @@ Module.prototype = {
                 return this.format("rate", this.data.read, false);
             return false;
         }
-    },
+    }
+};
 
-    menuGraph: "DiskHistory",
-    panelGraphs: ["DiskBar", "DiskHistory"]
+function BarGraph(){
+    this.init.apply(this, arguments);
+}
+BarGraph.prototype = {
+    __proto__: Graph.Bar.prototype,
+
+    draw: function(){
+        this.begin(2);
+
+        this.next("write");
+        this.bar(this.data.write / this.module.max);
+
+        this.next("read");
+        this.bar(this.data.read / this.module.max);
+    }
+};
+
+function HistoryGraph(){
+    this.init.apply(this, arguments);
+}
+HistoryGraph.prototype = {
+    __proto__: Graph.History.prototype,
+
+    draw: function(){
+        this.begin(this.history.write.length, 0, this.module.max);
+
+        this.next("write");
+        this.line(this.history.write, 0, 2);
+
+        this.next("read");
+        this.line(this.history.read, 1, 2);
+    }
 };

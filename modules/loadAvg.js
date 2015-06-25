@@ -9,7 +9,7 @@ function Module(){
 Module.prototype = {
     __proto__: Base.prototype,
 
-    name: "load",
+    name: "loadAvg",
     display: _("Load averages"),
 
     init: function(){

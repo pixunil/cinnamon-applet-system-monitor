@@ -1,13 +1,13 @@
 # SOME DESCRIPTIVE TITLE.
 # This file is put in the public domain.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: system-monitor@pixunil 3.6\n"
+"Project-Id-Version: system-monitor@pixunil 3.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-05-05 17:02+0200\n"
+"POT-Creation-Date: 2015-06-19 21:30+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,49 +16,49 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: \n"
 
-#: applet.js:99 applet.js:176
+#: applet.js:108 applet.js:185
 msgid "System Monitor"
 msgstr ""
 
-#: applet.js:104
+#: applet.js:113
 msgid "Graph"
 msgstr ""
 
 #. settings->graph-type->options
-#: applet.js:105
+#: applet.js:114
 msgid "Overview"
 msgstr ""
 
 #. settings->graph-type->options
-#: applet.js:105
+#: applet.js:114
 msgid "CPU History"
 msgstr ""
 
 #. settings->graph-type->options
-#: applet.js:105
+#: applet.js:114
 msgid "Memory and Swap History"
 msgstr ""
 
 #. settings->graph-type->options
-#: applet.js:106
+#: applet.js:115
 msgid "Disk History"
 msgstr ""
 
 #. settings->graph-type->options
-#: applet.js:106
+#: applet.js:115
 msgid "Network History"
 msgstr ""
 
 #. settings->graph-type->options
-#: applet.js:106
+#: applet.js:115
 msgid "Thermal History"
 msgstr ""
 
-#: modules.js:23
+#: modules.js:27
 msgid "Dependence missing"
 msgstr ""
 
-#: modules.js:23
+#: modules.js:27
 #, javascript-format
 msgid ""
 "Please install the GTop package\n"
@@ -69,63 +69,67 @@ msgid ""
 msgstr ""
 
 #. settings->load->description
-#: modules.js:290
+#: modules.js:294
 msgid "Load averages"
 msgstr ""
 
 #. settings->cpu->description
-#: modules.js:325
+#: modules.js:329
 msgid "CPU"
 msgstr ""
 
-#: modules.js:367
+#: modules.js:371
 msgid "User"
 msgstr ""
 
-#: modules.js:368
+#: modules.js:372
 msgid "System"
 msgstr ""
 
 #. settings->color-mem->description
-#: modules.js:450
+#: modules.js:454
 msgid "Memory"
 msgstr ""
 
-#: modules.js:475
+#: modules.js:479
 msgid "used"
 msgstr ""
 
-#: modules.js:476
+#: modules.js:480
 msgid "cached"
 msgstr ""
 
-#: modules.js:477
+#: modules.js:481
 msgid "buffered"
 msgstr ""
 
 #. settings->color-swap->description
-#: modules.js:547
+#: modules.js:551
 msgid "Swap"
 msgstr ""
 
 #. settings->disk->description
-#: modules.js:593
+#: modules.js:597
 msgid "Disk"
 msgstr ""
 
 #. settings->network->description
-#: modules.js:700
+#: modules.js:704
 msgid "Network"
 msgstr ""
 
-#: modules.js:739
+#: modules.js:743
 msgid "Total"
 msgstr ""
 
 #. settings->thermal->description
 #. settings->color-thermal->description
-#: modules.js:789
+#: modules.js:793
 msgid "Thermal"
+msgstr ""
+
+#. metadata->name
+msgid "System monitor with graphs"
 msgstr ""
 
 #. metadata->description
@@ -134,8 +138,18 @@ msgid ""
 "graphs"
 msgstr ""
 
-#. metadata->name
-msgid "System monitor with graphs"
+#. metadata->contributors
+#. settings->network-panel-graph->options
+#. settings->cpu-panel-graph->options
+#. settings->mem-panel-graph->options
+#. settings->graph-type->options
+#. settings->thermal-panel-graph->options
+#. settings->disk-panel-graph->options
+msgid "None"
+msgstr ""
+
+#. metadata->contributors
+msgid "Io"
 msgstr ""
 
 #. settings->graph-steps->description
@@ -237,15 +251,6 @@ msgstr ""
 
 #. settings->graph-connection->description
 msgid "Connection type for History graphs"
-msgstr ""
-
-#. settings->network-panel-graph->options
-#. settings->cpu-panel-graph->options
-#. settings->mem-panel-graph->options
-#. settings->graph-type->options
-#. settings->thermal-panel-graph->options
-#. settings->disk-panel-graph->options
-msgid "None"
 msgstr ""
 
 #. settings->network-panel-graph->options

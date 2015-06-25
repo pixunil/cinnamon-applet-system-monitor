@@ -1,4 +1,5 @@
 const _ = imports._;
+const Graph = imports.graph;
 const Base = imports.modules.Base;
 const GTop = imports.modules.GTop;
 
@@ -104,8 +105,64 @@ Module.prototype = {
 
             return false;
         }
-    },
+    }
+};
 
-    menuGraph: "MemorySwapHistory",
-    panelGraphs: ["MemoryBar", "MemoryHistory", "MemorySwapBar", "MemorySwapHistory"]
+function BarGraph(){
+    this.init.apply(this, arguments);
+}
+
+BarGraph.prototype = {
+    __proto__: Graph.Bar.prototype,
+
+    draw: function(){
+        if(this.settings.memPanelMode === 0)
+            this.begin(1);
+        else
+            this.begin(2);
+
+        this.next("mem");
+        this.bar(this.data.usedup / this.data.total);
+
+        this.setAlpha(.75);
+        this.bar(this.data.cached / this.data.total);
+
+        this.setAlpha(.5);
+        this.bar(this.data.buffer / this.data.total);
+
+        if(this.settings.memPanelMode === 2){
+            this.next("swap");
+            this.bar(this.module.swap.data.used / this.module.swap.data.total);
+        }
+    }
+};
+
+function HistoryGraph(){
+    this.init.apply(this, arguments);
+}
+
+HistoryGraph.prototype = {
+    __proto__: Graph.History.prototype,
+
+    draw: function(){
+        this.begin(this.history.usedup.length, 0, this.data.total);
+
+        let num = this.settings.memPanelMode === 0? 1 : 2;
+
+        this.next("mem");
+        this.line(this.history.usedup, 0, num);
+
+        this.setAlpha(.75);
+        this.line(this.history.cached, 0, num);
+
+        this.setAlpha(.5);
+        this.line(this.history.buffer, 0, num);
+
+        if(this.settings.memPanelMode === 2){
+            this.max = this.module.swap.data.total;
+
+            this.next("swap");
+            this.line(this.module.swap.history.used, 1, 2);
+        }
+    }
 };

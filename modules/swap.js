@@ -9,7 +9,8 @@ function Module(){
 Module.prototype = {
     __proto__: Base.prototype,
 
-    name: "mem",
+    name: "swap",
+    settingsName: "mem",
     display: _("Swap"),
 
     init: function(){

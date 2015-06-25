@@ -6,14 +6,13 @@ function process(number){
     return number > 0 && !isNaN(number) && isFinite(number);
 }
 
-function Base(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
+function Base(){
+    this.init.apply(this, arguments);
 }
+
 Base.prototype = {
-    _init: function(canvas, modules, time, settings, colors){
+    init: function(canvas, settings, colors){
         this.canvas = canvas;
-        this.modules = modules;
-        this.time = time;
         this.settings = settings;
         this.colors = colors;
     },
@@ -24,26 +23,34 @@ Base.prototype = {
         this.h = this.canvas.get_height();
     },
 
-    setColor: function(c){
-        this.color = c;
-        c = this.colors[c];
-        this.ctx.setSourceRGB(c[0], c[1], c[2]);
+    setColor: function(colorName){
+        this.colorName = colorName;
+
+        let color = this.colors[colorName];
+        this.ctx.setSourceRGB(color[0], color[1], color[2]);
     },
-    setAlpha: function(a){
-        var c = this.colors[this.color];
-        this.ctx.setSourceRGBA(c[0], c[1], c[2], a);
+
+    setAlpha: function(alpha){
+        let color = this.colors[this.colorName];
+        this.ctx.setSourceRGBA(color[0], color[1], color[2], alpha);
     }
 };
 
-
-function Overview(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
+function Overview(){
+    this.init.apply(this, arguments);
 }
+
 Overview.prototype = {
     __proto__: Base.prototype,
 
     xScale: .5,
     yScale: .5,
+
+    init: function(canvas, modules, settings, colors){
+        Base.prototype.init.call(this, canvas, settings, colors);
+
+        this.modules = modules;
+    },
 
     draw: function(){
         let m = this.modules;
@@ -130,9 +137,10 @@ Overview.prototype = {
 };
 
 
-function PieOverview(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
+function PieOverview(){
+    this.init.apply(this, arguments);
 }
+
 PieOverview.prototype = {
     __proto__: Overview.prototype,
 
@@ -149,6 +157,7 @@ PieOverview.prototype = {
             this.ctx.arcNegative(this.w / 2, this.h / 2, this.r, this.a, this.a -= angle);
         this.ctx.stroke();
     },
+
     small: function(angle, dir, side){
         if(!process(angle)) return;
 
@@ -165,6 +174,7 @@ PieOverview.prototype = {
             this.ctx.arcNegative(this.w / 2, this.h / 2, this.r, a, a - angle);
         this.ctx.stroke();
     },
+
     center: function(radius){
         if(!process(radius)) return;
 
@@ -173,9 +183,10 @@ PieOverview.prototype = {
     }
 };
 
-function ArcOverview(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
+function ArcOverview(){
+    this.init.apply(this, arguments);
 }
+
 ArcOverview.prototype = {
     __proto__: Overview.prototype,
 
@@ -197,6 +208,7 @@ ArcOverview.prototype = {
         }
         this.ctx.stroke();
     },
+
     small: function(angle, dir){
         if(!process(angle)) return;
 
@@ -208,6 +220,7 @@ ArcOverview.prototype = {
             this.ctx.arcNegative(this.w / 2, this.h, this.r, -Math.PI / 2, -angle - Math.PI / 2);
         this.ctx.stroke();
     },
+
     center: function(radius){
         if(!process(radius)) return;
 
@@ -216,11 +229,19 @@ ArcOverview.prototype = {
     }
 };
 
-function Bar(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
+function Bar(){
+    this.init.apply(this, arguments);
 }
+
 Bar.prototype = {
     __proto__: Base.prototype,
+
+    init: function(canvas, module, settings, colors){
+        Base.prototype.init.call(this, canvas, settings, colors);
+
+        this.module = module;
+        this.data = module.data;
+    },
 
     begin: function(n){
         Base.prototype.begin.call(this);
@@ -228,6 +249,7 @@ Bar.prototype = {
         this.dx = this.w / n;
         this.x = -this.dx;
     },
+
     next: function(color){
         this.x += this.dx;
         this.y = this.h;
@@ -241,11 +263,21 @@ Bar.prototype = {
     }
 };
 
-function History(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
+function History(){
+    this.init.apply(this, arguments);
 }
+
 History.prototype = {
     __proto__: Base.prototype,
+
+    init: function(canvas, module, time, settings, colors){
+        Base.prototype.init.call(this, canvas, settings, colors);
+
+        this.module = module;
+        this.data = module.data;
+        this.history = module.history;
+        this.time = time;
+    },
 
     _line: {
         line: function(history){
@@ -258,8 +290,9 @@ History.prototype = {
             this.ctx.identityMatrix();
             this.ctx.stroke();
 
-            this._incrementLast(history);
+            this.incrementLast(history);
         },
+
         area: function(history, num, total){
             this.ctx.save();
             if(this.packDir){
@@ -282,20 +315,24 @@ History.prototype = {
             this.ctx.fill();
             this.ctx.restore();
 
-            this._incrementLast(history);
+            this.incrementLast(history);
         },
+
         areaUpDown: function(history, num){
             this.ctx.save();
             if(this.packDir){
                 this.ctx.translate(this.dw * this.tx, this.h / 2);
-                if(!num) //up
+
+                if(!num) // up
                     this.ctx.scale(this.dw, -this.h / (this.max - this.min) / 2);
-                else //down
+                else // down
                     this.ctx.scale(this.dw, this.h / (this.max - this.min) / 2);
+
                 this.ctx.translate(0, -this.min);
             } else {
                 this.ctx.rectangle(num? 0 : this.w / 2, 0, this.w / 2, this.h);
                 this.ctx.clip();
+
                 this.ctx.translate((num? 0 : this.w / 2) + this.dw * this.tx / 2, this.h);
                 this.ctx.scale(this.dw / 2, -this.h / (this.max - this.min));
                 this.ctx.translate(0, -this.min);
@@ -303,14 +340,17 @@ History.prototype = {
 
             this.ctx.moveTo(0, history[0] + (this.last[0] || 0));
             this.connection(history, 1, true);
+
             if(!this.last.length)
                 this.ctx.lineTo(history.length - 1, (this.last[history.length - 1] || 0) + this.min);
+
             this.ctx.lineTo(0, (this.last[0] || 0) + this.min);
             this.ctx.fill();
             this.ctx.restore();
 
-            this._incrementLast(history);
+            this.incrementLast(history);
         },
+
         stack: function(history, num, total){
             this.ctx.save();
             this.ctx.translate(this.dw * this.tx, this.h);
@@ -325,8 +365,9 @@ History.prototype = {
             this.ctx.fill();
             this.ctx.restore();
 
-            this._incrementLast(history);
+            this.incrementLast(history);
         },
+
         bar: function(history, num, total){
             var l = history.length;
             for(var i = 0; i < l; ++i){
@@ -336,6 +377,7 @@ History.prototype = {
             this.ctx.fill();
         }
     },
+
     _connection: {
         line: function(history, i, back){
             for(var l = history.length; i < l; ++i)
@@ -346,6 +388,7 @@ History.prototype = {
                     this.ctx.lineTo(i, this.last[i]);
             }
         },
+
         straight: function(history, i, back){
             for(var l = history.length; i < l; ++i){
                 this.ctx.lineTo(i - .5, history[i - 1] + (this.last[i - 1] || 0));
@@ -361,6 +404,7 @@ History.prototype = {
                 }
             }
         },
+
         curve: function(history, i, back){
             for(var l = history.length; i < l; ++i)
                 this.ctx.curveTo(i - .5, history[i - 1] + (this.last[i - 1] || 0), i - .5, history[i] + (this.last[i] || 0), i, history[i] + (this.last[i] || 0));
@@ -372,7 +416,8 @@ History.prototype = {
             }
         }
     },
-    _incrementLast: function(history){
+
+    incrementLast: function(history){
         for(var i = 0, l = history.length; i < l; ++i)
             this.last[i] = history[i] + (this.last[i] || 0);
     },
@@ -402,266 +447,10 @@ History.prototype = {
 
         this.last = [];
     },
+
     next: function(color){
         this.setColor(color);
         if(this.settings[this.name + "Appearance"] !== "stack")
             this.last = [];
-    }
-};
-
-function CPUBar(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
-}
-CPUBar.prototype = {
-    __proto__: Bar.prototype,
-
-    draw: function(){
-        let m = this.modules;
-
-        this.begin(m.cpu.count);
-
-        for(let i = 0; i < m.cpu.count; ++i){
-            this.next("cpu" + (i % 4 + 1));
-            this.bar(m.cpu.data.user[i]);
-            this.setAlpha(.75);
-            this.bar(m.cpu.data.system[i]);
-        }
-    }
-};
-
-function CPUHistory(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
-}
-CPUHistory.prototype = {
-    __proto__: History.prototype,
-
-    name: "cpu",
-
-    draw: function(){
-        let m = this.modules;
-
-        this.begin(m.cpu.history.user[0].length);
-
-        for(let i = 0; i < m.cpu.count; ++i){
-            this.next("cpu" + (i % 4 + 1));
-            if(this.settings.cpuSplit){
-                this.line(m.cpu.history.user[i], i, m.cpu.count);
-                this.setAlpha(.75);
-                this.line(m.cpu.history.system[i], i, m.cpu.count);
-            } else
-                this.line(m.cpu.history.usage[i], i, m.cpu.count);
-        }
-    }
-};
-
-function MemoryBar(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
-}
-MemoryBar.prototype = {
-    __proto__: Bar.prototype,
-
-    draw: function(){
-        let m = this.modules;
-
-        this.begin(1);
-
-        this.next("mem");
-        this.bar(m.mem.data.usedup / m.mem.data.total);
-        this.setAlpha(.75);
-        this.bar(m.mem.data.cached / m.mem.data.total);
-        this.setAlpha(.5);
-        this.bar(m.mem.data.buffer / m.mem.data.total);
-    }
-};
-
-function MemoryHistory(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
-}
-MemoryHistory.prototype = {
-    __proto__: History.prototype,
-
-    name: "mem",
-
-    draw: function(){
-        let m = this.modules;
-        this.begin(m.mem.history.usedup.length, 0, m.mem.data.total);
-
-        this.next("mem");
-        this.line(m.mem.history.usedup, 0, 1);
-        this.setAlpha(.75);
-        this.line(m.mem.history.cached, 0, 1);
-        this.setAlpha(.5);
-        this.line(m.mem.history.buffer, 0, 1);
-    }
-};
-
-function MemorySwapBar(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
-}
-MemorySwapBar.prototype = {
-    __proto__: Bar.prototype,
-
-    draw: function(){
-        let m = this.modules;
-
-        this.begin(2);
-
-        this.next("mem");
-        this.bar(m.mem.data.usedup / m.mem.data.total);
-        this.setAlpha(.75);
-        this.bar(m.mem.data.cached / m.mem.data.total);
-        this.setAlpha(.5);
-        this.bar(m.mem.data.buffer / m.mem.data.total);
-
-        this.next("swap");
-        this.bar(m.swap.data.used / m.swap.data.total);
-    }
-};
-
-function MemorySwapHistory(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
-}
-MemorySwapHistory.prototype = {
-    __proto__: History.prototype,
-
-    name: "mem",
-
-    draw: function(){
-        let m = this.modules;
-        this.begin(m.mem.history.usedup.length, 0, m.mem.data.total);
-
-        this.next("mem");
-        this.line(m.mem.history.usedup, 0, 2);
-        this.setAlpha(.75);
-        this.line(m.mem.history.cached, 0, 2);
-        this.setAlpha(.5);
-        this.line(m.mem.history.buffer, 0, 2);
-
-        this.max = m.swap.data.total;
-
-        this.next("swap");
-        this.line(m.swap.history.used, 1, 2);
-    }
-};
-
-function DiskBar(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
-}
-DiskBar.prototype = {
-    __proto__: Bar.prototype,
-
-    draw: function(){
-        let m = this.modules;
-
-        this.begin(2);
-
-        this.next("write");
-        this.bar(m.disk.data.write / m.disk.max);
-
-        this.next("read");
-        this.bar(m.disk.data.read / m.disk.max);
-    }
-};
-
-function DiskHistory(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
-}
-DiskHistory.prototype = {
-    __proto__: History.prototype,
-
-    name: "disk",
-
-    draw: function(){
-        let m = this.modules;
-        this.begin(m.disk.history.write.length, 0, m.disk.max);
-
-        this.next("write");
-        this.line(m.disk.history.write, 0, 2);
-
-        this.next("read");
-        this.line(m.disk.history.read, 1, 2);
-    }
-};
-
-function NetworkBar(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
-}
-NetworkBar.prototype = {
-    __proto__: Bar.prototype,
-
-    draw: function(){
-        let m = this.modules;
-
-        this.begin(2);
-
-        this.next("up");
-        this.bar(m.network.data.up / m.network.max);
-
-        this.next("down");
-        this.bar(m.network.data.down / m.network.max);
-    }
-};
-
-function NetworkHistory(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
-}
-NetworkHistory.prototype = {
-    __proto__: History.prototype,
-
-    name: "network",
-
-    draw: function(){
-        let m = this.modules;
-        this.begin(m.network.history.up.length, 0, m.network.max);
-
-        this.next("up");
-        this.line(m.network.history.up, 0, 2);
-
-        this.next("down");
-        this.line(m.network.history.down, 1, 2);
-    }
-};
-
-function ThermalBar(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
-}
-ThermalBar.prototype = {
-    __proto__: Bar.prototype,
-
-    draw: function(){
-        let m = this.modules;
-
-        this.begin(1);
-
-        this.next("thermal");
-        this.bar((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
-    }
-};
-
-function ThermalHistory(canvas, modules, time, settings, colors){
-    this._init(canvas, modules, time, settings, colors);
-}
-ThermalHistory.prototype = {
-    __proto__: History.prototype,
-
-    name: "thermal",
-
-    draw: function(){
-        let m = this.modules;
-        this.begin(m.thermal.history[0].length, 1, m.thermal.max, m.thermal.min);
-
-        for(var i = 1, l = m.thermal.history.length; i < l; ++i){
-            if(m.thermal.colorRef[i])
-                this.next("cpu" + m.thermal.colorRef[i]);
-            else {
-                this.next("thermal");
-                this.setAlpha((l - i / 4) / l);
-            }
-            this.line(m.thermal.history[i], i, l);
-        }
-
-        this.next("thermal");
-        this.ctx.setDash([5, 5], 0);
-        this.line(m.thermal.history[0], 0, l);
     }
 };

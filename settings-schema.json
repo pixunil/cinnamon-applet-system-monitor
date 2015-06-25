@@ -118,10 +118,10 @@
         },
         "description": "Connection type for History graphs"
     },
-    "load-section": {
+    "loadAvg-section": {
         "type": "separator"
     },
-    "load": {
+    "loadAvg": {
         "type": "checkbox",
         "default": true,
         "description": "Load averages"

@@ -1,3 +1,4 @@
+const Pango = imports.gi.Pango;
 const St = imports.gi.St;
 
 const Main = imports.ui.main;
@@ -25,16 +26,6 @@ try {
         "to use the applet %s").format(uuid), icon);
 }
 
-const modules = (function(){
-    let modules = ["loadAvg", "cpu", "mem", "swap", "disk", "network", "thermal"];
-    let result = {};
-
-    for(let module of modules)
-        result[module] = imports.modules[module];
-
-    return result;
-})();
-
 function Base(){
     throw new TypeError("Trying to instantiate abstract class [" + uuid + "] modules.Base");
 }
@@ -46,6 +37,17 @@ Base.prototype = {
         this.time = time;
 
         this.container = [];
+
+        this.import = imports.modules[this.name];
+    },
+
+    buildPanelWidget: function(){
+        if(this.import.HistoryGraph){
+            this.panel = new PanelWidget(this);
+            return this.panel;
+        }
+
+        return null;
     },
 
     saveRaw: function(name, value){
@@ -148,13 +150,20 @@ Base.prototype = {
         return box;
     },
 
+    getSetting: function(value){
+        return this.settings[(this.settingsName || this.name) + value];
+    },
+
     doUpdate: function(menuOpen){
+        if(!this.getSetting(""))
+            return;
+
         this.menuOpen = menuOpen;
 
         this.update();
 
-        if(this.panel && this.settings[this.name + "PanelLabel"]){
-            let text = this.settings[this.name + "PanelLabel"].replace(/%(\w)(\w)/g, bind(this.panelLabelReplace, this));
+        if(this.panel && this.getSetting("PanelLabel")){
+            let text = this.getSetting("PanelLabel").replace(/%(\w)(\w)/g, bind(this.panelLabelReplace, this));
             this.panel.label.set_text(text);
             this.panel.label.margin_left = text.length? 6 : 0;
         }
@@ -277,5 +286,47 @@ Base.prototype = {
 
             this.panel.box.visible = this.panel.label.visible || this.panel.canvas.visible;
         }
+    }
+};
+
+function PanelWidget(){
+    this.init.apply(this, arguments);
+}
+
+PanelWidget.prototype = {
+    init: function(module){
+        this.box = new St.BoxLayout;
+
+        this.label = new St.Label({reactive: true, track_hover: true, style_class: "applet-label"});
+        this.label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+        this.box.add(this.label, {y_align: St.Align.MIDDLE, y_fill: false});
+
+        this.canvas = new St.DrawingArea;
+        this.canvas.connect("repaint", bind(this.draw, this));
+        this.box.add(this.canvas);
+
+        this.graphs = [
+            new module.import.BarGraph(this.canvas, module, module.settings, module.colors),
+            new module.import.HistoryGraph(this.canvas, module, module.time, module.settings, module.colors)
+        ];
+
+        // inform the history graph that a horizontal packing is now required
+        this.graphs[1].packDir = false;
+
+        this.module = module;
+        this.settings = module.settings;
+    },
+
+    draw: function(){
+        let graph = this.settings[this.module.name + "PanelGraph"];
+
+        if(this.settings[this.module.name + "PanelGraph"] === -1)
+            return;
+
+        this.graphs[graph].draw();
+    },
+
+    paint: function(){
+        this.canvas.queue_repaint();
     }
 };
