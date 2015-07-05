@@ -26,6 +26,8 @@ const iconName = imports.iconName;
 
 const Graph = imports.graph;
 
+const Module = imports.modules.Module;
+
 const Modules = {
     loadAvg: imports.modules.loadAvg,
     cpu: imports.modules.cpu,
@@ -85,8 +87,6 @@ SystemMonitorApplet.prototype = {
                 new PopupMenu.PopupMenuItem(_("Disk History")), new PopupMenu.PopupMenuItem(_("Network History")), new PopupMenu.PopupMenuItem(_("Thermal History"))]
         };
 
-        this.graphs = [];
-
         this.settings = {};
         this.colors = {};
         this.settingProvider = new Settings.AppletSettings(this.settings, uuid, instanceId);
@@ -105,12 +105,12 @@ SystemMonitorApplet.prototype = {
             keys.push(p, p + "-appearance", p + "-panel-label", p + "-panel-graph", p + "-panel-width");
         });
 
-        keys.forEach(function(p){
-            var q = p.replace(/-(.)/g, function(m, c){
-                return c.toUpperCase();
+        keys.forEach(function(keyDash){
+            let keyCamelCase = keyDash.replace(/-(.)/g, function(match, char){
+                return char.toUpperCase();
             });
 
-            this.settingProvider.bindProperty(Settings.BindingDirection.IN, p, q, bind(this.onSettingsChanged, this));
+            this.settingProvider.bindProperty(Settings.BindingDirection.IN, keyDash, keyCamelCase, bind(this.onSettingsChanged, this));
         }, this);
 
         this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", bind(this.onGraphTypeChanged, this));
@@ -121,11 +121,10 @@ SystemMonitorApplet.prototype = {
 
         this.modules = {};
         for(let module in Modules){
-            let Module = Modules[module].Module;
-            this.modules[module] = new Module(this.settings, this.colors, this.time);
+            this.modules[module] = new Module(Modules[module], this.settings, this.time, this.colors);
 
             if(!this.modules[module].unavailable){
-                this.menu.addMenuItem(this.modules[module].submenu);
+                this.menu.addMenuItem(this.modules[module].menuItem);
                 this._applet_tooltip.addActor(this.modules[module].tooltip);
             }
         }
@@ -192,7 +191,7 @@ SystemMonitorApplet.prototype = {
         this.actor.add(this.iconBox, {y_align: St.Align.MIDDLE, y_fill: false});
 
         for(let module in this.modules){
-            let panelWidget = this.modules[module].buildPanelWidget();
+            let panelWidget = this.modules[module].panelWidget;
 
             if(panelWidget)
                 this.actor.add(panelWidget.box);
@@ -206,7 +205,7 @@ SystemMonitorApplet.prototype = {
 
         for(var i in this.modules){
             if(this.settings[this.modules[i].name])
-                this.modules[i].getData(delta);
+                this.modules[i].dataProvider.getData(delta);
         }
 
         this.updateText();
@@ -223,7 +222,8 @@ SystemMonitorApplet.prototype = {
             this.canvas.queue_repaint();
 
         for(let module in this.modules){
-            let panelWidget = this.modules[module].panel;
+            let panelWidget = this.modules[module].panelWidget;
+
             if(panelWidget)
                 panelWidget.paint();
         }
@@ -237,9 +237,8 @@ SystemMonitorApplet.prototype = {
     },
 
     updateText: function(){
-        for(var i in this.modules){
-            this.modules[i].doUpdate(this.menu.isOpen);
-        }
+        for(let module in this.modules)
+            this.modules[module].menuItem.update();
     },
 
     on_applet_clicked: function(){
@@ -263,16 +262,17 @@ SystemMonitorApplet.prototype = {
         this.canvas.set_height(this.settings.graphSize);
 
         var j = 0;
-        for(var i in this.modules){
-            this.modules[i].onSettingsChanged();
-            if(this.modules[i].menuGraph){
+        for(let module in this.modules){
+            this.modules[module].onSettingsChanged();
+
+            /*if(this.modules[i].menuGraph){
                 this.graph.items[++j].actor.visible = !!this.settings[this.modules[i].name];
                 // if the module was deactivated, but the menu graph is active, set it to "Overview"
                 if(!this.settings[this.modules[i].name] && this.settings.graphType === j){
                     this.settings.graphType = 0;
                     this.onGraphTypeChanged();
                 }
-            }
+            }*/
         }
 
         this.iconBox.visible = this.settings.showIcon;

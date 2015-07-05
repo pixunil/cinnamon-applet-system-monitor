@@ -1,23 +1,22 @@
 const _ = imports._;
 const Graph = imports.graph;
-const Base = imports.modules.Base;
-const GTop = imports.modules.GTop;
+const Modules = imports.modules;
 
-function Module(){
+const name = "mem";
+const display = _("Memory");
+
+function DataProvider(){
     this.init.apply(this, arguments);
 }
 
-Module.prototype = {
-    __proto__: Base.prototype,
-
-    name: "mem",
-    display: _("Memory"),
+DataProvider.prototype = {
+    __proto__: Modules.BaseDataProvider.prototype,
 
     init: function(){
-        Base.prototype.init.apply(this, arguments);
+        Modules.BaseDataProvider.prototype.init.apply(this, arguments);
 
         try {
-            this.gtop = new GTop.glibtop_mem;
+            this.gtop = new Modules.GTop.glibtop_mem;
         } catch(e){
             this.unavailable = true;
             return;
@@ -30,42 +29,22 @@ Module.prototype = {
             cached: 0,
             buffer: 0
         };
+
         this.history = {
             usedup: [],
             cached: [],
             buffer: []
         };
-
-        let labels = [100, 100, 60];
-        this.buildSubMenu(labels);
-        this.buildMenuItem(_("used"), labels);
-        this.buildMenuItem(_("cached"), labels);
-        this.buildMenuItem(_("buffered"), labels);
     },
 
     getData: function(){
-        GTop.glibtop_get_mem(this.gtop);
+        Modules.GTop.glibtop_get_mem(this.gtop);
 
         this.saveData("total", this.gtop.total);
         this.saveData("used", this.gtop.used);
         this.saveData("usedup", this.gtop.used - this.gtop.cached - this.gtop.buffer);
         this.saveData("cached", this.gtop.cached);
         this.saveData("buffer", this.gtop.buffer);
-    },
-
-    update: function(){
-        this.setText(0, 0, "bytes", this.data.used);
-        this.setText(0, 1, "bytes", this.data.total);
-        this.setText(0, 2, "percent", this.data.used, this.data.total);
-
-        this.setText(1, 0, "bytes", this.data.usedup);
-        this.setText(1, 2, "percent", this.data.usedup, this.data.total);
-
-        this.setText(2, 0, "bytes", this.data.cached);
-        this.setText(2, 2, "percent", this.data.cached, this.data.total);
-
-        this.setText(3, 0, "bytes", this.data.buffer);
-        this.setText(3, 2, "percent", this.data.buffer, this.data.total);
     },
 
     panelLabel: {
@@ -105,6 +84,39 @@ Module.prototype = {
 
             return false;
         }
+    }
+};
+
+function MenuItem(){
+    this.init.apply(this, arguments);
+}
+
+MenuItem.prototype = {
+    __proto__: Modules.BaseSubMenuMenuItem.prototype,
+
+    labelWidths: [100, 100, 60],
+
+    init: function(module){
+        Modules.BaseSubMenuMenuItem.prototype.init.call(this, module);
+
+        this.addRow(_("used"));
+        this.addRow(_("cached"));
+        this.addRow(_("buffered"));
+    },
+
+    update: function(){
+        this.setText(0, 0, "bytes", this.data.used);
+        this.setText(0, 1, "bytes", this.data.total);
+        this.setText(0, 2, "percent", this.data.used, this.data.total);
+
+        this.setText(1, 0, "bytes", this.data.usedup);
+        this.setText(1, 2, "percent", this.data.usedup, this.data.total);
+
+        this.setText(2, 0, "bytes", this.data.cached);
+        this.setText(2, 2, "percent", this.data.cached, this.data.total);
+
+        this.setText(3, 0, "bytes", this.data.buffer);
+        this.setText(3, 2, "percent", this.data.buffer, this.data.total);
     }
 };
 

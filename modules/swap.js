@@ -1,20 +1,20 @@
 const _ = imports._;
-const Base = imports.modules.Base;
+const Modules = imports.modules;
 const GTop = imports.modules.GTop;
 
-function Module(){
+const name = "swap";
+const settingsName = "mem";
+const display = _("Swap");
+
+function DataProvider(){
     this.init.apply(this, arguments);
 }
 
-Module.prototype = {
-    __proto__: Base.prototype,
-
-    name: "swap",
-    settingsName: "mem",
-    display: _("Swap"),
+DataProvider.prototype = {
+    __proto__: Modules.BaseDataProvider.prototype,
 
     init: function(){
-        Base.prototype.init.apply(this, arguments);
+        Modules.BaseDataProvider.prototype.init.apply(this, arguments);
 
         try {
             this.gtop = new GTop.glibtop_swap;
@@ -31,24 +31,31 @@ Module.prototype = {
         this.history = {
             used: []
         };
-
-        let labels = [100, 100, 60];
-        this.submenu = this.buildMenuItem(this.display, labels);
     },
 
     getData: function(){
-        GTop.glibtop_get_swap(this.gtop);
+        Modules.GTop.glibtop_get_swap(this.gtop);
 
         this.saveData("total", this.gtop.total);
         this.saveData("used", this.gtop.used);
     },
 
+    // will handled by Memory
+    onSettingsChanged: function(){}
+};
+
+function MenuItem(){
+    this.init.apply(this, arguments);
+}
+
+MenuItem.prototype = {
+    __proto__: Modules.BaseMenuItem.prototype,
+
+    labelWidths: [100, 100, 60],
+
     update: function(){
         this.setText(0, 0, "bytes", this.data.used);
         this.setText(0, 1, "bytes", this.data.total);
         this.setText(0, 2, "percent", this.data.used, this.data.total);
-    },
-
-    // will handled by Memory
-    onSettingsChanged: function(){}
-};
+    }
+}

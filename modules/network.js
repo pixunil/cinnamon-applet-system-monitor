@@ -2,27 +2,26 @@ const Cinnamon = imports.gi.Cinnamon;
 
 const _ = imports._;
 const Graph = imports.graph;
-const Base = imports.modules.Base;
-const GTop = imports.modules.GTop;
+const Modules = imports.modules;
 
-function Module(){
+const name = "network";
+const display = _("Network");
+
+function DataProvider(){
     this.init.apply(this, arguments);
 }
 
-Module.prototype = {
-    __proto__: Base.prototype,
-
-    name: "network",
-    display: _("Network"),
+DataProvider.prototype = {
+    __proto__: Modules.BaseDataProvider.prototype,
 
     max: 1,
     maxIndex: 0,
 
     init: function(){
-        Base.prototype.init.apply(this, arguments);
+        Modules.BaseDataProvider.prototype.init.apply(this, arguments);
 
         try {
-            this.gtop = new GTop.glibtop_netload;
+            this.gtop = new Modules.GTop.glibtop_netload;
         } catch(e){
             this.unavailable = true;
             return;
@@ -44,10 +43,8 @@ Module.prototype = {
         };
 
         this.dev = [];
-
-        let labels = [130, 130];
-        this.buildSubMenu(labels);
         let r = Cinnamon.get_file_contents_utf8_sync("/proc/net/dev").split("\n"), s;
+
         for(var i = 2, l = r.length; i < l; ++i){
             s = r[i].match(/^\s*(\w+)/);
             if(s !== null){
@@ -56,13 +53,13 @@ Module.prototype = {
                 this.dev.push(s);
             }
         }
-        this.buildMenuItem(_("Total"), labels);
     },
+
     getData: function(delta){
         let up = 0, down = 0;
 
         for(var i = 0, l = this.dev.length; i < l; ++i){
-            GTop.glibtop_get_netload(this.gtop, this.dev[i]);
+            Modules.GTop.glibtop_get_netload(this.gtop, this.dev[i]);
             up += this.gtop.bytes_out;
             down += this.gtop.bytes_in;
         }
@@ -77,13 +74,7 @@ Module.prototype = {
         this.saveRaw("up", up);
         this.saveRaw("down", down);
     },
-    update: function(){
-        this.setText(0, this.settings.order? 0 : 1, "rate", this.data.up, true);
-        this.setText(0, this.settings.order? 1 : 0, "rate", this.data.down, false);
 
-        this.setText(1, this.settings.order? 0 : 1, "bytes", this.raw.up);
-        this.setText(1, this.settings.order? 1 : 0, "bytes", this.raw.down);
-    },
     panelLabel: {
         r: function(n){
             if(n === "u")
@@ -94,6 +85,32 @@ Module.prototype = {
 
             return false;
         }
+    }
+};
+
+function MenuItem(){
+    this.init.apply(this, arguments);
+}
+
+MenuItem.prototype = {
+    __proto__: Modules.BaseSubMenuMenuItem.prototype,
+
+    labelWidths: [130, 130],
+
+    init: function(module){
+        Modules.BaseSubMenuMenuItem.prototype.init.call(this, module);
+
+        this.settings = module.settings;
+
+        this.addRow(_("Total"));
+    },
+
+    update: function(){
+        this.setText(0, this.settings.order? 0 : 1, "rate", this.data.up, true);
+        this.setText(0, this.settings.order? 1 : 0, "rate", this.data.down, false);
+
+        this.setText(1, this.settings.order? 0 : 1, "bytes", this.raw.up);
+        this.setText(1, this.settings.order? 1 : 0, "bytes", this.raw.down);
     }
 };
 

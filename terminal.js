@@ -6,7 +6,7 @@ const Main = imports.ui.main;
 
 const Util = imports.misc.util;
 
-//Credits for the TerminalReader class go to lestcape (https://github.com/lestcape)
+// Credits for the TerminalReader class go to lestcape (https://github.com/lestcape)
 function TerminalReader(command, callback){
     this._init(command, callback);
 }

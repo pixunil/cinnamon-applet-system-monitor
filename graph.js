@@ -2,6 +2,8 @@ const Cairo = imports.cairo;
 
 const GLib = imports.gi.GLib;
 
+const ModulePart = imports.modules.ModulePart;
+
 function process(number){
     return number > 0 && !isNaN(number) && isFinite(number);
 }
@@ -194,7 +196,8 @@ ArcOverview.prototype = {
     yScale: 1,
 
     normal: function(angle){
-        if(!process(angle)) return;
+        if(!process(angle))
+            return;
 
         angle *= Math.PI / 2;
         if(this.a === 0){
@@ -210,7 +213,8 @@ ArcOverview.prototype = {
     },
 
     small: function(angle, dir){
-        if(!process(angle)) return;
+        if(!process(angle))
+            return;
 
         angle *= Math.PI / 2;
 
@@ -222,7 +226,8 @@ ArcOverview.prototype = {
     },
 
     center: function(radius){
-        if(!process(radius)) return;
+        if(!process(radius))
+            return;
 
         this.ctx.arc(this.w / 2, this.h, radius * this.dr, -Math.PI, Math.PI);
         this.ctx.fill();
@@ -234,13 +239,12 @@ function Bar(){
 }
 
 Bar.prototype = {
-    __proto__: Base.prototype,
+    __proto__: ModulePart(Base),
 
     init: function(canvas, module, settings, colors){
         Base.prototype.init.call(this, canvas, settings, colors);
 
         this.module = module;
-        this.data = module.data;
     },
 
     begin: function(n){
@@ -268,14 +272,12 @@ function History(){
 }
 
 History.prototype = {
-    __proto__: Base.prototype,
+    __proto__: ModulePart(Base),
 
     init: function(canvas, module, time, settings, colors){
         Base.prototype.init.call(this, canvas, settings, colors);
 
         this.module = module;
-        this.data = module.data;
-        this.history = module.history;
         this.time = time;
     },
 
@@ -436,8 +438,10 @@ History.prototype = {
         this.max = max || 1;
 
         this.line = this._line[this.settings[this.name + "Appearance"]];
+
         if(!this.line)
-            this.line = this._line.line;
+            this.line = this._line.area;
+
         if(this.settings[this.name + "Appearance"] === "line")
             this.ctx.setLineJoin(Cairo.LineJoin.ROUND);
 

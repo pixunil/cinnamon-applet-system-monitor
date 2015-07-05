@@ -1,42 +1,48 @@
 const _ = imports._;
-const Base = imports.modules.Base;
-const GTop = imports.modules.GTop;
+const Modules = imports.modules;
 
-function Module(){
+const name = "loadAvg";
+const display = _("Load averages");
+
+function DataProvider(){
     this.init.apply(this, arguments);
 }
 
-Module.prototype = {
-    __proto__: Base.prototype,
-
-    name: "loadAvg",
-    display: _("Load averages"),
+DataProvider.prototype = {
+    __proto__: Modules.BaseDataProvider.prototype,
 
     init: function(){
-        Base.prototype.init.apply(this, arguments);
+        Modules.BaseDataProvider.prototype.init.apply(this, arguments);
 
         try {
-            this.gtop = new GTop.glibtop_loadavg;
+            this.gtop = new Modules.GTop.glibtop_loadavg;
         } catch(e){
             this.unavailable = true;
             return;
         }
 
         this.data = [];
-
-        let labels = [90, 90, 80];
-        this.submenu = this.buildMenuItem(this.display, labels);
     },
 
     getData: function(){
-        GTop.glibtop_get_loadavg(this.gtop);
+        Modules.GTop.glibtop_get_loadavg(this.gtop);
 
         this.data = this.gtop.loadavg;
-    },
+    }
+};
+
+function MenuItem(){
+    this.init.apply(this, arguments);
+}
+
+MenuItem.prototype = {
+    __proto__: Modules.BaseMenuItem.prototype,
+
+    labelWidths: [90, 90, 80],
 
     update: function(){
         this.setText(0, 0, "number", this.data[0]);
         this.setText(0, 1, "number", this.data[1]);
         this.setText(0, 2, "number", this.data[2]);
     }
-};
+}

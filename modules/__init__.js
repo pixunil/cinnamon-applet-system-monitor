@@ -15,8 +15,10 @@ const bind = imports.bind;
 
 const MAXSIZE = 1500;
 
+let GTop = null;
+
 try {
-    const GTop = imports.gi.GTop;
+    GTop = imports.gi.GTop;
 } catch(e){
     let icon = new St.Icon({icon_name: iconName, icon_type: St.IconType.FULLCOLOR, icon_size: 24});
     Main.criticalNotify(_("Dependence missing"), _("Please install the GTop package\n" +
@@ -26,28 +28,163 @@ try {
         "to use the applet %s").format(uuid), icon);
 }
 
-function Base(){
-    throw new TypeError("Trying to instantiate abstract class [" + uuid + "] modules.Base");
-}
-
-Base.prototype = {
-    init: function(settings, colors, time){
-        this.settings = settings;
-        this.colors = colors;
-        this.time = time;
-
-        this.container = [];
-
-        this.import = imports.modules[this.name];
+// shortcuts
+const ModulePartPrototype = {
+    name: {
+        get: function(){
+            return this.module.nameConst;
+        }
     },
 
-    buildPanelWidget: function(){
-        if(this.import.HistoryGraph){
-            this.panel = new PanelWidget(this);
-            return this.panel;
+    raw: {
+        get: function(){
+            return this.module.dataProvider.raw;
+        }
+    },
+
+    data: {
+        get: function(){
+            return this.module.dataProvider.data;
+        }
+    },
+
+    history: {
+        get: function(){
+            return this.module.dataProvider.history;
+        }
+    },
+
+    count: {
+        get: function(){
+            return this.module.dataProvider.count;
+        }
+    },
+
+    dev: {
+        get: function(){
+            return this.module.dataProvider.dev;
+        }
+    },
+
+    colorRefs: {
+        get: function(){
+            return this.module.dataProvider.colorRefs;
+        }
+    }
+};
+
+function ModulePart(superClass){
+    return Object.create(superClass.prototype, ModulePartPrototype);
+}
+
+function Module(){
+    this.init.apply(this, arguments);
+}
+
+Module.prototype = {
+    __proto__: ModulePart(Object),
+
+    init: function(imports, settings, time, colors){
+        this.import = imports;
+        this.nameConst = imports.name;
+        this.display = imports.display;
+
+        this.module = this;
+
+        this.settings = settings;
+        this.time = time;
+        this.colors = colors;
+
+        this.dataProvider = new imports.DataProvider(this);
+
+        if(this.dataProvider.unavailable){
+            this.unvailable = true;
+            return;
         }
 
-        return null;
+        this.menuItem = new imports.MenuItem(this, settings);
+        this.tooltip = this.menuItem.makeTooltip();
+
+        if(imports.HistoryGraph)
+            this.panelWidget = new PanelWidget(this, settings, time, colors);
+    },
+
+    get min(){
+        return this.dataProvider.min || 0;
+    },
+
+    get max(){
+        return this.dataProvider.max || 0;
+    },
+
+    onSettingsChanged: function(){
+        if(this.dataProvider.unavailable)
+            this.settings[this.name] = false;
+
+        //this.menuItem.onSettingsChanged();
+        if(this.panelWidget)
+            this.panelWidget.onSettingsChanged();
+    },
+
+    format: function(format, value, ext){
+        value = value || 0;
+        if(format === "number")
+            return this.formatNumber(value);
+        if(format === "rate")
+            return this.formatRate(value, ext);
+        if(format === "percent")
+            return this.formatPercent(value, ext);
+        if(format === "thermal")
+            return this.formatThermal(value);
+        if(format === "bytes")
+            return this.formatBytes(value);
+        return value;
+    },
+
+    formatNumber: function(number){
+        return number.toFixed(2);
+    },
+
+    formatBytes: function(bytes){
+        let prefix = " KMGTPEZY";
+        let a = 1, j = 0;
+        while(bytes / a > MAXSIZE){
+            a *= this.settings.byteUnit? 1024 : 1000;
+            ++j;
+        }
+        return (bytes / a).toFixed(1) + " " + prefix[j] + (this.settings.byteUnit && j? "i" : "") + "B";
+    },
+
+    formatRate: function(bytes, dir){
+        let prefix = " KMGTPEZY";
+        let a = (this.settings.rateUnit < 2? 1 : .125), j = 0;
+        while(bytes / a > MAXSIZE){
+            a *= this.settings.rateUnit & 1? 1024 : 1000;
+            ++j;
+        }
+        return (bytes / a).toFixed(1) + " " + prefix[j] + (this.settings.rateUnit & 1 && j? "i" : "") + (this.settings.rateUnit < 2? "B" : "bit") + "/s " + (dir? "\u25B2" : "\u25BC");
+    },
+
+    formatPercent: function(part, total){
+        return (100 * part / (total || 1)).toFixed(1) + "%";
+    },
+
+    formatThermal: function(celsius){
+        let number = this.settings.thermalUnit? celsius : celsius * 1.8 + 32;
+        let unit = this.settings.thermalUnit? "\u2103" : "\u2109"; //2103: Celsius, 2109: Fahrenheit
+        return number.toFixed(1) + unit;
+    }
+}
+
+function BaseDataProvider(){
+    throw new TypeError("Trying to instantiate abstract class [" + uuid + "] modules.BaseDataProvider");
+}
+
+BaseDataProvider.prototype = {
+    init: function(module){
+        this.module = module;
+        this.time = module.time;
+        this.settings = module.settings;
     },
 
     saveRaw: function(name, value){
@@ -110,46 +247,6 @@ Base.prototype = {
         }
     },
 
-    buildMenuItem: function(name, labels, margin){
-        let box = this.makeBox(labels, margin);
-
-        let item = new PopupMenu.PopupMenuItem(name, {reactive: false});
-        item.addActor(box);
-
-        if(this.submenu)
-            this.submenu.menu.addMenuItem(item);
-        return item;
-    },
-
-    buildSubMenu: function(labels, margin){
-        let box = this.makeBox(labels, margin);
-
-        this.submenu = new PopupMenu.PopupSubMenuMenuItem(this.display);
-        this.submenu.addActor(box);
-    },
-
-    makeBox: function(labels, margin){
-        let box = new St.BoxLayout({margin_left: margin || 0}), tooltip = false;
-        if(!this.submenu){
-            tooltip = new St.BoxLayout;
-            tooltip.add_actor(new St.Label({text: this.display, width: 85, style: "text-align: left"}));
-            this.tooltip = tooltip;
-        }
-
-        for(var i = 0, l = labels.length; i < l; ++i){
-            box.add_actor(new St.Label({width: labels[i], style: "text-align: right"}));
-            if(tooltip){
-                let label = new St.Label({width: labels[i] * .75, style: "text-align: right"});
-                if(margin && i === 0)
-                    label.margin_left = margin * .75;
-                tooltip.add_actor(label);
-            }
-        }
-
-        this.container.push(box);
-        return box;
-    },
-
     getSetting: function(value){
         return this.settings[(this.settingsName || this.name) + value];
     },
@@ -178,15 +275,6 @@ Base.prototype = {
         } else if(m === "%")
             return main + sub;
         return match;
-    },
-
-    setText: function(container, label, format, value, ext){
-        value = this.format(format, value, ext);
-
-        if(container === 0)
-            this.tooltip.get_children()[label + 1].set_text(value);
-        if(this.menuOpen)
-            this.container[container].get_children()[label].set_text(value);
     },
 
     checkWarning: function(value, body, index){
@@ -218,75 +306,105 @@ Base.prototype = {
         let notification = new MessageTray.Notification(source, summary, body, {icon: icon});
         notification.setTransient(true);
         source.notify(notification);
-    },
-
-    format: function(format, value, ext){
-        value = value || 0;
-        if(format === "number")
-            return this.formatNumber(value);
-        if(format === "rate")
-            return this.formatRate(value, ext);
-        if(format === "percent")
-            return this.formatPercent(value, ext);
-        if(format === "thermal")
-            return this.formatThermal(value);
-        if(format === "bytes")
-            return this.formatBytes(value);
-        return value;
-    },
-
-    formatNumber: function(number){
-        return number.toFixed(2);
-    },
-
-    formatBytes: function(bytes){
-        let prefix = " KMGTPEZY";
-        let a = 1, j = 0;
-        while(bytes / a > MAXSIZE){
-            a *= this.settings.byteUnit? 1024 : 1000;
-            ++j;
-        }
-        return (bytes / a).toFixed(1) + " " + prefix[j] + (this.settings.byteUnit && j? "i" : "") + "B";
-    },
-
-    formatRate: function(bytes, dir){
-        let prefix = " KMGTPEZY";
-        let a = (this.settings.rateUnit < 2? 1 : .125), j = 0;
-        while(bytes / a > MAXSIZE){
-            a *= this.settings.rateUnit & 1? 1024 : 1000;
-            ++j;
-        }
-        return (bytes / a).toFixed(1) + " " + prefix[j] + (this.settings.rateUnit & 1 && j? "i" : "") + (this.settings.rateUnit < 2? "B" : "bit") + "/s " + (dir? "\u25B2" : "\u25BC");
-    },
-
-    formatPercent: function(part, total){
-        return (100 * part / (total || 1)).toFixed(1) + "%";
-    },
-
-    formatThermal: function(celsius){
-        let number = this.settings.thermalUnit? celsius : celsius * 1.8 + 32;
-        let unit = this.settings.thermalUnit? "\u2103" : "\u2109"; //2103: Celsius, 2109: Fahrenheit
-        return number.toFixed(1) + unit;
-    },
-
-    onSettingsChanged: function(){
-        if(this.unavailable)
-            this.settings[this.name] = false;
-
-        if(this.submenu){
-            this.submenu.actor.visible = !!this.settings[this.name];
-            this.tooltip.visible = !!this.settings[this.name];
-        }
-
-        if(this.panel){
-            this.panel.label.visible = this.settings[this.name] && this.settings[this.name + "PanelLabel"] !== "";
-
-            this.panel.canvas.width = this.settings[this.name + "PanelWidth"];
-            this.panel.canvas.visible = this.settings[this.name] && this.settings[this.name + "PanelGraph"] !== -1;
-
-            this.panel.box.visible = this.panel.label.visible || this.panel.canvas.visible;
-        }
     }
+};
+
+function BaseMenuItem(){
+    throw new TypeError("Trying to instantiate abstract class [" + uuid + "] modules.BaseMenuItem");
+}
+
+BaseMenuItem.prototype = {
+    __proto__: ModulePart(PopupMenu.PopupMenuItem),
+
+    init: function(module){
+        PopupMenu.PopupMenuItem.prototype._init.call(this, module.display, {reactive: false});
+
+        this.module = module;
+        this.containers = [];
+
+        let box = this.makeBox();
+        this.addActor(box);
+    },
+
+    makeBox: function(labelWidths, margin, tooltip){
+        if(labelWidths === undefined)
+            labelWidths = this.labelWidths;
+
+        if(margin === undefined)
+            margin = this.margin || 0;
+
+        let box = new St.BoxLayout;
+        let container = [];
+
+        if(tooltip)
+            box.add_actor(new St.Label({text: this.module.display, width: 85, margin_right: margin, style: "text-align: left"}));
+        else
+            box.margin_left = margin;
+
+        for(let i = 0, l = labelWidths.length; i < l; ++i){
+            let label = new St.Label({width: labelWidths[i], style: "text-align: right"});
+            box.add_actor(label);
+            container.push(label);
+        }
+
+        if(tooltip)
+            this.tooltip = container;
+        else
+            this.containers.push(container);
+
+        return box;
+    },
+
+    makeTooltip: function(){
+        let labelWidths = this.labelWidths.map(labelWidth => labelWidth * .75);
+        let margin = (this.margin || 0) * .75;
+        return this.makeBox(labelWidths, margin, true);
+    },
+
+    setText: function(container, label, format, value, ext){
+        value = this.module.format(format, value, ext);
+
+        if(container === 0)
+            this.tooltip[label].text = value;
+
+        this.containers[container][label].text = value;
+    }
+};
+
+function BaseSubMenuMenuItem(){
+    throw new TypeError("Trying to instantiate abstract class [" + uuid + "] modules.BaseSubMenuMenuItem");
+}
+
+BaseSubMenuMenuItem.prototype = {
+    __proto__: ModulePart(PopupMenu.PopupSubMenuMenuItem),
+
+    init: function(module){
+        PopupMenu.PopupSubMenuMenuItem.prototype._init.call(this, module.display);
+
+        this.module = module;
+        this.containers = [];
+
+        let box = this.makeBox();
+        this.addActor(box);
+    },
+
+    makeBox: BaseMenuItem.prototype.makeBox,
+    makeTooltip: BaseMenuItem.prototype.makeTooltip,
+
+    addRow: function(label, labels, margin){
+        if(labels === undefined)
+            labels = this.labels;
+
+        if(margin === undefined)
+            margin = this.margin;
+
+        let menuItem = new PopupMenu.PopupMenuItem(label, {reactive: false});
+        this.menu.addMenuItem(menuItem);
+        let box = this.makeBox(labels, margin);
+        menuItem.addActor(box);
+    },
+
+    setText: BaseMenuItem.prototype.setText
 };
 
 function PanelWidget(){
@@ -294,7 +412,7 @@ function PanelWidget(){
 }
 
 PanelWidget.prototype = {
-    init: function(module){
+    init: function(module, settings, time, colors){
         this.box = new St.BoxLayout;
 
         this.label = new St.Label({reactive: true, track_hover: true, style_class: "applet-label"});
@@ -306,21 +424,21 @@ PanelWidget.prototype = {
         this.box.add(this.canvas);
 
         this.graphs = [
-            new module.import.BarGraph(this.canvas, module, module.settings, module.colors),
-            new module.import.HistoryGraph(this.canvas, module, module.time, module.settings, module.colors)
+            new module.import.BarGraph(this.canvas, module, settings, colors),
+            new module.import.HistoryGraph(this.canvas, module, time, settings, colors)
         ];
 
         // inform the history graph that a horizontal packing is now required
         this.graphs[1].packDir = false;
 
-        this.module = module;
+        this.name = module.name;
         this.settings = module.settings;
     },
 
     draw: function(){
-        let graph = this.settings[this.module.name + "PanelGraph"];
+        let graph = this.settings[this.name + "PanelGraph"];
 
-        if(this.settings[this.module.name + "PanelGraph"] === -1)
+        if(this.settings[this.name + "PanelGraph"] === -1)
             return;
 
         this.graphs[graph].draw();
@@ -328,5 +446,14 @@ PanelWidget.prototype = {
 
     paint: function(){
         this.canvas.queue_repaint();
+    },
+
+    onSettingsChanged: function(){
+        this.label.visible = this.settings[this.name] && this.settings[this.name + "PanelLabel"] !== "";
+
+        this.canvas.width = this.settings[this.name + "PanelWidth"];
+        this.canvas.visible = this.settings[this.name] && this.settings[this.name + "PanelGraph"] !== -1;
+
+        this.box.visible = this.label.visible || this.canvas.visible;
     }
 };

@@ -4,17 +4,17 @@ const _ = imports._;
 const Graph = imports.graph;
 const bind = imports.bind;
 const Terminal = imports.terminal;
-const Base = imports.modules.Base;
+const Modules = imports.modules;
 
-function Module(){
+const name = "thermal";
+const display = _("Thermal");
+
+function DataProvider(){
     this.init.apply(this, arguments);
 }
 
-Module.prototype = {
-    __proto__: Base.prototype,
-
-    name: "thermal",
-    display: _("Thermal"),
+DataProvider.prototype = {
+    __proto__: Modules.BaseDataProvider.prototype,
 
     path: "",
 
@@ -24,39 +24,55 @@ Module.prototype = {
     notificationFormat: "thermal",
 
     init: function(){
-        Base.prototype.init.apply(this, arguments);
+        Modules.BaseDataProvider.prototype.init.apply(this, arguments);
 
         this.data = [];
         this.history = [[]];
 
         this.sensors = [];
-        this.colorRef = [];
+        this.sensorNames = [];
+        this.colorRefs = [];
 
-        let labels = [80], margin = 180;
-        this.buildSubMenu(labels, 180);
-        let r = GLib.spawn_command_line_sync("which sensors");
-        if(r[0] && r[3] === 0){
-            this.path = r[1].toString().split("\n", 1)[0];
-            r = GLib.spawn_command_line_sync(this.path)[1].toString().split("\n");
-            for(var i = 0, l = r.length, s; i < l; ++i){
-                if(r[i].substr(0, 8) === "Adapter:" && !r[i].match(/virtual/i)){
-                    s = r[i].substr(9);
-                    for(++i; r[i] && r[i].substr(0, 8) !== "Adapter:"; ++i){
-                        if(r[i].match(/\d+.\d+\xb0C/)){
-                            let name = r[i].match(/[^:]+/)[0];
-                            let coreMatch = name.match(/core\s*(\d)/i);
+        let result = GLib.spawn_command_line_sync("which sensors");
 
-                            if(coreMatch !== null) this.colorRef.push(parseInt(coreMatch[1]) % 4 + 1);
-                            else this.colorRef.push(null);
+        if(!result[0] || result[3] !== 0){
+            this.unavailable = true;
+            return;
+        }
 
-                            this.buildMenuItem(name, labels, margin);
-                            this.sensors.push(i);
-                            this.history.push([]);
-                        }
-                    }
+
+        this.path = result[1].toString().split("\n", 1)[0];
+        let lines = GLib.spawn_command_line_sync(this.path)[1].toString().split("\n");
+
+        for(let i = 0, l = lines.length; i < l; ++i){
+            let line = lines[i];
+
+            if(line.substr(0, 8) === "Adapter:" && !line.match(/virtual/i)){
+                while(true){
+                    ++i;
+                    let line = lines[i];
+
+                    if(!line || line.substr(0, 8) === "Adapter:")
+                        break;
+
+                    if(!line.match(/\d+.\d+\xb0C/))
+                        continue;
+
+                    let name = line.match(/[^:]+/)[0];
+                    let coreMatch = name.match(/core\s*(\d)/i);
+
+                    if(coreMatch !== null)
+                        this.colorRefs.push(parseInt(coreMatch[1]) % 4 + 1);
+                    else
+                        this.colorRefs.push(null);
+
+                    this.sensors.push(i);
+                    this.sensorNames.push(name);
+                    this.history.push([]);
                 }
             }
         }
+
 
         if(!this.sensors.length)
             this.unavailable = true;
@@ -92,11 +108,6 @@ Module.prototype = {
             this.checkWarning(temp, "Temperature was over %s for %fsec");
     },
 
-    update: function(){
-        for(var i = 0, l = this.data.length; i < l; ++i)
-            this.setText(i, 0, "thermal", this.data[i]);
-    },
-
     panelLabel: {
         t: function(n){
             if(this.data[n - 0])
@@ -115,6 +126,31 @@ Module.prototype = {
                 this.settings.thermalWarningValue = (this.settings.thermalWarningValue - 32) * 5 / 9; // Fahrenheit => Celsius
         }
     },
+};
+
+function MenuItem(){
+    this.init.apply(this, arguments);
+}
+
+MenuItem.prototype = {
+    __proto__: Modules.BaseSubMenuMenuItem.prototype,
+
+    labelWidths: [80],
+    margin: 180,
+
+    init: function(module){
+        Modules.BaseSubMenuMenuItem.prototype.init.call(this, module);
+
+        for(let i = 0, l = module.dataProvider.sensorNames.length; i < l; ++i)
+            this.addRow(module.dataProvider.sensorNames[i]);
+
+        delete module.dataProvider.sensorNames;
+    },
+
+    update: function(){
+        for(let i = 0, l = this.data.length; i < l; ++i)
+            this.setText(i, 0, "thermal", this.data[i]);
+    }
 };
 
 function BarGraph(){
@@ -145,8 +181,8 @@ HistoryGraph.prototype = {
         // first draw the sensors
         for(let i = 1, l = this.history.length; i < l; ++i){
             // if this sensor is labelled after a cpu core, use a cpu color
-            if(this.module.colorRef[i])
-                this.next("cpu" + this.module.colorRef[i]);
+            if(this.module.colorRefs[i])
+                this.next("cpu" + this.module.colorRefs[i]);
             // otherwise the normal thermal color
             else {
                 this.next("thermal");

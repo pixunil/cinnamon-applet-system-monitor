@@ -5,27 +5,26 @@ const Mainloop = imports.mainloop;
 const _ = imports._;
 const Graph = imports.graph;
 const bind = imports.bind;
-const Base = imports.modules.Base;
-const GTop = imports.modules.GTop;
+const Modules = imports.modules;
 
-function Module(){
+const name = "disk";
+const display = _("Disk");
+
+function DataProvider(){
     this.init.apply(this, arguments);
 }
 
-Module.prototype = {
-    __proto__: Base.prototype,
-
-    name: "disk",
-    display: _("Disk"),
+DataProvider.prototype = {
+    __proto__: Modules.BaseDataProvider.prototype,
 
     max: 1,
     maxIndex: 0,
 
     init: function(){
-        Base.prototype.init.apply(this, arguments);
+        Modules.BaseDataProvider.prototype.init.apply(this, arguments);
 
         try {
-            this.gtop = new GTop.glibtop_fsusage;
+            this.gtop = new Modules.GTop.glibtop_fsusage;
         } catch(e){
             this.unavailable = true;
             return;
@@ -35,39 +34,41 @@ Module.prototype = {
             write: 0,
             read: 0
         };
+
         this.data = {
             write: 0,
             read: 0
         };
+
         this.history = {
             write: [],
             read: []
         };
 
-        this.buildSubMenu([130, 130]);
-
         this.updateDevices();
     },
 
     updateDevices: function(){
-        this.container.splice(1, this.container.length - 1);
-        this.submenu.menu.removeAll();
         this.dev = [];
 
         let mountFile = Cinnamon.get_file_contents_utf8_sync("/etc/mtab").split("\n");
         for(let mountLine in mountFile){
             let mount = mountFile[mountLine].split(" ");
+
             if(mount[0].indexOf("/dev/") === 0){
-                GTop.glibtop_get_fsusage(this.gtop, mount[1]);
+                Modules.GTop.glibtop_get_fsusage(this.gtop, mount[1]);
+
                 this.dev.push({
                     path: mount[1],
                     size: this.gtop.block_size,
                     free: this.gtop.bfree,
                     blocks: this.gtop.blocks
                 });
-                this.buildMenuItem(mount[1], [100, 100, 60]);
             }
         }
+
+        if(this.module.menuItem)
+            this.module.menuItem.updateDevices();
 
         Mainloop.timeout_add(30000, bind(this.updateDevices, this));
     },
@@ -76,7 +77,7 @@ Module.prototype = {
         let write = 0, read = 0;
 
         for(var i = 0; i < this.dev.length; ++i){
-            GTop.glibtop_get_fsusage(this.gtop, this.dev[i].path);
+            Modules.GTop.glibtop_get_fsusage(this.gtop, this.dev[i].path);
 
             this.dev[i].size = this.gtop.block_size;
             this.dev[i].free = this.gtop.bfree;
@@ -97,17 +98,6 @@ Module.prototype = {
         this.saveRaw("read", read);
     },
 
-    update: function(){
-        this.setText(0, this.settings.order? 0 : 1, "rate", this.data.write, true);
-        this.setText(0, this.settings.order? 1 : 0, "rate", this.data.read, false);
-
-        for(var i = 0; i < this.dev.length; ++i){
-            this.setText(i + 1, 0, "bytes", (this.dev[i].blocks - this.dev[i].free) * this.dev[i].size);
-            this.setText(i + 1, 1, "bytes", this.dev[i].blocks * this.dev[i].size);
-            this.setText(i + 1, 2, "percent", this.dev[i].blocks - this.dev[i].free, this.dev[i].blocks);
-        }
-    },
-
     panelLabel: {
         r: function(n){
             if(n === "w")
@@ -115,6 +105,43 @@ Module.prototype = {
             if(n === "r")
                 return this.format("rate", this.data.read, false);
             return false;
+        }
+    }
+};
+
+function MenuItem(){
+    this.init.apply(this, arguments);
+}
+
+MenuItem.prototype = {
+    __proto__: Modules.BaseSubMenuMenuItem.prototype,
+
+    labelWidths: [130, 130],
+
+    init: function(module){
+        Modules.BaseSubMenuMenuItem.prototype.init.apply(this, arguments);
+
+        this.settings = module.settings;
+        this.updateDevices();
+    },
+
+    updateDevices: function(){
+        this.containers.splice(1, this.containers.length - 1);
+        this.menu.removeAll();
+
+        for(let dev in this.dev)
+            this.addRow(this.dev[dev].path, [100, 100, 60]);
+    },
+
+    update: function(){
+        this.setText(0, this.settings.order? 0 : 1, "rate", this.data.write, true);
+        this.setText(0, this.settings.order? 1 : 0, "rate", this.data.read, false);
+
+        for(var i = 0; i < this.dev.length; ++i){
+            let dev = this.dev[i];
+            this.setText(i + 1, 0, "bytes", (dev.blocks - dev.free) * dev.size);
+            this.setText(i + 1, 1, "bytes", dev.blocks * dev.size);
+            this.setText(i + 1, 2, "percent", dev.blocks - dev.free, dev.blocks);
         }
     }
 };
