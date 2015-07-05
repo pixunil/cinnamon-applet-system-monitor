@@ -238,7 +238,7 @@ SystemMonitorApplet.prototype = {
 
     updateText: function(){
         for(let module in this.modules)
-            this.modules[module].menuItem.update();
+            this.modules[module].update();
     },
 
     on_applet_clicked: function(){

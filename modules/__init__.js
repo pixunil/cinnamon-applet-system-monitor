@@ -28,116 +28,33 @@ try {
         "to use the applet %s").format(uuid), icon);
 }
 
-// shortcuts
 const ModulePartPrototype = {
-    name: {
-        get: function(){
-            return this.module.nameConst;
-        }
+    init: function(module){
+        this.module = module;
     },
 
-    raw: {
-        get: function(){
-            return this.module.dataProvider.raw;
-        }
-    },
-
-    data: {
-        get: function(){
-            return this.module.dataProvider.data;
-        }
-    },
-
-    history: {
-        get: function(){
-            return this.module.dataProvider.history;
-        }
-    },
-
-    count: {
-        get: function(){
-            return this.module.dataProvider.count;
-        }
-    },
-
-    dev: {
-        get: function(){
-            return this.module.dataProvider.dev;
-        }
-    },
-
-    colorRefs: {
-        get: function(){
-            return this.module.dataProvider.colorRefs;
-        }
-    }
-};
-
-function ModulePart(superClass){
-    return Object.create(superClass.prototype, ModulePartPrototype);
-}
-
-function Module(){
-    this.init.apply(this, arguments);
-}
-
-Module.prototype = {
-    __proto__: ModulePart(Object),
-
-    init: function(imports, settings, time, colors){
-        this.import = imports;
-        this.nameConst = imports.name;
-        this.display = imports.display;
-
-        this.module = this;
-
-        this.settings = settings;
-        this.time = time;
-        this.colors = colors;
-
-        this.dataProvider = new imports.DataProvider(this);
-
-        if(this.dataProvider.unavailable){
-            this.unvailable = true;
-            return;
-        }
-
-        this.menuItem = new imports.MenuItem(this, settings);
-        this.tooltip = this.menuItem.makeTooltip();
-
-        if(imports.HistoryGraph)
-            this.panelWidget = new PanelWidget(this, settings, time, colors);
-    },
-
-    get min(){
-        return this.dataProvider.min || 0;
-    },
-
-    get max(){
-        return this.dataProvider.max || 0;
-    },
-
-    onSettingsChanged: function(){
-        if(this.dataProvider.unavailable)
-            this.settings[this.name] = false;
-
-        //this.menuItem.onSettingsChanged();
-        if(this.panelWidget)
-            this.panelWidget.onSettingsChanged();
+    getSetting: function(value){
+        return this.module.settings[this.settingsName + value];
     },
 
     format: function(format, value, ext){
         value = value || 0;
+
         if(format === "number")
             return this.formatNumber(value);
+
         if(format === "rate")
             return this.formatRate(value, ext);
+
         if(format === "percent")
             return this.formatPercent(value, ext);
+
         if(format === "thermal")
             return this.formatThermal(value);
+
         if(format === "bytes")
             return this.formatBytes(value);
+
         return value;
     },
 
@@ -173,6 +90,107 @@ Module.prototype = {
         let number = this.settings.thermalUnit? celsius : celsius * 1.8 + 32;
         let unit = this.settings.thermalUnit? "\u2103" : "\u2109"; //2103: Celsius, 2109: Fahrenheit
         return number.toFixed(1) + unit;
+    },
+
+    // shortcuts
+    get name(){
+        return this.module.name;
+    },
+
+    get settingsName(){
+        return this.module.settingsName || this.name;
+    },
+
+    get settings(){
+        return this.module.settings;
+    },
+
+    get raw(){
+        return this.module.dataProvider.raw;
+    },
+
+    get data(){
+        return this.module.dataProvider.data;
+    },
+
+    get history(){
+        return this.module.dataProvider.history;
+    },
+
+    get count(){
+        return this.module.dataProvider.count;
+    },
+
+    get dev(){
+        return this.module.dataProvider.dev;
+    },
+
+    get colorRefs(){
+        return this.module.dataProvider.colorRefs;
+    }
+};
+
+function ModulePart(superClass){
+    var proto = Object.create(superClass.prototype);
+
+    for(let property in ModulePartPrototype)
+        Object.defineProperty(proto, property, Object.getOwnPropertyDescriptor(ModulePartPrototype, property));
+
+    return proto;
+}
+
+function Module(){
+    this.init.apply(this, arguments);
+}
+
+Module.prototype = {
+    init: function(imports, settings, time, colors){
+        this.import = imports;
+        this.name = imports.name;
+        this.settingsName = imports.settingsName;
+        this.display = imports.display;
+
+        this.module = this;
+
+        this.settings = settings;
+        this.time = time;
+        this.colors = colors;
+
+        this.dataProvider = new imports.DataProvider(this);
+
+        if(this.dataProvider.unavailable){
+            this.unvailable = true;
+            return;
+        }
+
+        this.menuItem = new imports.MenuItem(this, settings);
+        this.tooltip = this.menuItem.makeTooltip();
+
+        if(imports.HistoryGraph)
+            this.panelWidget = new PanelWidget(this, settings, time, colors);
+    },
+
+    get min(){
+        return this.dataProvider.min || 0;
+    },
+
+    get max(){
+        return this.dataProvider.max || 0;
+    },
+
+    update: function(){
+        this.menuItem.update();
+        if(this.panelWidget)
+            this.panelWidget.update();
+    },
+
+    onSettingsChanged: function(){
+        if(this.dataProvider.unavailable)
+            this.settings[this.name] = false;
+
+        //this.menuItem.onSettingsChanged();
+        if(this.panelWidget)
+            this.panelWidget.onSettingsChanged();
     }
 }
 
@@ -245,36 +263,6 @@ BaseDataProvider.prototype = {
                 }
             }
         }
-    },
-
-    getSetting: function(value){
-        return this.settings[(this.settingsName || this.name) + value];
-    },
-
-    doUpdate: function(menuOpen){
-        if(!this.getSetting(""))
-            return;
-
-        this.menuOpen = menuOpen;
-
-        this.update();
-
-        if(this.panel && this.getSetting("PanelLabel")){
-            let text = this.getSetting("PanelLabel").replace(/%(\w)(\w)/g, bind(this.panelLabelReplace, this));
-            this.panel.label.set_text(text);
-            this.panel.label.margin_left = text.length? 6 : 0;
-        }
-        delete this.menuOpen;
-    },
-
-    panelLabelReplace: function(match, main, sub){
-        if(this.panelLabel[main]){
-            let output = this.panelLabel[main].call(this, sub);
-            if(output)
-                return output;
-        } else if(m === "%")
-            return main + sub;
-        return match;
     },
 
     checkWarning: function(value, body, index){
@@ -362,7 +350,7 @@ BaseMenuItem.prototype = {
     },
 
     setText: function(container, label, format, value, ext){
-        value = this.module.format(format, value, ext);
+        value = this.format(format, value, ext);
 
         if(container === 0)
             this.tooltip[label].text = value;
@@ -412,6 +400,8 @@ function PanelWidget(){
 }
 
 PanelWidget.prototype = {
+    __proto__: ModulePartPrototype,
+
     init: function(module, settings, time, colors){
         this.box = new St.BoxLayout;
 
@@ -423,6 +413,8 @@ PanelWidget.prototype = {
         this.canvas.connect("repaint", bind(this.draw, this));
         this.box.add(this.canvas);
 
+        this.panelLabel = new module.import.PanelLabel(module);
+
         this.graphs = [
             new module.import.BarGraph(this.canvas, module, settings, colors),
             new module.import.HistoryGraph(this.canvas, module, time, settings, colors)
@@ -431,8 +423,27 @@ PanelWidget.prototype = {
         // inform the history graph that a horizontal packing is now required
         this.graphs[1].packDir = false;
 
-        this.name = module.name;
-        this.settings = module.settings;
+        this.module = module;
+    },
+
+    update: function(){
+        if(this.getSetting("PanelLabel")){
+            let text = this.getSetting("PanelLabel").replace(/%(\w)(\w)/g, bind(this.panelLabelReplace, this));
+            this.label.set_text(text);
+            this.label.margin_left = text.length? 6 : 0;
+        }
+    },
+
+    panelLabelReplace: function(match, main, sub){
+        if(this.panelLabel[main]){
+            let output = this.panelLabel[main](sub);
+
+            if(output)
+                return output;
+        } else if(m === "%")
+            return main + sub;
+
+        return match;
     },
 
     draw: function(){
@@ -449,10 +460,10 @@ PanelWidget.prototype = {
     },
 
     onSettingsChanged: function(){
-        this.label.visible = this.settings[this.name] && this.settings[this.name + "PanelLabel"] !== "";
+        this.label.visible = this.getSetting("") && this.getSetting("PanelLabel") !== "";
 
-        this.canvas.width = this.settings[this.name + "PanelWidth"];
-        this.canvas.visible = this.settings[this.name] && this.settings[this.name + "PanelGraph"] !== -1;
+        this.canvas.width = this.getSetting("PanelWidth");
+        this.canvas.visible = this.getSetting("") && this.getSetting("PanelGraph") !== -1;
 
         this.box.visible = this.label.visible || this.canvas.visible;
     }

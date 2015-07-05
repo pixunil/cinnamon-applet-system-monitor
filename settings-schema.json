@@ -324,8 +324,7 @@
     "disk": {
         "type": "checkbox",
         "default": true,
-        "description": "Disk",
-        "dependency": "disk"
+        "description": "Disk"
     },
     "color-write": {
         "type": "colorchooser",

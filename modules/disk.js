@@ -96,16 +96,6 @@ DataProvider.prototype = {
 
         this.saveRaw("write", write);
         this.saveRaw("read", read);
-    },
-
-    panelLabel: {
-        r: function(n){
-            if(n === "w")
-                return this.format("rate", this.data.write, true);
-            if(n === "r")
-                return this.format("rate", this.data.read, false);
-            return false;
-        }
     }
 };
 
@@ -145,6 +135,24 @@ MenuItem.prototype = {
         }
     }
 };
+
+function PanelLabel(){
+    this.init.apply(this, arguments);
+}
+
+PanelLabel.prototype = {
+    __proto__: Modules.ModulePartPrototype,
+
+    r: function(n){
+        if(n === "w")
+            return this.format("rate", this.data.write, true);
+
+        if(n === "r")
+            return this.format("rate", this.data.read, false);
+
+        return false;
+    }
+}
 
 function BarGraph(){
     this.init.apply(this, arguments);

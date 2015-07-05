@@ -51,23 +51,23 @@ Overview.prototype = {
     init: function(canvas, modules, settings, colors){
         Base.prototype.init.call(this, canvas, settings, colors);
 
-        this.modules = modules;
+        for(let module in modules)
+            this[module] = modules[module].dataProvider;
     },
 
     draw: function(){
-        let m = this.modules;
         this.begin();
 
         if(this.settings.thermal){
             this.next("thermal");
-            this.center((m.thermal.data[0] - m.thermal.min) / (m.thermal.max - m.thermal.min));
+            this.center((this.thermal.data[0] - this.thermal.min) / (this.thermal.max - this.thermal.min));
         }
 
         if(this.settings.disk){
             this.next("write");
-            this.small(m.disk.data.write / m.disk.max, true, false);
+            this.small(this.disk.data.write / this.disk.max, true, false);
             this.setColor("read");
-            this.small(m.disk.data.read / m.disk.max, false, false);
+            this.small(this.disk.data.read / this.disk.max, false, false);
         }
 
         if(this.settings.network){
@@ -75,30 +75,30 @@ Overview.prototype = {
                 this.next("up");
             else
                 this.setColor("up");
-            this.small(m.network.data.up / m.network.max, true, true);
+            this.small(this.network.data.up / this.network.max, true, true);
             this.setColor("down");
-            this.small(m.network.data.down / m.network.max, false, true);
+            this.small(this.network.data.down / this.network.max, false, true);
         }
 
         if(this.settings.cpu){
-            for(let i = 0; i < m.cpu.count; ++i){
+            for(let i = 0; i < this.cpu.count; ++i){
                 this.next("cpu" + (i % 4 + 1));
-                this.normal(m.cpu.data.user[i], true);
+                this.normal(this.cpu.data.user[i], true);
                 this.setAlpha(.75);
-                this.normal(m.cpu.data.system[i], true);
+                this.normal(this.cpu.data.system[i], true);
             }
         }
 
         if(this.settings.mem){
             this.next("mem");
-            this.normal(m.mem.data.usedup / m.mem.data.total, false);
+            this.normal(this.mem.data.usedup / this.mem.data.total, false);
             this.setAlpha(.75);
-            this.normal(m.mem.data.cached / m.mem.data.total, false);
+            this.normal(this.mem.data.cached / this.mem.data.total, false);
             this.setAlpha(.5);
-            this.normal(m.mem.data.buffer / m.mem.data.total, false);
+            this.normal(this.mem.data.buffer / this.mem.data.total, false);
 
             this.next("swap");
-            this.normal(m.swap.data.used / m.swap.data.total, false);
+            this.normal(this.swap.data.used / this.swap.data.total, false);
         }
     },
 
@@ -118,7 +118,7 @@ Overview.prototype = {
         if(this.settings.network)
             count.small++;
         if(this.settings.cpu)
-            count.normal += this.modules.cpu.count;
+            count.normal += this.cpu.count;
         if(this.settings.mem)
             count.normal += 2;
 

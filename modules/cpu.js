@@ -98,29 +98,6 @@ DataProvider.prototype = {
             this.checkWarning(r / this.count, "CPU usage was over %s for %fsec");
     },
 
-    panelLabel: {
-        _percent: function(n, prop){
-            if(n === "a"){
-                let value = 0;
-                for(var i = 0; i < this.count; ++i)
-                    value += this.data[prop][i] / this.count;
-                return this.format("percent", value);
-            } else if(n - 0 > -1 && n - 0 < this.count)
-                return this.format("percent", this.data[prop][n - 0]);
-            return false;
-        },
-
-        t: function(n){
-            return this.panelLabel._percent.call(this, n, "usage");
-        },
-        u: function(n){
-            return this.panelLabel._percent.call(this, n, "user");
-        },
-        s: function(n){
-            return this.panelLabel._percent.call(this, n, "system");
-        }
-    },
-
     onSettingsChanged: function(){
         Base.prototype.onSettingsChanged.call(this);
 
@@ -146,9 +123,9 @@ MenuItem.prototype = {
 
     init: function(module){
         this.labelWidths = [];
-        this.margin = 260 - module.count * 60;
+        this.margin = 260 - module.dataProvider.count * 60;
 
-        for(let i = 0; i < module.count; ++i)
+        for(let i = 0; i < module.dataProvider.count; ++i)
             this.labelWidths.push(60);
 
         Modules.BaseSubMenuMenuItem.prototype.init.call(this, module);
@@ -165,6 +142,38 @@ MenuItem.prototype = {
         }
     }
 };
+
+function PanelLabel(){
+    this.init.apply(this, arguments);
+}
+
+PanelLabel.prototype = {
+    __proto__: Modules.ModulePartPrototype,
+
+    process: function(n, prop){
+        if(n === "a"){
+            let value = 0;
+            for(var i = 0; i < this.count; ++i)
+                value += this.data[prop][i] / this.count;
+
+            return this.format("percent", value);
+        } else if(n - 0 > -1 && n - 0 < this.count)
+            return this.format("percent", this.data[prop][n - 0]);
+        return false;
+    },
+
+    t: function(n){
+        return this.process(n, "usage");
+    },
+
+    u: function(n){
+        return this.process(n, "user");
+    },
+
+    s: function(n){
+        return this.process(n, "system");
+    }
+}
 
 function BarGraph(){
     this.init.apply(this, arguments);

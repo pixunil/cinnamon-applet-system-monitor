@@ -45,45 +45,6 @@ DataProvider.prototype = {
         this.saveData("usedup", this.gtop.used - this.gtop.cached - this.gtop.buffer);
         this.saveData("cached", this.gtop.cached);
         this.saveData("buffer", this.gtop.buffer);
-    },
-
-    panelLabel: {
-        _mem: {
-            u: "usedup",
-            U: "used",
-            c: "cached",
-            b: "buffer",
-            t: "total"
-        },
-
-        _swap: {
-            u: "used",
-            t: "total"
-        },
-
-        m: function(n){
-            if(this.panelLabel._mem[n])
-                return this.format("bytes", this.data[this.panelLabel._mem[n]]);
-
-            return false;
-        },
-
-        s: function(n){
-            if(n === "p")
-                return this.format("percent", this.swap.data.used, this.swap.data.total);
-
-            if(this.panelLabel._swap[n])
-                return this.format("bytes", this.swap.data[this.panelLabel._swap[n]]);
-
-            return false;
-        },
-
-        p: function(n){
-            if(this.panelLabel._mem[n])
-                return this.format("percent", this.data[this.panelLabel._mem[n]], this.data.total);
-
-            return false;
-        }
     }
 };
 
@@ -119,6 +80,51 @@ MenuItem.prototype = {
         this.setText(3, 2, "percent", this.data.buffer, this.data.total);
     }
 };
+
+function PanelLabel(){
+    this.init.apply(this, arguments);
+}
+
+PanelLabel.prototype = {
+    __proto__: Modules.ModulePartPrototype,
+
+    mem: {
+        u: "usedup",
+        U: "used",
+        c: "cached",
+        b: "buffer",
+        t: "total"
+    },
+
+    swap: {
+        u: "used",
+        t: "total"
+    },
+
+    m: function(n){
+        if(this.mem[n])
+            return this.format("bytes", this.data[this.mem[n]]);
+
+        return false;
+    },
+
+    s: function(n){
+        if(n === "p")
+            return this.format("percent", this.swap.data.used, this.swap.data.total);
+
+        if(this.swap[n])
+            return this.format("bytes", this.swap.data[this.swap[n]]);
+
+        return false;
+    },
+
+    p: function(n){
+        if(this.mem[n])
+            return this.format("percent", this.data[this.mem[n]], this.data.total);
+
+        return false;
+    }
+}
 
 function BarGraph(){
     this.init.apply(this, arguments);

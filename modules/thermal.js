@@ -108,15 +108,6 @@ DataProvider.prototype = {
             this.checkWarning(temp, "Temperature was over %s for %fsec");
     },
 
-    panelLabel: {
-        t: function(n){
-            if(this.data[n - 0])
-                return this.format("thermal", this.data[n - 0]);
-
-            return false;
-        }
-    },
-
     onSettingsChanged: function(){
         Base.prototype.onSettingsChanged.call(this);
 
@@ -152,6 +143,21 @@ MenuItem.prototype = {
             this.setText(i, 0, "thermal", this.data[i]);
     }
 };
+
+function PanelLabel(){
+    this.init.apply(this, arguments);
+}
+
+PanelLabel.prototype = {
+    __proto__: Modules.ModulePartPrototype,
+
+    t: function(n){
+        if(this.data[n - 0])
+            return this.format("thermal", this.data[n - 0]);
+
+        return false;
+    }
+}
 
 function BarGraph(){
     this.init.apply(this, arguments);
