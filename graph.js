@@ -13,10 +13,8 @@ function Base(){
 }
 
 Base.prototype = {
-    init: function(canvas, settings, colors){
+    init: function(canvas){
         this.canvas = canvas;
-        this.settings = settings;
-        this.colors = colors;
     },
 
     begin: function(){
@@ -49,7 +47,10 @@ Overview.prototype = {
     yScale: .5,
 
     init: function(canvas, modules, settings, colors){
-        Base.prototype.init.call(this, canvas, settings, colors);
+        Base.prototype.init.call(this, canvas);
+
+        this.settings = settings;
+        this.colors = colors;
 
         for(let module in modules)
             this[module] = modules[module].dataProvider;
@@ -241,8 +242,8 @@ function Bar(){
 Bar.prototype = {
     __proto__: ModulePart(Base),
 
-    init: function(canvas, module, settings, colors){
-        Base.prototype.init.call(this, canvas, settings, colors);
+    init: function(canvas, module){
+        Base.prototype.init.call(this, canvas);
 
         this.module = module;
     },
@@ -274,11 +275,10 @@ function History(){
 History.prototype = {
     __proto__: ModulePart(Base),
 
-    init: function(canvas, module, time, settings, colors){
-        Base.prototype.init.call(this, canvas, settings, colors);
+    init: function(canvas, module){
+        Base.prototype.init.call(this, canvas);
 
         this.module = module;
-        this.time = time;
     },
 
     _line: {

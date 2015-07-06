@@ -124,7 +124,7 @@ PanelLabel.prototype = {
 
         return false;
     }
-}
+};
 
 function BarGraph(){
     this.init.apply(this, arguments);
@@ -154,6 +154,8 @@ BarGraph.prototype = {
         }
     }
 };
+
+const historyGraphDisplay = _("Memory and Swap History");
 
 function HistoryGraph(){
     this.init.apply(this, arguments);

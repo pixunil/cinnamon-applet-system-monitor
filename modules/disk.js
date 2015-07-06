@@ -111,7 +111,6 @@ MenuItem.prototype = {
     init: function(module){
         Modules.BaseSubMenuMenuItem.prototype.init.apply(this, arguments);
 
-        this.settings = module.settings;
         this.updateDevices();
     },
 
@@ -152,7 +151,7 @@ PanelLabel.prototype = {
 
         return false;
     }
-}
+};
 
 function BarGraph(){
     this.init.apply(this, arguments);
@@ -170,6 +169,8 @@ BarGraph.prototype = {
         this.bar(this.data.read / this.module.max);
     }
 };
+
+const historyGraphDisplay = _("Disk History");
 
 function HistoryGraph(){
     this.init.apply(this, arguments);

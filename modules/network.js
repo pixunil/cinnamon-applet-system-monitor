@@ -88,8 +88,6 @@ MenuItem.prototype = {
     init: function(module){
         Modules.BaseSubMenuMenuItem.prototype.init.call(this, module);
 
-        this.settings = module.settings;
-
         this.addRow(_("Total"));
     },
 
@@ -118,7 +116,7 @@ PanelLabel.prototype = {
 
         return false;
     }
-}
+};
 
 function BarGraph(){
     this.init.apply(this, arguments);
@@ -137,6 +135,8 @@ BarGraph.prototype = {
         this.bar(this.data.down / this.module.max);
     }
 };
+
+const historyGraphDisplay = _("Network History");
 
 function HistoryGraph(){
     this.init.apply(this, arguments);

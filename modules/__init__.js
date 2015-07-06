@@ -34,7 +34,7 @@ const ModulePartPrototype = {
     },
 
     getSetting: function(value){
-        return this.module.settings[this.settingsName + value];
+        return this.module.settings[(this.module.settingsName || this.module.name) + value];
     },
 
     format: function(format, value, ext){
@@ -97,12 +97,16 @@ const ModulePartPrototype = {
         return this.module.name;
     },
 
-    get settingsName(){
-        return this.module.settingsName || this.name;
-    },
-
     get settings(){
         return this.module.settings;
+    },
+
+    get colors(){
+        return this.module.colors;
+    },
+
+    get time(){
+        return this.module.time;
     },
 
     get raw(){
@@ -149,6 +153,7 @@ Module.prototype = {
         this.name = imports.name;
         this.settingsName = imports.settingsName;
         this.display = imports.display;
+        this.historyGraphDisplay = imports.historyGraphDisplay;
 
         this.module = this;
 
@@ -163,32 +168,42 @@ Module.prototype = {
             return;
         }
 
-        this.menuItem = new imports.MenuItem(this, settings);
+        this.menuItem = new imports.MenuItem(this);
         this.tooltip = this.menuItem.makeTooltip();
 
         if(imports.HistoryGraph)
-            this.panelWidget = new PanelWidget(this, settings, time, colors);
+            this.panelWidget = new PanelWidget(this);
     },
+
+    getSetting: ModulePartPrototype.getSetting,
 
     get min(){
         return this.dataProvider.min || 0;
     },
 
     get max(){
-        return this.dataProvider.max || 0;
+        return this.dataProvider.max || 1;
+    },
+
+    getData: function(delta){
+        if(this.getSetting(""))
+            this.dataProvider.getData(delta);
     },
 
     update: function(){
-        this.menuItem.update();
-        if(this.panelWidget)
-            this.panelWidget.update();
+        if(this.getSetting("")){
+            this.menuItem.update();
+
+            if(this.panelWidget)
+                this.panelWidget.update();
+        }
     },
 
     onSettingsChanged: function(){
         if(this.dataProvider.unavailable)
             this.settings[this.name] = false;
 
-        //this.menuItem.onSettingsChanged();
+        this.menuItem.onSettingsChanged();
         if(this.panelWidget)
             this.panelWidget.onSettingsChanged();
     }
@@ -346,7 +361,9 @@ BaseMenuItem.prototype = {
     makeTooltip: function(){
         let labelWidths = this.labelWidths.map(labelWidth => labelWidth * .75);
         let margin = (this.margin || 0) * .75;
-        return this.makeBox(labelWidths, margin, true);
+
+        this.tooltipBox = this.makeBox(labelWidths, margin, true);
+        return this.tooltipBox;
     },
 
     setText: function(container, label, format, value, ext){
@@ -356,6 +373,11 @@ BaseMenuItem.prototype = {
             this.tooltip[label].text = value;
 
         this.containers[container][label].text = value;
+    },
+
+    onSettingsChanged: function(){
+        this.actor.visible = this.getSetting("");
+        this.tooltipBox.visible = this.getSetting("");
     }
 };
 
@@ -392,7 +414,8 @@ BaseSubMenuMenuItem.prototype = {
         menuItem.addActor(box);
     },
 
-    setText: BaseMenuItem.prototype.setText
+    setText: BaseMenuItem.prototype.setText,
+    onSettingsChanged: BaseMenuItem.prototype.onSettingsChanged
 };
 
 function PanelWidget(){
@@ -402,7 +425,9 @@ function PanelWidget(){
 PanelWidget.prototype = {
     __proto__: ModulePartPrototype,
 
-    init: function(module, settings, time, colors){
+    init: function(module){
+        this.module = module;
+
         this.box = new St.BoxLayout;
 
         this.label = new St.Label({reactive: true, track_hover: true, style_class: "applet-label"});
@@ -416,14 +441,12 @@ PanelWidget.prototype = {
         this.panelLabel = new module.import.PanelLabel(module);
 
         this.graphs = [
-            new module.import.BarGraph(this.canvas, module, settings, colors),
-            new module.import.HistoryGraph(this.canvas, module, time, settings, colors)
+            new module.import.BarGraph(this.canvas, module),
+            new module.import.HistoryGraph(this.canvas, module)
         ];
 
         // inform the history graph that a horizontal packing is now required
         this.graphs[1].packDir = false;
-
-        this.module = module;
     },
 
     update: function(){

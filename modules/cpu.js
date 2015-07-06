@@ -14,6 +14,8 @@ DataProvider.prototype = {
 
     notificationFormat: "percent",
 
+    count: 0,
+
     init: function(){
         Modules.BaseDataProvider.prototype.init.apply(this, arguments);
 
@@ -173,7 +175,7 @@ PanelLabel.prototype = {
     s: function(n){
         return this.process(n, "system");
     }
-}
+};
 
 function BarGraph(){
     this.init.apply(this, arguments);
@@ -194,6 +196,8 @@ BarGraph.prototype = {
         }
     }
 };
+
+const historyGraphDisplay = _("CPU History");
 
 function HistoryGraph(){
     this.init.apply(this, arguments);

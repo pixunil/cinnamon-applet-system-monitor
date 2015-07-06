@@ -81,11 +81,11 @@ SystemMonitorApplet.prototype = {
 
         this.time = [];
 
-        this.graph = {
-            submenu: new PopupMenu.PopupSubMenuMenuItem(_("Graph")),
-            items: [new PopupMenu.PopupMenuItem(_("Overview")), new PopupMenu.PopupMenuItem(_("CPU History")), new PopupMenu.PopupMenuItem(_("Memory and Swap History")),
-                new PopupMenu.PopupMenuItem(_("Disk History")), new PopupMenu.PopupMenuItem(_("Network History")), new PopupMenu.PopupMenuItem(_("Thermal History"))]
-        };
+        this.graphSubMenu = new PopupMenu.PopupSubMenuMenuItem(_("Graph"));
+
+        this.graphMenuItems = [
+            new PopupMenu.PopupMenuItem(_("Overview"))
+        ];
 
         this.settings = {};
         this.colors = {};
@@ -135,15 +135,15 @@ SystemMonitorApplet.prototype = {
         this.initGraphs();
 
         this.onGraphTypeChanged();
-        this.graph.items.forEach(function(item, i){
+        this.graphMenuItems.forEach(function(item, i){
             // supress menu from closing
             item.activate = bind(function(){
                 this.settings.graphType = i;
                 this.onGraphTypeChanged();
             }, this);
-            this.graph.submenu.menu.addMenuItem(item, {span: -1, expand: true});
+            this.graphSubMenu.menu.addMenuItem(item, {span: -1, expand: true});
         }, this);
-        this.menu.addMenuItem(this.graph.submenu);
+        this.menu.addMenuItem(this.graphSubMenu);
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem);
         this.menu.addAction(_("System Monitor"), function(){
@@ -179,8 +179,10 @@ SystemMonitorApplet.prototype = {
             module = this.modules[module];
             let graph = module.import.HistoryGraph;
 
-            if(graph)
-                this.graphs.push(new graph(this.canvas, module, this.time, this.settings, this.colors));
+            if(graph){
+                this.graphs.push(new graph(this.canvas, module));
+                this.graphMenuItems.push(new PopupMenu.PopupMenuItem(module.historyGraphDisplay));
+            }
         }
     },
 
@@ -199,16 +201,19 @@ SystemMonitorApplet.prototype = {
     },
 
     getData: function(){
+        // calculate the time since the last update and save the time
         let time = GLib.get_monotonic_time() / 1e6;
         let delta = time - this.time[0];
         this.time[0] = time;
 
-        for(var i in this.modules){
-            if(this.settings[this.modules[i].name])
-                this.modules[i].dataProvider.getData(delta);
-        }
+        // generate data
+        for(let module in this.modules)
+            this.modules[module].getData(delta);
 
+        // data generated, now update the text
         this.updateText();
+
+        // queue the next data request
         this.timeout = Mainloop.timeout_add(this.settings.interval, bind(this.getData, this));
 
         // refresh independently of the drawing timeline the Overview graph
@@ -261,18 +266,19 @@ SystemMonitorApplet.prototype = {
         }, this);
         this.canvas.set_height(this.settings.graphSize);
 
-        var j = 0;
+        let j = 0;
         for(let module in this.modules){
-            this.modules[module].onSettingsChanged();
+            module = this.modules[module];
+            module.onSettingsChanged();
 
-            /*if(this.modules[i].menuGraph){
-                this.graph.items[++j].actor.visible = !!this.settings[this.modules[i].name];
+            if(module.historyGraphDisplay){
+                this.graphMenuItems[++j].actor.visible = this.settings[module.name];
                 // if the module was deactivated, but the menu graph is active, set it to "Overview"
-                if(!this.settings[this.modules[i].name] && this.settings.graphType === j){
+                if(!this.settings[module.name] && this.settings.graphType === j){
                     this.settings.graphType = 0;
                     this.onGraphTypeChanged();
                 }
-            }*/
+            }
         }
 
         this.iconBox.visible = this.settings.showIcon;
@@ -281,15 +287,16 @@ SystemMonitorApplet.prototype = {
     },
 
     onGraphTypeChanged: function(){
-        this.graph.items.forEach(function(item){
+        this.graphMenuItems.forEach(function(item){
             item.setShowDot(false);
         });
 
         let show = this.settings.graphType !== -1;
-        this.graph.submenu.actor.visible = show;
+        this.graphSubMenu.actor.visible = show;
         this.canvasHolder.actor.visible = show;
+
         if(show){
-            this.graph.items[this.settings.graphType].setShowDot(true);
+            this.graphMenuItems[this.settings.graphType].setShowDot(true);
             this.paint(this.paintTimeline, 0, true);
         }
     },
@@ -299,15 +306,16 @@ SystemMonitorApplet.prototype = {
         let graphType = this.settings.graphType;
 
         if(direction === Clutter.ScrollDirection.DOWN && graphType < this.graphs.length - 1){
-            // skip not available modules
+            // scrolling down, so increment the graphType pointer until a active item is hit
             do {
                 if(++graphType === this.graphs.length)
                     return;
-            } while(!this.graph.items[graphType].actor.visible);
+            } while(!this.graphMenuItems[graphType].actor.visible);
         } else if(direction === Clutter.ScrollDirection.UP && graphType > 0){
+            // scrolling up, so decrement the graphType pointer until a active item is hit
             do {
                 graphType--;
-            } while(!this.graph.items[graphType].actor.visible);
+            } while(!this.graphMenuItems[graphType].actor.visible);
         }
 
         this.settings.graphType = graphType;

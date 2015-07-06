@@ -43,39 +43,39 @@ DataProvider.prototype = {
 
         this.path = result[1].toString().split("\n", 1)[0];
         let lines = GLib.spawn_command_line_sync(this.path)[1].toString().split("\n");
+        let inAdapter = false;
 
         for(let i = 0, l = lines.length; i < l; ++i){
             let line = lines[i];
 
-            if(line.substr(0, 8) === "Adapter:" && !line.match(/virtual/i)){
-                while(true){
-                    ++i;
-                    let line = lines[i];
-
-                    if(!line || line.substr(0, 8) === "Adapter:")
-                        break;
-
-                    if(!line.match(/\d+.\d+\xb0C/))
-                        continue;
-
-                    let name = line.match(/[^:]+/)[0];
-                    let coreMatch = name.match(/core\s*(\d)/i);
-
-                    if(coreMatch !== null)
-                        this.colorRefs.push(parseInt(coreMatch[1]) % 4 + 1);
-                    else
-                        this.colorRefs.push(null);
-
-                    this.sensors.push(i);
-                    this.sensorNames.push(name);
-                    this.history.push([]);
-                }
+            if(line.substr(0, 8) === "Adapter:"){
+                if(line.match(/virtual/i))
+                    inAdapter = false;
+                else
+                    inAdapter = true;
             }
+
+            if(inAdapter && line.match(/\d+.\d+\xb0C/))
+                this.parseSensorLine(line, i);
         }
 
 
         if(!this.sensors.length)
             this.unavailable = true;
+    },
+
+    parseSensorLine: function(line, lineNumber){
+        let name = line.match(/[^:]+/)[0];
+        let coreMatch = name.match(/core\s*(\d)/i);
+
+        if(coreMatch !== null)
+            this.colorRefs.push(parseInt(coreMatch[1]) % 4 + 1);
+        else
+            this.colorRefs.push(null);
+
+        this.sensors.push(lineNumber);
+        this.sensorNames.push(name);
+        this.history.push([]);
     },
 
     getData: function(){
@@ -157,7 +157,7 @@ PanelLabel.prototype = {
 
         return false;
     }
-}
+};
 
 function BarGraph(){
     this.init.apply(this, arguments);
@@ -174,6 +174,8 @@ BarGraph.prototype = {
     }
 };
 
+const historyGraphDisplay = _("Thermal History");
+
 function HistoryGraph(){
     this.init.apply(this, arguments);
 }
@@ -187,8 +189,8 @@ HistoryGraph.prototype = {
         // first draw the sensors
         for(let i = 1, l = this.history.length; i < l; ++i){
             // if this sensor is labelled after a cpu core, use a cpu color
-            if(this.module.colorRefs[i])
-                this.next("cpu" + this.module.colorRefs[i]);
+            if(this.colorRefs[i])
+                this.next("cpu" + this.colorRefs[i]);
             // otherwise the normal thermal color
             else {
                 this.next("thermal");
