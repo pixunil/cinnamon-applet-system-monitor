@@ -45,4 +45,18 @@ MenuItem.prototype = {
         this.setText(0, 1, "number", this.data[1]);
         this.setText(0, 2, "number", this.data[2]);
     }
+};
+
+function PanelLabel(){
+    this.init.apply(this, arguments);
 }
+
+PanelLabel.prototype = {
+    __proto__: Modules.ModulePartPrototype,
+
+    l: function(n){
+        return this.formatNumber(this.data[n]);
+
+        return false;
+    }
+};

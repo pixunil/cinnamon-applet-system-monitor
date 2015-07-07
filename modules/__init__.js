@@ -171,8 +171,9 @@ Module.prototype = {
         this.menuItem = new imports.MenuItem(this);
         this.tooltip = this.menuItem.makeTooltip();
 
-        if(imports.HistoryGraph)
+        try {
             this.panelWidget = new PanelWidget(this);
+        } catch(e){}
     },
 
     getSetting: ModulePartPrototype.getSetting,
@@ -207,7 +208,7 @@ Module.prototype = {
         if(this.panelWidget)
             this.panelWidget.onSettingsChanged();
     }
-}
+};
 
 function BaseDataProvider(){
     throw new TypeError("Trying to instantiate abstract class [" + uuid + "] modules.BaseDataProvider");
@@ -430,27 +431,34 @@ PanelWidget.prototype = {
 
         this.box = new St.BoxLayout;
 
-        this.label = new St.Label({reactive: true, track_hover: true, style_class: "applet-label"});
-        this.label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
-        this.box.add(this.label, {y_align: St.Align.MIDDLE, y_fill: false});
+        if(module.import.PanelLabel){
+            this.label = new St.Label({reactive: true, track_hover: true, style_class: "applet-label"});
+            this.label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+            this.box.add(this.label, {y_align: St.Align.MIDDLE, y_fill: false});
 
-        this.canvas = new St.DrawingArea;
-        this.canvas.connect("repaint", bind(this.draw, this));
-        this.box.add(this.canvas);
+            this.panelLabel = new module.import.PanelLabel(module);
+        }
 
-        this.panelLabel = new module.import.PanelLabel(module);
+        if(module.import.BarGraph){
+            this.canvas = new St.DrawingArea;
+            this.canvas.connect("repaint", bind(this.draw, this));
+            this.box.add(this.canvas);
 
-        this.graphs = [
-            new module.import.BarGraph(this.canvas, module),
-            new module.import.HistoryGraph(this.canvas, module)
-        ];
+            this.graphs = [
+                new module.import.BarGraph(this.canvas, module),
+                new module.import.HistoryGraph(this.canvas, module)
+            ];
 
-        // inform the history graph that a horizontal packing is now required
-        this.graphs[1].packDir = false;
+            // inform the history graph that a horizontal packing is now required
+            this.graphs[1].packDir = false;
+        }
+
+        if(!this.label && !this.canvas)
+            throw new Error("PanelWidget uninitialisable.");
     },
 
     update: function(){
-        if(this.getSetting("PanelLabel")){
+        if(this.getSetting("PanelLabel") && this.label){
             let text = this.getSetting("PanelLabel").replace(/%(\w)(\w)/g, bind(this.panelLabelReplace, this));
             this.label.set_text(text);
             this.label.margin_left = text.length? 6 : 0;
@@ -463,7 +471,7 @@ PanelWidget.prototype = {
 
             if(output)
                 return output;
-        } else if(m === "%")
+        } else if(main === "%")
             return main + sub;
 
         return match;
@@ -479,15 +487,26 @@ PanelWidget.prototype = {
     },
 
     paint: function(){
-        this.canvas.queue_repaint();
+        if(this.canvas)
+            this.canvas.queue_repaint();
     },
 
     onSettingsChanged: function(){
-        this.label.visible = this.getSetting("") && this.getSetting("PanelLabel") !== "";
+        let showBox = false;
 
-        this.canvas.width = this.getSetting("PanelWidth");
-        this.canvas.visible = this.getSetting("") && this.getSetting("PanelGraph") !== -1;
+        if(this.label){
+            let show = this.getSetting("") && this.getSetting("PanelLabel") !== "";
+            this.label.visible = show;
+            showBox = show;
+        }
 
-        this.box.visible = this.label.visible || this.canvas.visible;
+        if(this.canvas){
+            this.canvas.width = this.getSetting("PanelWidth");
+            let show = this.getSetting("") && this.getSetting("PanelGraph") !== -1;
+            this.canvas.visible = show;
+            showBox = showBox || show;
+        }
+
+        this.box.visible = showBox;
     }
 };

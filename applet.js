@@ -95,7 +95,8 @@ SystemMonitorApplet.prototype = {
         let keys = [
             "show-icon", "interval", "byte-unit", "rate-unit", "thermal-unit", "order",
             "graph-size", "graph-steps", "graph-overview", "graph-connection",
-            "loadAvg", "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value",
+            "loadAvg", "loadAvg-panel-label",
+            "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value",
             "color-mem", "color-swap", "mem-panel-mode",
             "color-write", "color-read", "color-up", "color-down",
             "color-thermal", "thermal-mode","thermal-warning", "thermal-warning-time", "thermal-warning-value"

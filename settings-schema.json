@@ -126,6 +126,13 @@
         "default": true,
         "description": "Load averages"
     },
+    "loadAvg-panel-label": {
+        "type": "entry",
+        "default": "",
+        "description": "Label in the panel",
+        "dependency": "loadAvg",
+        "tooltip": "Common placeholders: \n %l0 \t load average for the last minute \n %l1 \t load average for the last 5 minutes \n %l2 \t load average for the last 15 minutes"
+    },
     "cpu-section": {
         "type": "separator"
     },

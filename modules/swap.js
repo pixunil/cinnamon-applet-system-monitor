@@ -58,4 +58,4 @@ MenuItem.prototype = {
         this.setText(0, 1, "bytes", this.data.total);
         this.setText(0, 2, "percent", this.data.used, this.data.total);
     }
-}
+};

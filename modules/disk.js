@@ -108,7 +108,7 @@ MenuItem.prototype = {
 
     labelWidths: [130, 130],
 
-    init: function(module){
+    init: function(){
         Modules.BaseSubMenuMenuItem.prototype.init.apply(this, arguments);
 
         this.updateDevices();
