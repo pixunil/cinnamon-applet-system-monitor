@@ -106,7 +106,7 @@ DataProvider.prototype = {
         this.updateMinMax();
 
         if(this.settings.thermalWarning)
-            this.checkWarning(temp, "Temperature was over %s for %fsec");
+            this.checkWarning(temp, _("Temperature was over %s for %fsec"));
     },
 
     onSettingsChanged: function(){

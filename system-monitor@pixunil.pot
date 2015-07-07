@@ -16,49 +16,59 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: \n"
 
-#: applet.js:108 applet.js:185
+#: applet.js:80 applet.js:151
 msgid "System Monitor"
 msgstr ""
 
-#: applet.js:113
+#: applet.js:84
 msgid "Graph"
 msgstr ""
 
 #. settings->graph-type->options
-#: applet.js:114
+#: applet.js:87
 msgid "Overview"
 msgstr ""
 
-#. settings->graph-type->options
-#: applet.js:114
-msgid "CPU History"
+#. settings->loadAvg->description
+#: modules/loadAvg.js:5
+msgid "Load averages"
+msgstr ""
+
+#. settings->thermal->description
+#. settings->color-thermal->description
+#: modules/thermal.js:10
+msgid "Thermal"
+msgstr ""
+
+#: modules/thermal.js:109
+#, javascript-format
+msgid "Temperature was over %s for %fsec"
 msgstr ""
 
 #. settings->graph-type->options
-#: applet.js:114
-msgid "Memory and Swap History"
-msgstr ""
-
-#. settings->graph-type->options
-#: applet.js:115
-msgid "Disk History"
-msgstr ""
-
-#. settings->graph-type->options
-#: applet.js:115
-msgid "Network History"
-msgstr ""
-
-#. settings->graph-type->options
-#: applet.js:115
+#: modules/thermal.js:176
 msgid "Thermal History"
 msgstr ""
 
-#: modules.js:27
+#. settings->network->description
+#: modules/network.js:8
+msgid "Network"
+msgstr ""
+
+#: modules/network.js:91
+msgid "Total"
+msgstr ""
+
+#. settings->graph-type->options
+#: modules/network.js:139
+msgid "Network History"
+msgstr ""
+
+#: modules/__init__.js:24
 msgid "Dependence missing"
 msgstr ""
 
-#: modules.js:27
+#: modules/__init__.js:24
 #, javascript-format
 msgid ""
 "Please install the GTop package\n"
@@ -68,64 +78,75 @@ msgid ""
 "to use the applet %s"
 msgstr ""
 
-#. settings->load->description
-#: modules.js:294
-msgid "Load averages"
-msgstr ""
-
-#. settings->cpu->description
-#: modules.js:329
-msgid "CPU"
-msgstr ""
-
-#: modules.js:371
-msgid "User"
-msgstr ""
-
-#: modules.js:372
-msgid "System"
-msgstr ""
-
-#. settings->color-mem->description
-#: modules.js:454
-msgid "Memory"
-msgstr ""
-
-#: modules.js:479
-msgid "used"
-msgstr ""
-
-#: modules.js:480
-msgid "cached"
-msgstr ""
-
-#: modules.js:481
-msgid "buffered"
-msgstr ""
-
-#. settings->color-swap->description
-#: modules.js:551
-msgid "Swap"
+#. settings->thermal-warning->description
+#. settings->cpu-warning->description
+#: modules/__init__.js:314
+msgid "Warning"
 msgstr ""
 
 #. settings->disk->description
-#: modules.js:597
+#: modules/disk.js:11
 msgid "Disk"
 msgstr ""
 
-#. settings->network->description
-#: modules.js:704
-msgid "Network"
+#. settings->graph-type->options
+#: modules/disk.js:173
+msgid "Disk History"
 msgstr ""
 
-#: modules.js:743
-msgid "Total"
+#. settings->color-mem->description
+#: modules/mem.js:6
+msgid "Memory"
 msgstr ""
 
-#. settings->thermal->description
-#. settings->color-thermal->description
-#: modules.js:793
-msgid "Thermal"
+#: modules/mem.js:64
+msgid "used"
+msgstr ""
+
+#: modules/mem.js:65
+msgid "cached"
+msgstr ""
+
+#: modules/mem.js:66
+msgid "buffered"
+msgstr ""
+
+#. settings->graph-type->options
+#: modules/mem.js:159
+msgid "Memory and Swap History"
+msgstr ""
+
+#. settings->color-swap->description
+#: modules/swap.js:7
+msgid "Swap"
+msgstr ""
+
+#. settings->cpu->description
+#: modules/cpu.js:6
+msgid "CPU"
+msgstr ""
+
+#: modules/cpu.js:96
+#, javascript-format
+msgid "CPU core %d usage was over %s for %fsec"
+msgstr ""
+
+#: modules/cpu.js:101
+#, javascript-format
+msgid "CPU usage was over %s for %fsec"
+msgstr ""
+
+#: modules/cpu.js:134
+msgid "User"
+msgstr ""
+
+#: modules/cpu.js:135
+msgid "System"
+msgstr ""
+
+#. settings->graph-type->options
+#: modules/cpu.js:199
+msgid "CPU History"
 msgstr ""
 
 #. metadata->name
@@ -138,18 +159,17 @@ msgid ""
 "graphs"
 msgstr ""
 
-#. metadata->contributors
-#. settings->network-panel-graph->options
-#. settings->cpu-panel-graph->options
-#. settings->mem-panel-graph->options
-#. settings->graph-type->options
-#. settings->thermal-panel-graph->options
-#. settings->disk-panel-graph->options
-msgid "None"
+#. settings->mem-panel-mode->description
+msgid "Mode of graph"
 msgstr ""
 
-#. metadata->contributors
-msgid "Io"
+#. settings->mem-panel-mode->options
+msgid "only Memory"
+msgstr ""
+
+#. settings->mem-panel-mode->options
+#. settings->mem->description
+msgid "Memory and Swap"
 msgstr ""
 
 #. settings->graph-steps->description
@@ -228,8 +248,8 @@ msgstr ""
 #. settings->network-panel-width->units
 #. settings->disk-panel-width->units
 #. settings->mem-panel-width->units
-#. settings->cpu-panel-width->units
 #. settings->graph-size->units
+#. settings->cpu-panel-width->units
 msgid "px"
 msgstr ""
 
@@ -256,6 +276,15 @@ msgstr ""
 #. settings->network-panel-graph->options
 #. settings->cpu-panel-graph->options
 #. settings->mem-panel-graph->options
+#. settings->graph-type->options
+#. settings->thermal-panel-graph->options
+#. settings->disk-panel-graph->options
+msgid "None"
+msgstr ""
+
+#. settings->network-panel-graph->options
+#. settings->cpu-panel-graph->options
+#. settings->mem-panel-graph->options
 #. settings->thermal-panel-graph->options
 #. settings->disk-panel-graph->options
 msgid "History"
@@ -273,18 +302,25 @@ msgstr ""
 msgid "Show icon"
 msgstr ""
 
-#. settings->thermal-warning->description
-#. settings->cpu-warning->description
-msgid "Warning"
-msgstr ""
-
 #. settings->thermal-warning-value->description
 msgid "Trigger temperature"
 msgstr ""
 
-#. settings->mem->description
-#. settings->mem-panel-mode->options
-msgid "Memory and Swap"
+#. settings->loadAvg-panel-label->description
+#. settings->disk-panel-label->description
+#. settings->thermal-panel-label->description
+#. settings->cpu-panel-label->description
+#. settings->network-panel-label->description
+#. settings->mem-panel-label->description
+msgid "Label in the panel"
+msgstr ""
+
+#. settings->loadAvg-panel-label->tooltip
+msgid ""
+"Common placeholders: \n"
+" %l0 \t load average for the last minute \n"
+" %l1 \t load average for the last 5 minutes \n"
+" %l2 \t load average for the last 15 minutes"
 msgstr ""
 
 #. settings->thermal-mode->options
@@ -372,14 +408,6 @@ msgstr ""
 
 #. settings->rate-unit->description
 msgid "Rates unit"
-msgstr ""
-
-#. settings->disk-panel-label->description
-#. settings->thermal-panel-label->description
-#. settings->cpu-panel-label->description
-#. settings->network-panel-label->description
-#. settings->mem-panel-label->description
-msgid "Label in the panel"
 msgstr ""
 
 #. settings->disk-panel-label->tooltip
@@ -489,14 +517,6 @@ msgstr ""
 
 #. settings->graph-overview->description
 msgid "Appearance of Overview graph"
-msgstr ""
-
-#. settings->mem-panel-mode->description
-msgid "Mode of graph"
-msgstr ""
-
-#. settings->mem-panel-mode->options
-msgid "only Memory"
 msgstr ""
 
 #. settings->color-read->description

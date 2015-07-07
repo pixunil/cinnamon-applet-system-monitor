@@ -93,12 +93,12 @@ DataProvider.prototype = {
                 if(this.settings.cpuWarningMode)
                     r += this.data.usage[i];
                 else
-                    this.checkWarning(this.data.usage[i], "CPU core " + (i + 1) + " usage was over %s for %fsec", i);
+                    this.checkWarning(this.data.usage[i], _("CPU core %d usage was over %s for %fsec").format(i + 1), i);
             }
         }
 
         if(this.settings.cpuWarning && this.settings.cpuWarningMode)
-            this.checkWarning(r / this.count, "CPU usage was over %s for %fsec");
+            this.checkWarning(r / this.count, _("CPU usage was over %s for %fsec"));
     },
 
     onSettingsChanged: function(){

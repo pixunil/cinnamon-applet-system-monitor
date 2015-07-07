@@ -108,7 +108,7 @@ class Main:
             arguments = ["xgettext"]
             for flag, value in data.items():
                 arguments.append("--%s=%s" % (flag, value))
-            arguments += glob("*.js")
+            arguments += self.get_js_files()
 
             subprocess.call(arguments)
         except OSError:
@@ -147,6 +147,16 @@ class Main:
         self.pot.save()
 
         print "Extraction complete"
+
+    def get_js_files(self):
+        files = []
+
+        for dirpath, dirnames, filenames in os.walk("."):
+            for filename in filenames:
+                if filename.endswith(".js"):
+                    files.append(os.path.join(dirpath, filename))
+
+        return files
 
     def update(self):
         if not getattr(self, "pot", None):
@@ -234,7 +244,7 @@ class Main:
 
         zip = ZipFile(self.md["uuid"] + ".zip", "w")
 
-        for file in glob("*.js") + glob("po/*.po") + ["metadata.json", "settings-schema.json"]:
+        for file in self.get_js_files() + glob("po/*.po") + ["metadata.json", "settings-schema.json"]:
             zip.write(file, "%s/%s" % (self.md["uuid"], file))
 
         zip.close()

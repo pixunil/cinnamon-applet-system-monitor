@@ -18,49 +18,49 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 1.5.4\n"
 
-#: applet.js:108 applet.js:185
+#: applet.js:80 applet.js:151
 msgid "System Monitor"
 msgstr "Systemüberwachung"
 
-#: applet.js:113
+#: applet.js:84
 msgid "Graph"
 msgstr "Graph"
 
 #. settings->graph-type->options
-#: applet.js:114
+#: applet.js:87
 msgid "Overview"
 msgstr "Übersicht"
 
 #. settings->graph-type->options
-#: applet.js:114
+#: modules/cpu.js:199
 msgid "CPU History"
 msgstr "CPU-Chronik"
 
 #. settings->graph-type->options
-#: applet.js:114
+#: modules/mem.js:159
 msgid "Memory and Swap History"
 msgstr "Arbeitsspeicher- und Auslagerungschronik"
 
 #. settings->graph-type->options
-#: applet.js:115
+#: modules/disk.js:173
 msgid "Disk History"
 msgstr "Festplattenchronik"
 
 #. settings->graph-type->options
-#: applet.js:115
+#: modules/network.js:139
 msgid "Network History"
 msgstr "Netzwerkchronik"
 
 #. settings->graph-type->options
-#: applet.js:115
+#: modules/thermal.js:176
 msgid "Thermal History"
 msgstr "Temperaturchronik"
 
-#: modules.js:27
+#: modules/__init__.js:24
 msgid "Dependence missing"
 msgstr "Abhängigkeit nicht erfüllt"
 
-#: modules.js:27
+#: modules/__init__.js:24
 #, javascript-format
 msgid ""
 "Please install the GTop package\n"
@@ -76,57 +76,57 @@ msgstr ""
 "um das Applet %s nutzen zu können"
 
 #. settings->cpu->description
-#: modules.js:329
+#: modules/cpu.js:6
 msgid "CPU"
 msgstr "CPU"
 
-#: modules.js:371
+#: modules/cpu.js:134
 msgid "User"
 msgstr "Benutzer"
 
-#: modules.js:372
+#: modules/cpu.js:135
 msgid "System"
 msgstr "System"
 
 #. settings->color-mem->description
-#: modules.js:454
+#: modules/mem.js:6
 msgid "Memory"
 msgstr "Arbeitsspeicher"
 
-#: modules.js:479
+#: modules/mem.js:64
 msgid "used"
 msgstr "benutzt"
 
-#: modules.js:480
+#: modules/mem.js:65
 msgid "cached"
 msgstr "gecached"
 
-#: modules.js:481
+#: modules/mem.js:66
 msgid "buffered"
 msgstr "gepuffert"
 
 #. settings->color-swap->description
-#: modules.js:551
+#: modules/swap.js:7
 msgid "Swap"
 msgstr "Swap"
 
 #. settings->disk->description
-#: modules.js:597
+#: modules/disk.js:11
 msgid "Disk"
 msgstr "Festplatte"
 
 #. settings->network->description
-#: modules.js:704
+#: modules/network.js:8
 msgid "Network"
 msgstr "Netzwerk"
 
-#: modules.js:743
+#: modules/network.js:91
 msgid "Total"
 msgstr "Gesamt"
 
 #. settings->thermal->description
 #. settings->color-thermal->description
-#: modules.js:793
+#: modules/thermal.js:10
 msgid "Thermal"
 msgstr "Temperatur"
 
@@ -138,8 +138,8 @@ msgstr "Typ des Graphen"
 msgid "only Memory"
 msgstr "nur Arbeitsspeicher"
 
-#. settings->mem->description
 #. settings->mem-panel-mode->options
+#. settings->mem->description
 msgid "Memory and Swap"
 msgstr "Arbeitsspeicher und Auslagerung"
 
@@ -221,8 +221,8 @@ msgstr "Breite des Graphen"
 #. settings->network-panel-width->units
 #. settings->disk-panel-width->units
 #. settings->mem-panel-width->units
-#. settings->cpu-panel-width->units
 #. settings->graph-size->units
+#. settings->cpu-panel-width->units
 msgid "px"
 msgstr "px"
 
@@ -250,7 +250,6 @@ msgstr "Gerade"
 msgid "Connection type for History graphs"
 msgstr "Verbundtyp für Chronikgraphen"
 
-#. metadata->contributors
 #. settings->network-panel-graph->options
 #. settings->cpu-panel-graph->options
 #. settings->mem-panel-graph->options
@@ -282,6 +281,7 @@ msgstr "zeige Symbol"
 
 #. settings->thermal-warning->description
 #. settings->cpu-warning->description
+#: modules/__init__.js:314
 msgid "Warning"
 msgstr "Warnung"
 
@@ -376,6 +376,7 @@ msgstr "Einheit für Festplatten- und Netzwerkauslastung"
 msgid "Rates unit"
 msgstr "Einheit für Raten"
 
+#. settings->loadAvg-panel-label->description
 #. settings->disk-panel-label->description
 #. settings->thermal-panel-label->description
 #. settings->cpu-panel-label->description
@@ -520,8 +521,8 @@ msgstr "Modus"
 msgid "Cores"
 msgstr "Kerne"
 
-#. settings->load->description
-#: modules.js:294
+#. settings->loadAvg->description
+#: modules/loadAvg.js:5
 msgid "Load averages"
 msgstr "Durchschnittslast"
 
@@ -537,18 +538,32 @@ msgstr ""
 "Zeigt CPU, Arbeitsspeicher- und Auslagerungsauslastung, Festplatten- und "
 "Netzwerkraten als Text und in Graphen"
 
-#. metadata->contributors
-msgid "Io"
+#: modules/thermal.js:109
+#, javascript-format
+msgid "Temperature was over %s for %fsec"
+msgstr "Temperatur war über %s für %fsec"
+
+#: modules/cpu.js:101
+#, javascript-format
+msgid "CPU usage was over %s for %fsec"
+msgstr "CPU Auslastung war über %s für %fsec"
+
+#. settings->loadAvg-panel-label->tooltip
+msgid ""
+"Common placeholders: \n"
+" %l0 \t load average for the last minute \n"
+" %l1 \t load average for the last 5 minutes \n"
+" %l2 \t load average for the last 15 minutes"
 msgstr ""
+"Platzhalter: \n"
+" %l0 \t Durchschnittslast der letzten Minute \n"
+" %l1 \t Durchschnittslast der letzten 5 Minuten \n"
+" %l2 \t Durchschnittslast der letzten 15 Minuten"
 
-#~ msgid "Elvarius: Mind work"
-#~ msgstr "Elvarius: Denkarbeit"
-
-#~ msgid "Eonigris: Computer"
-#~ msgstr ""
-
-#~ msgid "Atletikus: Key stroker"
-#~ msgstr ""
+#: modules/cpu.js:96
+#, javascript-format
+msgid "CPU core %d usage was over %s for %fsec"
+msgstr "Auslastung von CPU Kern %d war über %s für %fsec"
 
 #~ msgid "History graphs draw interval"
 #~ msgstr "Aktualisierungsintervall von Chronikgraphen"

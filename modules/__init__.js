@@ -311,7 +311,7 @@ BaseDataProvider.prototype = {
 
             if(notify){
                 let value = this.format(this.notificationFormat, this.getSetting("WarningValue"));
-                this.notify("Warning:", body.format(value, this.getSetting("WarningTime") * this.settings.interval / 1000));
+                this.notify(_("Warning"), body.format(value, this.getSetting("WarningTime") * this.settings.interval / 1000));
             }
         } else {
             if(index !== undefined)
