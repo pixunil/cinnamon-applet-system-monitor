@@ -155,6 +155,19 @@ Module.prototype = {
         this.display = imports.display;
         this.historyGraphDisplay = imports.historyGraphDisplay;
 
+        if(!this.settingsName){
+            this.settingKeys = [this.name];
+
+            if(imports.additionalSettingKeys)
+                this.settingKeys = this.settingKeys.concat(imports.additionalSettingKeys);
+
+            if(imports.HistoryGraph)
+                this.settingKeys.push(this.name + "-appearance", this.name + "-panel-graph", this.name + "-panel-width");
+
+            if(imports.PanelLabel)
+                this.settingKeys.push(this.name + "-panel-label");
+        }
+
         this.module = this;
 
         this.settings = settings;
@@ -171,9 +184,8 @@ Module.prototype = {
         this.menuItem = new imports.MenuItem(this);
         this.tooltip = this.menuItem.makeTooltip();
 
-        try {
+        if(imports.PanelLabel || imports.BarGraph)
             this.panelWidget = new PanelWidget(this);
-        } catch(e){}
     },
 
     getSetting: ModulePartPrototype.getSetting,
@@ -204,6 +216,9 @@ Module.prototype = {
         if(this.dataProvider.unavailable)
             this.settings[this.name] = false;
 
+        if(this.dataProvider.onSettingsChanged)
+            this.dataProvider.onSettingsChanged();
+
         this.menuItem.onSettingsChanged();
         if(this.panelWidget)
             this.panelWidget.onSettingsChanged();
@@ -220,6 +235,11 @@ BaseDataProvider.prototype = {
         this.time = module.time;
         this.settings = module.settings;
     },
+
+    getSetting: ModulePartPrototype.getSetting,
+    format: ModulePartPrototype.format,
+    formatPercent: ModulePartPrototype.formatPercent,
+    formatThermal: ModulePartPrototype.formatThermal,
 
     saveRaw: function(name, value){
         this.raw[name] = value;
@@ -282,7 +302,7 @@ BaseDataProvider.prototype = {
     },
 
     checkWarning: function(value, body, index){
-        if(value >= this.settings[this.name + "WarningValue"]){
+        if(value >= this.getSetting("WarningValue")){
             var notify = false;
             if(index !== undefined)
                 notify = --this.notifications[index] === 0;
@@ -290,14 +310,14 @@ BaseDataProvider.prototype = {
                 notify = --this.notifications === 0;
 
             if(notify){
-                let value = this.format(this.notificationFormat, this.settings[this.name + "WarningValue"]);
-                this.notify("Warning:", body.format(value, this.settings[this.name + "WarningTime"] * this.settings.interval / 1000));
+                let value = this.format(this.notificationFormat, this.getSetting("WarningValue"));
+                this.notify("Warning:", body.format(value, this.getSetting("WarningTime") * this.settings.interval / 1000));
             }
         } else {
             if(index !== undefined)
-                this.notifications[index] = this.settings[this.name + "WarningTime"];
+                this.notifications[index] = this.getSetting("WarningTime");
             else
-                this.notifications = this.settings[this.name + "WarningTime"];
+                this.notifications = this.getSetting("WarningTime");
         }
     },
 
@@ -452,9 +472,6 @@ PanelWidget.prototype = {
             // inform the history graph that a horizontal packing is now required
             this.graphs[1].packDir = false;
         }
-
-        if(!this.label && !this.canvas)
-            throw new Error("PanelWidget uninitialisable.");
     },
 
     update: function(){

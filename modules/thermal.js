@@ -8,6 +8,7 @@ const Modules = imports.modules;
 
 const name = "thermal";
 const display = _("Thermal");
+const additionalSettingKeys = ["thermal-mode","thermal-warning", "thermal-warning-time", "thermal-warning-value"];
 
 function DataProvider(){
     this.init.apply(this, arguments);
@@ -109,8 +110,6 @@ DataProvider.prototype = {
     },
 
     onSettingsChanged: function(){
-        Base.prototype.onSettingsChanged.call(this);
-
         if(this.settings.thermalWarning){
             this.notifications = this.settings.thermalWarningTime;
             if(!this.settings.thermalUnit)

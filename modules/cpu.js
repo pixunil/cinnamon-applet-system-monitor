@@ -4,6 +4,7 @@ const Modules = imports.modules;
 
 const name = "cpu";
 const display = _("CPU");
+const additionalSettingKeys = ["cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value"];
 
 function DataProvider(){
     this.init.apply(this, arguments);
@@ -101,8 +102,6 @@ DataProvider.prototype = {
     },
 
     onSettingsChanged: function(){
-        Base.prototype.onSettingsChanged.call(this);
-
         if(this.settings.cpuWarning){
             if(this.settings.cpuWarningMode)
                 this.notifications = this.settings.cpuWarningTime;

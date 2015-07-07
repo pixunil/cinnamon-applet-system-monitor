@@ -95,17 +95,34 @@ SystemMonitorApplet.prototype = {
         let keys = [
             "show-icon", "interval", "byte-unit", "rate-unit", "thermal-unit", "order",
             "graph-size", "graph-steps", "graph-overview", "graph-connection",
-            "loadAvg", "loadAvg-panel-label",
-            "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4", "cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value",
+            "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4",
             "color-mem", "color-swap", "mem-panel-mode",
             "color-write", "color-read", "color-up", "color-down",
-            "color-thermal", "thermal-mode","thermal-warning", "thermal-warning-time", "thermal-warning-value"
+            "color-thermal"
         ];
 
-        ["cpu", "mem", "disk", "network", "thermal"].forEach(function(p){
-            keys.push(p, p + "-appearance", p + "-panel-label", p + "-panel-graph", p + "-panel-width");
-        });
+        this.menuManager = new PopupMenu.PopupMenuManager(this);
+        this.menu = new Applet.AppletPopupMenu(this, orientation);
+        this.menuManager.addMenu(this.menu);
 
+        this.modules = {};
+        for(let module in Modules){
+            this.modules[module] = new Module(Modules[module], this.settings, this.time, this.colors);
+            module = this.modules[module];
+
+            if(module.unavailable)
+                continue;
+
+            this.menu.addMenuItem(module.menuItem);
+            this._applet_tooltip.addActor(module.tooltip);
+
+            if(module.settingKeys)
+                keys = keys.concat(module.settingKeys);
+        }
+
+        this.modules.mem.swap = this.modules.swap;
+
+        // listen to the settingProvider
         keys.forEach(function(keyDash){
             let keyCamelCase = keyDash.replace(/-(.)/g, function(match, char){
                 return char.toUpperCase();
@@ -115,22 +132,6 @@ SystemMonitorApplet.prototype = {
         }, this);
 
         this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", bind(this.onGraphTypeChanged, this));
-
-        this.menuManager = new PopupMenu.PopupMenuManager(this);
-        this.menu = new Applet.AppletPopupMenu(this, orientation);
-        this.menuManager.addMenu(this.menu);
-
-        this.modules = {};
-        for(let module in Modules){
-            this.modules[module] = new Module(Modules[module], this.settings, this.time, this.colors);
-
-            if(!this.modules[module].unavailable){
-                this.menu.addMenuItem(this.modules[module].menuItem);
-                this._applet_tooltip.addActor(this.modules[module].tooltip);
-            }
-        }
-
-        this.modules.mem.swap = this.modules.swap;
 
         this.initPanel();
         this.initGraphs();

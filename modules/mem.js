@@ -4,6 +4,7 @@ const Modules = imports.modules;
 
 const name = "mem";
 const display = _("Memory");
+const additionalSettingKeys = [];
 
 function DataProvider(){
     this.init.apply(this, arguments);
@@ -179,10 +180,10 @@ HistoryGraph.prototype = {
         this.line(this.history.buffer, 0, num);
 
         if(this.settings.memPanelMode === 2){
-            this.max = this.module.swap.data.total;
+            this.max = this.module.swap.dataProvider.data.total;
 
             this.next("swap");
-            this.line(this.module.swap.history.used, 1, 2);
+            this.line(this.module.swap.dataProvider.history.used, 1, 2);
         }
     }
 };
