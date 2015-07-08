@@ -470,7 +470,7 @@ PanelWidget.prototype = {
             ];
 
             // inform the history graph that a horizontal packing is now required
-            this.graphs[1].packDir = false;
+            this.graphs[1].packDir = "horizontal";
         }
     },
 
@@ -495,12 +495,17 @@ PanelWidget.prototype = {
     },
 
     draw: function(){
-        let graph = this.settings[this.name + "PanelGraph"];
+        let graph = this.getSetting("PanelGraph");
 
-        if(this.settings[this.name + "PanelGraph"] === -1)
+        if(graph === -1)
             return;
 
-        this.graphs[graph].draw();
+        graph = this.graphs[graph];
+
+        if(this.getSetting("PanelMode") !== undefined)
+            graph.mode = this.getSetting("PanelMode");
+
+        graph.draw();
     },
 
     paint: function(){

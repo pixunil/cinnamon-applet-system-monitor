@@ -206,17 +206,17 @@ HistoryGraph.prototype = {
     __proto__: Graph.History.prototype,
 
     draw: function(){
-        this.begin(this.history.user[0].length);
+        this.begin(this.count, this.history.user[0].length);
 
         for(let i = 0; i < this.count; ++i){
             this.next("cpu" + (i % 4 + 1));
 
             if(this.settings.cpuSplit){
-                this.line(this.history.user[i], i, this.count);
+                this.line(this.history.user[i]);
                 this.setAlpha(.75);
-                this.line(this.history.system[i], i, this.count);
+                this.line(this.history.system[i]);
             } else
-                this.line(this.history.usage[i], i, this.count);
+                this.line(this.history.usage[i]);
         }
     }
 };

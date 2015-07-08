@@ -307,8 +307,8 @@
         "type": "combobox",
         "default": 0,
         "options": {
-            "only Memory": 0,
-            "Memory and Swap": 2
+            "only Memory": "mem",
+            "Memory and Swap": "mem-swap"
         },
         "description": "Mode of graph",
         "indent": true,

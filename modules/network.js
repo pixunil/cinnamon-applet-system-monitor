@@ -146,12 +146,12 @@ HistoryGraph.prototype = {
     __proto__: Graph.History.prototype,
 
     draw: function(){
-        this.begin(this.history.up.length, 0, this.module.max);
+        this.begin(2, this.history.up.length, 0, this.module.max);
 
         this.next("up");
-        this.line(this.history.up, 0, 2);
+        this.line(this.history.up);
 
         this.next("down");
-        this.line(this.history.down, 1, 2);
+        this.line(this.history.down);
     }
 };

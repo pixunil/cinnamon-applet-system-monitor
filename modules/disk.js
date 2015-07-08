@@ -179,12 +179,12 @@ HistoryGraph.prototype = {
     __proto__: Graph.History.prototype,
 
     draw: function(){
-        this.begin(this.history.write.length, 0, this.module.max);
+        this.begin(2, this.history.write.length, 0, this.module.max);
 
         this.next("write");
-        this.line(this.history.write, 0, 2);
+        this.line(this.history.write);
 
         this.next("read");
-        this.line(this.history.read, 1, 2);
+        this.line(this.history.read);
     }
 };

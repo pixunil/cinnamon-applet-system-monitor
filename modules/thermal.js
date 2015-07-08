@@ -183,7 +183,9 @@ HistoryGraph.prototype = {
     __proto__: Graph.History.prototype,
 
     draw: function(){
-        this.begin(this.history[0].length, 1, this.module.max, this.module.min);
+        this.begin(this.history.length, this.history[0].length, 1, this.module.max, this.module.min);
+
+        this.section = 0;
 
         // first draw the sensors
         for(let i = 1, l = this.history.length; i < l; ++i){
@@ -201,6 +203,7 @@ HistoryGraph.prototype = {
 
         // then the min / average / max data
         this.next("thermal");
+        this.section = 0;
         this.ctx.setDash([5, 5], 0);
         this.line(this.history[0], 0, this.history.length);
     }

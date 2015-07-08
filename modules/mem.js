@@ -134,8 +134,10 @@ function BarGraph(){
 BarGraph.prototype = {
     __proto__: Graph.Bar.prototype,
 
+    mode: "mem-swap",
+
     draw: function(){
-        if(this.settings.memPanelMode === 0)
+        if(this.settings.memPanelMode === "mem")
             this.begin(1);
         else
             this.begin(2);
@@ -149,9 +151,9 @@ BarGraph.prototype = {
         this.setAlpha(.5);
         this.bar(this.data.buffer / this.data.total);
 
-        if(this.settings.memPanelMode === 2){
+        if(this.mode === "mem-swap"){
             this.next("swap");
-            this.bar(this.module.swap.data.used / this.module.swap.data.total);
+            this.bar(this.module.swap.dataProvider.data.used / this.module.swap.dataProvider.data.total);
         }
     }
 };
@@ -165,25 +167,30 @@ function HistoryGraph(){
 HistoryGraph.prototype = {
     __proto__: Graph.History.prototype,
 
-    draw: function(){
-        this.begin(this.history.usedup.length, 0, this.data.total);
+    mode: "mem-swap",
 
-        let num = this.settings.memPanelMode === 0? 1 : 2;
+    draw: function(){
+        let num = 1;
+
+        if(this.mode === "mem-swap")
+            num = 2;
+
+        this.begin(num, this.history.usedup.length, 0, this.data.total);
 
         this.next("mem");
-        this.line(this.history.usedup, 0, num);
+        this.line(this.history.usedup);
 
         this.setAlpha(.75);
-        this.line(this.history.cached, 0, num);
+        this.line(this.history.cached);
 
         this.setAlpha(.5);
-        this.line(this.history.buffer, 0, num);
+        this.line(this.history.buffer);
 
-        if(this.settings.memPanelMode === 2){
+        if(this.mode === "mem-swap"){
             this.max = this.module.swap.dataProvider.data.total;
 
             this.next("swap");
-            this.line(this.module.swap.dataProvider.history.used, 1, 2);
+            this.line(this.module.swap.dataProvider.history.used);
         }
     }
 };

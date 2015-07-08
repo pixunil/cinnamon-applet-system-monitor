@@ -248,10 +248,10 @@ Bar.prototype = {
         this.module = module;
     },
 
-    begin: function(n){
+    begin: function(numberSections){
         Base.prototype.begin.call(this);
 
-        this.dx = this.w / n;
+        this.dx = this.w / numberSections;
         this.x = -this.dx;
     },
 
@@ -275,6 +275,8 @@ function History(){
 History.prototype = {
     __proto__: ModulePart(Base),
 
+    packDir: "vertical",
+
     init: function(canvas, module){
         Base.prototype.init.call(this, canvas);
 
@@ -295,17 +297,18 @@ History.prototype = {
             this.incrementLast(history);
         },
 
-        area: function(history, num, total){
+        area: function(history){
             this.ctx.save();
-            if(this.packDir){
-                this.ctx.translate(this.dw * this.tx, this.h - (this.h * num / total));
-                this.ctx.scale(this.dw, -this.h / (this.max - this.min) / total);
+            if(this.packDir === "vertical"){
+                this.ctx.translate(this.dw * this.tx, this.h - (this.h * this.section / this.numberSections));
+                this.ctx.scale(this.dw, -this.h / (this.max - this.min) / this.numberSections);
                 this.ctx.translate(0, -this.min);
             } else {
-                this.ctx.rectangle(this.w * num / total, 0, this.w / total, this.h);
+                let x = this.w * this.section / this.numberSections;
+                this.ctx.rectangle(x, 0, this.w / this.numberSections, this.h);
                 this.ctx.clip();
-                this.ctx.translate(this.w * num / total + this.dw * this.tx / total, this.h);
-                this.ctx.scale(this.dw / total, -this.h / (this.max - this.min));
+                this.ctx.translate(x + this.dw * this.tx / this.numberSections, this.h);
+                this.ctx.scale(this.dw / this.numberSections, -this.h / (this.max - this.min));
                 this.ctx.translate(0, -this.min);
             }
 
@@ -320,22 +323,23 @@ History.prototype = {
             this.incrementLast(history);
         },
 
-        areaUpDown: function(history, num){
+        areaUpDown: function(history){
             this.ctx.save();
             if(this.packDir){
                 this.ctx.translate(this.dw * this.tx, this.h / 2);
 
-                if(!num) // up
+                if(!this.section) // up
                     this.ctx.scale(this.dw, -this.h / (this.max - this.min) / 2);
                 else // down
                     this.ctx.scale(this.dw, this.h / (this.max - this.min) / 2);
 
                 this.ctx.translate(0, -this.min);
             } else {
-                this.ctx.rectangle(num? 0 : this.w / 2, 0, this.w / 2, this.h);
+                let x = this.section? 0 : this.w / 2;
+                this.ctx.rectangle(2, 0, this.w / 2, this.h);
                 this.ctx.clip();
 
-                this.ctx.translate((num? 0 : this.w / 2) + this.dw * this.tx / 2, this.h);
+                this.ctx.translate(x + this.dw * this.tx / 2, this.h);
                 this.ctx.scale(this.dw / 2, -this.h / (this.max - this.min));
                 this.ctx.translate(0, -this.min);
             }
@@ -353,10 +357,10 @@ History.prototype = {
             this.incrementLast(history);
         },
 
-        stack: function(history, num, total){
+        stack: function(history){
             this.ctx.save();
             this.ctx.translate(this.dw * this.tx, this.h);
-            this.ctx.scale(this.dw, -this.h / (this.max - this.min) / total);
+            this.ctx.scale(this.dw, -this.h / (this.max - this.min) / this.numberSections);
             this.ctx.translate(0, -this.min);
 
             this.ctx.moveTo(0, history[0] + (this.last[0] || 0));
@@ -370,13 +374,19 @@ History.prototype = {
             this.incrementLast(history);
         },
 
-        bar: function(history, num, total){
-            var l = history.length;
-            for(var i = 0; i < l; ++i){
-                this.ctx.rectangle(this.dw * (i + this.tx) + this.dw * num / total, this.h, this.dw / total, -(history[i] + (this.last[i] || 0) - this.min) / (this.max - this.min) * this.h);
+        bar: function(history){
+            this.ctx.save();
+            this.ctx.translate(this.dw * (this.tx + this.section / this.numberSections), this.h);
+            this.ctx.scale(this.dw, -this.h / (this.max - this.min));
+            this.ctx.translate(0, this.min);
+
+            for(var i = 0, l = history.length; i < l; ++i){
+                this.ctx.rectangle(i, 0, 1 / this.numberSections, history[i] + (this.last[i] || 0));
                 this.last[i] = history[i] + (this.last[i] || 0) - this.min;
             }
+
             this.ctx.fill();
+            this.ctx.restore();
         }
     },
 
@@ -424,15 +434,16 @@ History.prototype = {
             this.last[i] = history[i] + (this.last[i] || 0);
     },
 
-    packDir: true,
-
-    begin: function(n, t, max, min){
+    begin: function(numberSections, numberSteps, timeIndex, max, min){
         Base.prototype.begin.call(this);
 
+        this.section = -1;
+        this.numberSections = numberSections;
+
         this.dw = this.w / this.settings.graphSteps;
-        t = this.time[t || 0];
-        var deltaT = (GLib.get_monotonic_time() / 1e3 - t * 1e3) / this.settings.interval;
-        this.tx = this.settings.graphSteps + 2 - deltaT - n;
+        let time = this.time[timeIndex || 0];
+        var deltaT = (GLib.get_monotonic_time() / 1e3 - time * 1e3) / this.settings.interval;
+        this.tx = this.settings.graphSteps + 2 - deltaT - numberSteps;
 
         this.min = min || 0;
         this.max = max || 1;
@@ -454,6 +465,7 @@ History.prototype = {
 
     next: function(color){
         this.setColor(color);
+        this.section++;
         if(this.settings[this.name + "Appearance"] !== "stack")
             this.last = [];
     }
