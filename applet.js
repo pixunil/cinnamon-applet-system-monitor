@@ -70,14 +70,14 @@ function SystemMonitorApplet(){
 }
 
 SystemMonitorApplet.prototype = {
-    __proto__: Applet.Applet.prototype,
+    __proto__: Applet.IconApplet.prototype,
 
     init: function(orientation, panelHeight, instanceId){
-        Applet.Applet.prototype._init.call(this, orientation, panelHeight);
+        Applet.IconApplet.prototype._init.call(this, orientation, panelHeight);
 
-        this.panelHeight = panelHeight;
         this._applet_tooltip = new SystemMonitorTooltip(this, orientation);
         this._applet_tooltip.addActor(new St.Label({text: _("System Monitor")}));
+        this.set_applet_icon_symbolic_name(iconName);
 
         this.time = [];
 
@@ -118,6 +118,9 @@ SystemMonitorApplet.prototype = {
 
             if(module.settingKeys)
                 keys = keys.concat(module.settingKeys);
+
+            if(module.panelWidget)
+                this.actor.add(module.panelWidget.box);
         }
 
         this.modules.mem.swap = this.modules.swap;
@@ -133,7 +136,6 @@ SystemMonitorApplet.prototype = {
 
         this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", bind(this.onGraphTypeChanged, this));
 
-        this.initPanel();
         this.initGraphs();
 
         this.onGraphTypeChanged();
@@ -185,20 +187,6 @@ SystemMonitorApplet.prototype = {
                 this.graphs.push(new graph(this.canvas, module));
                 this.graphMenuItems.push(new PopupMenu.PopupMenuItem(module.historyGraphDisplay));
             }
-        }
-    },
-
-    initPanel: function(){
-        this.iconBox = new St.Bin();
-        let icon = new St.Icon({icon_name: iconName, icon_type: St.IconType.SYMBOLIC, reactive: true, track_hover: true, style_class: "system-status-icon"});
-        this.iconBox.child = icon;
-        this.actor.add(this.iconBox, {y_align: St.Align.MIDDLE, y_fill: false});
-
-        for(let module in this.modules){
-            let panelWidget = this.modules[module].panelWidget;
-
-            if(panelWidget)
-                this.actor.add(panelWidget.box);
         }
     },
 
@@ -283,7 +271,8 @@ SystemMonitorApplet.prototype = {
             }
         }
 
-        this.iconBox.visible = this.settings.showIcon;
+        // use the private property _applet_icon_box for showing / hiding the icon
+        this._applet_icon_box.visible = this.settings.showIcon;
 
         this.updateText();
     },
