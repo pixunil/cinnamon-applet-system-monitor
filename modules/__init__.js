@@ -159,13 +159,18 @@ Module.prototype = {
             this.settingKeys = [this.name];
 
             if(imports.additionalSettingKeys)
-                this.settingKeys = this.settingKeys.concat(imports.additionalSettingKeys);
+                this.settingKeys = this.settingKeys.concat(imports.additionalSettingKeys.map(key => this.name + "-" + key));
 
             if(imports.HistoryGraph)
                 this.settingKeys.push(this.name + "-appearance", this.name + "-panel-graph", this.name + "-panel-width");
 
             if(imports.PanelLabel)
                 this.settingKeys.push(this.name + "-panel-label");
+
+            if(imports.colorSettingKeys){
+                this.colorSettingKeys = imports.colorSettingKeys;
+                this.settingKeys = this.settingKeys.concat(this.colorSettingKeys.map(key => this.name + "-color-" + key));
+            }
         }
 
         this.module = this;
@@ -215,6 +220,19 @@ Module.prototype = {
     onSettingsChanged: function(){
         if(this.dataProvider.unavailable)
             this.settings[this.name] = false;
+
+        this.color = {};
+
+        if(this.colorSettingKeys){
+            this.colorSettingKeys.forEach(function(key){
+                let color = this.getSetting("Color" + key[0].toUpperCase() + key.substr(1));
+                color = color.match(/(\d+), (\d+), (\d+)/); // get the values of red, green and blue
+                color.shift(); // remove the match index
+                color = color.map(colorPart => parseInt(colorPart) / 255); // make the color parts to be integers in the range 0 to 1
+
+                this.color[key] = color;
+            }, this);
+        }
 
         if(this.dataProvider.onSettingsChanged)
             this.dataProvider.onSettingsChanged();
@@ -526,6 +544,8 @@ PanelWidget.prototype = {
             this.canvas.width = this.getSetting("PanelWidth");
             let show = this.getSetting("") && this.getSetting("PanelGraph") !== -1;
             this.canvas.visible = show;
+            this.canvas.margin_left = show? 6 : 0;
+
             showBox = showBox || show;
         }
 

@@ -90,16 +90,19 @@ SystemMonitorApplet.prototype = {
         this.settings = {};
         this.colors = {};
         this.settingProvider = new Settings.AppletSettings(this.settings, uuid, instanceId);
+        this.settingProvider.bindProperties = function(keys, onSettingsChanged){
+            keys.forEach(function(keyDash){
+                let keyCamelCase = stringDashToCamelCase(keyDash);
 
-        // Settings keys
-        let keys = [
+                this.bindProperty(Settings.BindingDirection.IN, keyDash, keyCamelCase, onSettingsChanged);
+            }, this);
+        };
+
+        // Applet settings keys
+        this.settingProvider.bindProperties([
             "show-icon", "interval", "byte-unit", "rate-unit", "thermal-unit", "order",
-            "graph-size", "graph-steps", "graph-overview", "graph-connection",
-            "color-cpu1", "color-cpu2", "color-cpu3", "color-cpu4",
-            "color-mem", "color-swap", "mem-panel-mode",
-            "color-write", "color-read", "color-up", "color-down",
-            "color-thermal"
-        ];
+            "graph-size", "graph-steps", "graph-overview", "graph-connection"
+        ], bind(this.onSettingsChanged, this));
 
         this.menuManager = new PopupMenu.PopupMenuManager(this);
         this.menu = new Applet.AppletPopupMenu(this, orientation);
@@ -116,23 +119,16 @@ SystemMonitorApplet.prototype = {
             this.menu.addMenuItem(module.menuItem);
             this._applet_tooltip.addActor(module.tooltip);
 
-            if(module.settingKeys)
-                keys = keys.concat(module.settingKeys);
+            if(module.settingKeys){
+                this.settingProvider.bindProperties(module.settingKeys, bind(module.onSettingsChanged, module));
+                module.onSettingsChanged();
+            }
 
             if(module.panelWidget)
                 this.actor.add(module.panelWidget.box);
         }
 
         this.modules.mem.swap = this.modules.swap;
-
-        // listen to the settingProvider
-        keys.forEach(function(keyDash){
-            let keyCamelCase = keyDash.replace(/-(.)/g, function(match, char){
-                return char.toUpperCase();
-            });
-
-            this.settingProvider.bindProperty(Settings.BindingDirection.IN, keyDash, keyCamelCase, bind(this.onSettingsChanged, this));
-        }, this);
 
         this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", bind(this.onGraphTypeChanged, this));
 
@@ -248,28 +244,7 @@ SystemMonitorApplet.prototype = {
     },
 
     onSettingsChanged: function(){
-        ["cpu1", "cpu2", "cpu3", "cpu4", "mem", "swap", "write", "read", "up", "down", "thermal"].forEach(function(p){
-            let c = this.settings["color" + p[0].toUpperCase() + p.substr(1)].split(","), i;
-            for(i = 0; i < 3; ++i)
-                c[i] = parseInt(c[i].match(/\d+/)) / 255; //rgba[0-255] -> rgb[0-1]
-            this.colors[p] = c;
-        }, this);
         this.canvas.set_height(this.settings.graphSize);
-
-        let j = 0;
-        for(let module in this.modules){
-            module = this.modules[module];
-            module.onSettingsChanged();
-
-            if(module.historyGraphDisplay){
-                this.graphMenuItems[++j].actor.visible = this.settings[module.name];
-                // if the module was deactivated, but the menu graph is active, set it to "Overview"
-                if(!this.settings[module.name] && this.settings.graphType === j){
-                    this.settings.graphType = 0;
-                    this.onGraphTypeChanged();
-                }
-            }
-        }
 
         // use the private property _applet_icon_box for showing / hiding the icon
         this._applet_icon_box.visible = this.settings.showIcon;

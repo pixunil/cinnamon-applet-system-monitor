@@ -4,7 +4,8 @@ const Modules = imports.modules;
 
 const name = "mem";
 const display = _("Memory");
-const additionalSettingKeys = [];
+const additionalSettingKeys = ["panel-mode"];
+const colorSettingKeys = ["mem", "swap"];
 
 function DataProvider(){
     this.init.apply(this, arguments);

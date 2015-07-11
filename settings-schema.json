@@ -141,25 +141,25 @@
         "default": true,
         "description": "CPU"
     },
-    "color-cpu1": {
+    "cpu-color-core1": {
         "type": "colorchooser",
         "default": "rgba(255, 110, 0, 1)",
         "description": "CPU1",
         "dependency": "cpu"
     },
-    "color-cpu2": {
+    "cpu-color-core2": {
         "type": "colorchooser",
         "default": "rgba(203, 12, 41, 1)",
         "description": "CPU2",
         "dependency": "cpu"
     },
-    "color-cpu3": {
+    "cpu-color-core3": {
         "type": "colorchooser",
         "default": "rgba(73, 168, 53, 1)",
         "description": "CPU3",
         "dependency": "cpu"
     },
-    "color-cpu4": {
+    "cpu-color-core4": {
         "type": "colorchooser",
         "default": "rgba(45, 125, 179, 1)",
         "description": "CPU4",
@@ -263,13 +263,13 @@
         "default": true,
         "description": "Memory and Swap"
     },
-    "color-mem": {
+    "mem-color-mem": {
         "type": "colorchooser",
         "default": "rgba(171, 24, 82, 1)",
         "description": "Memory",
         "dependency": "mem"
     },
-    "color-swap": {
+    "mem-color-swap": {
         "type": "colorchooser",
         "default": "rgba(73, 168, 53, 1)",
         "description": "Swap",
@@ -333,13 +333,13 @@
         "default": true,
         "description": "Disk"
     },
-    "color-write": {
+    "disk-color-write": {
         "type": "colorchooser",
         "default": "rgba(238, 29, 0, 1)",
         "description": "Write",
         "dependency": "disk"
     },
-    "color-read": {
+    "disk-color-read": {
         "type": "colorchooser",
         "default": "rgba(45, 125, 179, 1)",
         "description": "Read",
@@ -393,13 +393,13 @@
         "default": true,
         "description": "Network"
     },
-    "color-up": {
+    "network-color-up": {
         "type": "colorchooser",
         "default": "rgba(238, 29, 0, 1)",
         "description": "Up",
         "dependency": "network"
     },
-    "color-down": {
+    "network-color-down": {
         "type": "colorchooser",
         "default": "rgba(45, 125, 179, 1)",
         "description": "Down",
@@ -453,7 +453,7 @@
         "default": true,
         "description": "Thermal"
     },
-    "color-thermal": {
+    "thermal-color-thermal": {
         "type": "colorchooser",
         "default": "rgba(238, 80, 29, 1)",
         "description": "Thermal",

@@ -8,7 +8,8 @@ const Modules = imports.modules;
 
 const name = "thermal";
 const display = _("Thermal");
-const additionalSettingKeys = ["thermal-mode","thermal-warning", "thermal-warning-time", "thermal-warning-value"];
+const additionalSettingKeys = ["mode", "warning", "warning-time", "warning-value"];
+const colorSettingKeys = ["thermal"];
 
 function DataProvider(){
     this.init.apply(this, arguments);
@@ -191,7 +192,7 @@ HistoryGraph.prototype = {
         for(let i = 1, l = this.history.length; i < l; ++i){
             // if this sensor is labelled after a cpu core, use a cpu color
             if(this.colorRefs[i])
-                this.next("cpu" + this.colorRefs[i]);
+                this.next(this.module.cpu.color["core" + this.colorRefs[i]]);
             // otherwise the normal thermal color
             else {
                 this.next("thermal");

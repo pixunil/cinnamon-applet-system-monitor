@@ -6,6 +6,7 @@ const Modules = imports.modules;
 
 const name = "network";
 const display = _("Network");
+const colorSettingKeys = ["up", "down"];
 
 function DataProvider(){
     this.init.apply(this, arguments);

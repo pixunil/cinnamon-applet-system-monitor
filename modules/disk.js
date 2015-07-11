@@ -9,6 +9,7 @@ const Modules = imports.modules;
 
 const name = "disk";
 const display = _("Disk");
+const colorSettingKeys = ["write", "read"];
 
 function DataProvider(){
     this.init.apply(this, arguments);

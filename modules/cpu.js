@@ -4,7 +4,8 @@ const Modules = imports.modules;
 
 const name = "cpu";
 const display = _("CPU");
-const additionalSettingKeys = ["cpu-split", "cpu-warning", "cpu-warning-time", "cpu-warning-mode", "cpu-warning-value"];
+const additionalSettingKeys = ["split", "warning", "warning-time", "warning-mode", "warning-value"];
+const colorSettingKeys = ["core1", "core2", "core3", "core4"];
 
 function DataProvider(){
     this.init.apply(this, arguments);
@@ -187,7 +188,7 @@ BarGraph.prototype = {
         this.begin(this.count);
 
         for(let i = 0; i < this.count; ++i){
-            this.next("cpu" + (i % 4 + 1));
+            this.next("core" + (i % 4 + 1));
             this.bar(this.data.user[i]);
 
             this.setAlpha(.75);
@@ -209,7 +210,7 @@ HistoryGraph.prototype = {
         this.begin(this.count, this.history.user[0].length);
 
         for(let i = 0; i < this.count; ++i){
-            this.next("cpu" + (i % 4 + 1));
+            this.next("core" + (i % 4 + 1));
 
             if(this.settings.cpuSplit){
                 this.line(this.history.user[i]);

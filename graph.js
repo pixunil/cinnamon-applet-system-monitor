@@ -23,16 +23,13 @@ Base.prototype = {
         this.h = this.canvas.get_height();
     },
 
-    setColor: function(colorName){
-        this.colorName = colorName;
-
-        let color = this.colors[colorName];
+    setColor: function(color){
+        this.lastColor = color;
         this.ctx.setSourceRGB(color[0], color[1], color[2]);
     },
 
     setAlpha: function(alpha){
-        let color = this.colors[this.colorName];
-        this.ctx.setSourceRGBA(color[0], color[1], color[2], alpha);
+        this.ctx.setSourceRGBA(this.lastColor[0], this.lastColor[1], this.lastColor[2], alpha);
     }
 };
 
@@ -46,44 +43,46 @@ Overview.prototype = {
     xScale: .5,
     yScale: .5,
 
-    init: function(canvas, modules, settings, colors){
+    init: function(canvas, modules, settings){
         Base.prototype.init.call(this, canvas);
 
         this.settings = settings;
-        this.colors = colors;
+        this.color = {};
 
-        for(let module in modules)
+        for(let module in modules){
             this[module] = modules[module].dataProvider;
+            this.color[module] = modules[module].color;
+        }
     },
 
     draw: function(){
         this.begin();
 
         if(this.settings.thermal){
-            this.next("thermal");
+            this.next("thermal", "thermal");
             this.center((this.thermal.data[0] - this.thermal.min) / (this.thermal.max - this.thermal.min));
         }
 
         if(this.settings.disk){
-            this.next("write");
+            this.next("disk", "write");
             this.small(this.disk.data.write / this.disk.max, true, false);
-            this.setColor("read");
+            this.setColor("disk", "read");
             this.small(this.disk.data.read / this.disk.max, false, false);
         }
 
         if(this.settings.network){
             if(!this.smallMerged)
-                this.next("up");
+                this.next("network", "up");
             else
-                this.setColor("up");
+                this.setColor("network", "up");
             this.small(this.network.data.up / this.network.max, true, true);
-            this.setColor("down");
+            this.setColor("network", "down");
             this.small(this.network.data.down / this.network.max, false, true);
         }
 
         if(this.settings.cpu){
             for(let i = 0; i < this.cpu.count; ++i){
-                this.next("cpu" + (i % 4 + 1));
+                this.next("cpu", "core" + (i % 4 + 1));
                 this.normal(this.cpu.data.user[i], true);
                 this.setAlpha(.75);
                 this.normal(this.cpu.data.system[i], true);
@@ -91,14 +90,14 @@ Overview.prototype = {
         }
 
         if(this.settings.mem){
-            this.next("mem");
+            this.next("mem", "mem");
             this.normal(this.mem.data.usedup / this.mem.data.total, false);
             this.setAlpha(.75);
             this.normal(this.mem.data.cached / this.mem.data.total, false);
             this.setAlpha(.5);
             this.normal(this.mem.data.buffer / this.mem.data.total, false);
 
-            this.next("swap");
+            this.next("mem", "swap");
             this.normal(this.swap.data.used / this.swap.data.total, false);
         }
     },
@@ -132,10 +131,15 @@ Overview.prototype = {
         this.ctx.setLineWidth(this.dr);
     },
 
-    next: function(color){
+    next: function(module, colorName){
         this.a = this.startA;
         this.r += this.dr;
-        this.setColor(color);
+
+        this.setColor(module, colorName);
+    },
+
+    setColor: function(module, colorName){
+        Base.prototype.setColor.call(this, this.color[module][colorName]);
     }
 };
 
@@ -255,10 +259,11 @@ Bar.prototype = {
         this.x = -this.dx;
     },
 
-    next: function(color){
+    next: function(colorName){
         this.x += this.dx;
         this.y = this.h;
-        this.setColor(color);
+
+        this.setColor(this.module.color[colorName]);
     },
 
     bar: function(size){
@@ -464,9 +469,12 @@ History.prototype = {
     },
 
     next: function(color){
-        this.setColor(color);
         this.section++;
         if(this.settings[this.name + "Appearance"] !== "stack")
             this.last = [];
+
+        if(typeof color === "string")
+            color = this.module.color[color];
+        this.setColor(color);
     }
 };
