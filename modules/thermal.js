@@ -92,15 +92,15 @@ DataProvider.prototype = {
         for(var i = 0, l = this.sensors.length; i < l; ++i){
             this.saveData(i + 1, parseFloat(result[this.sensors[i]].match(/\d+\.\d+/)));
 
-            if(this.settings.thermalMode === 0 && temp > this.data[i + 1] || temp === 0)
+            if(this.settings.thermalMode === "min" && temp > this.data[i + 1] || temp === 0)
                 temp = this.data[i + 1];
-            else if(this.settings.thermalMode === 1)
+            else if(this.settings.thermalMode === "avg")
                 temp += this.data[i + 1];
-            else if(this.settings.thermalMode === 2 && temp < this.data[i + 1])
+            else if(this.settings.thermalMode === "max" && temp < this.data[i + 1])
                 temp = this.data[i + 1];
         }
 
-        if(this.settings.thermalMode === 1)
+        if(this.settings.thermalMode === "avg")
             temp /= l;
         this.saveData(0, temp);
 

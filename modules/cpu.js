@@ -91,14 +91,14 @@ DataProvider.prototype = {
             this.saveData("usage", i, (duser + dsystem) / dtotal);
 
             if(this.settings.cpuWarning){
-                if(this.settings.cpuWarningMode)
+                if(this.settings.cpuWarningMode === "avg")
                     r += this.data.usage[i];
                 else
                     this.checkWarning(this.data.usage[i], _("CPU core %d usage was over %s for %fsec").format(i + 1), i);
             }
         }
 
-        if(this.settings.cpuWarning && this.settings.cpuWarningMode)
+        if(this.settings.cpuWarning && this.settings.cpuWarningMode === "avg")
             this.checkWarning(r / this.count, _("CPU usage was over %s for %fsec"));
     },
 
@@ -212,7 +212,7 @@ HistoryGraph.prototype = {
         for(let i = 0; i < this.count; ++i){
             this.next("core" + (i % 4 + 1));
 
-            if(this.settings.cpuSplit){
+            if(this.settings.cpuSplit === "user-system"){
                 this.line(this.history.user[i]);
                 this.setAlpha(.75);
                 this.line(this.history.system[i]);

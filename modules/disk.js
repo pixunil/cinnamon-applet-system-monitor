@@ -124,8 +124,8 @@ MenuItem.prototype = {
     },
 
     update: function(){
-        this.setText(0, this.settings.order? 0 : 1, "rate", this.data.write, true);
-        this.setText(0, this.settings.order? 1 : 0, "rate", this.data.read, false);
+        this.setText(0, this.settings.order === "up-down"? 0 : 1, "rate", this.data.write, true);
+        this.setText(0, this.settings.order === "down-up"? 0 : 1, "rate", this.data.read, false);
 
         for(var i = 0; i < this.dev.length; ++i){
             let dev = this.dev[i];

@@ -64,22 +64,35 @@ const ModulePartPrototype = {
 
     formatBytes: function(bytes){
         let prefix = " KMGTPEZY";
-        let a = 1, j = 0;
-        while(bytes / a > MAXSIZE){
-            a *= this.settings.byteUnit? 1024 : 1000;
-            ++j;
+        let size = 1;
+        let sizeMultiplicator = this.settings.byteUnit === "binary"? 1024 : 1000;
+        let prefixIndex = 0;
+
+        while(bytes / size > MAXSIZE){
+            size *= sizeMultiplicator;
+            ++prefixIndex;
         }
-        return (bytes / a).toFixed(1) + " " + prefix[j] + (this.settings.byteUnit && j? "i" : "") + "B";
+
+        let number = (bytes / size).toFixed(1);
+        let unit = prefix[prefixIndex] + (this.settings.byteUnit === "binary" && prefixIndex? "i" : "") + "B";
+        return number + " " + unit;
     },
 
     formatRate: function(bytes, dir){
         let prefix = " KMGTPEZY";
-        let a = (this.settings.rateUnit < 2? 1 : .125), j = 0;
-        while(bytes / a > MAXSIZE){
-            a *= this.settings.rateUnit & 1? 1024 : 1000;
-            ++j;
+        let size = this.settings.rateUnit[1] === "byte"? 1 : .125;
+        let sizeMultiplicator = this.settings.rateUnit[0] === "binary"? 1024 : 1000;
+        let prefixIndex = 0;
+
+        while(bytes / size > MAXSIZE){
+            size *= sizeMultiplicator;
+            ++prefixIndex;
         }
-        return (bytes / a).toFixed(1) + " " + prefix[j] + (this.settings.rateUnit & 1 && j? "i" : "") + (this.settings.rateUnit < 2? "B" : "bit") + "/s " + (dir? "\u25B2" : "\u25BC");
+
+        let number = (bytes / size).toFixed(1);
+        let unit = prefix[prefixIndex] + (this.settings.rateUnit[0] === "binary" && prefixIndex? "i" : "") + (this.settings.rateUnit[1] === "byte"? "B" : "bit") + "/s";
+        let arrow = dir? "\u25B2" : "\u25BC";
+        return number + " " + unit + " " + arrow;
     },
 
     formatPercent: function(part, total){
@@ -88,7 +101,7 @@ const ModulePartPrototype = {
 
     formatThermal: function(celsius){
         let number = this.settings.thermalUnit? celsius : celsius * 1.8 + 32;
-        let unit = this.settings.thermalUnit? "\u2103" : "\u2109"; //2103: Celsius, 2109: Fahrenheit
+        let unit = this.settings.thermalUnit === "celsius"? "\u2103" : "\u2109"; //2103: Celsius, 2109: Fahrenheit
         return number.toFixed(1) + unit;
     },
 
@@ -495,7 +508,7 @@ GraphMenuItem.prototype = {
             this.onGraphTypeChanged();
         }
     }
-}
+};
 
 function PanelWidget(){
     this.init.apply(this, arguments);

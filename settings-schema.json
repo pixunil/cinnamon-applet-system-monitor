@@ -20,41 +20,41 @@
     },
     "byte-unit": {
         "type": "combobox",
-        "default": true,
+        "default": "binary",
         "options": {
-            "B, KiB, MiB": true,
-            "B, KB, MB": false
+            "B, KiB, MiB": "binary",
+            "B, KB, MB": "decimal"
         },
         "description": "Bytes unit",
         "tooltip": "Unit for memory, swap, disk space and total network usage"
     },
     "rate-unit": {
         "type": "combobox",
-        "default": 1,
+        "default": ["binary", "byte"],
         "options": {
-            "B/s, KiB/s, MiB/s": 1,
-            "B/s, KB/s, MB/s": 0,
-            "bit/s Kibit/s, Mibit/s": 3,
-            "bit/s Kbit/s, Mbit/s": 2
+            "B/s, KiB/s, MiB/s": ["binary", "byte"],
+            "B/s, KB/s, MB/s": ["decimal", "byte"],
+            "bit/s Kibit/s, Mibit/s": ["binary", "bit"],
+            "bit/s Kbit/s, Mbit/s": ["decimal", "bit"]
         },
         "description": "Rates unit",
         "tooltip": "Unit for disk and network usage"
     },
     "thermal-unit": {
         "type": "combobox",
-        "default": true,
+        "default": "celsius",
         "options": {
-            "\u2103": true,
-            "\u2109": false
+            "\u2103": "celsius",
+            "\u2109": "fahrenheit"
         },
         "description": "Thermal unit"
     },
     "order": {
         "type": "combobox",
-        "default": true,
+        "default": "up-down",
         "options": {
-            "Write - Read / Up - Down": true,
-            "Read - Write / Down - Up": false
+            "Write - Read / Up - Down": "up-down",
+            "Read - Write / Down - Up": "down-up"
         },
         "description": "Order of Disk and Network items"
     },
@@ -179,10 +179,10 @@
     },
     "cpu-split": {
         "type": "combobox",
-        "default": false,
+        "default": "total",
         "options": {
-            "Total usage": false,
-            "User and System usage": true
+            "Total usage": "total",
+            "User and System usage": "user-system"
         },
         "description": "Show which information in history graphs",
         "dependency": "cpu"
@@ -246,10 +246,10 @@
     },
     "cpu-warning-mode": {
         "type": "combobox",
-        "default": true,
+        "default": "avg",
         "options": {
-            "Cores": false,
-            "Average": true
+            "Cores": "cores",
+            "Average": "avg"
         },
         "description": "Mode",
         "indent": true,
@@ -461,11 +461,11 @@
     },
     "thermal-mode": {
         "type": "combobox",
-        "default": 3,
+        "default": "avg",
         "options": {
-            "Minimum": 0,
-            "Average": 1,
-            "Maximum": 2
+            "Minimum": "min",
+            "Average": "avg",
+            "Maximum": "max"
         },
         "description": "Thermal mode",
         "dependency": "thermal"
