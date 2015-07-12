@@ -192,7 +192,7 @@ HistoryGraph.prototype = {
         for(let i = 1, l = this.history.length; i < l; ++i){
             // if this sensor is labelled after a cpu core, use a cpu color
             if(this.colorRefs[i])
-                this.next(this.module.cpu.color["core" + this.colorRefs[i]]);
+                this.next(this.modules.cpu.color["core" + this.colorRefs[i]]);
             // otherwise the normal thermal color
             else {
                 this.next("thermal");

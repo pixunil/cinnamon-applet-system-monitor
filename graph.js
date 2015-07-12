@@ -47,11 +47,11 @@ Overview.prototype = {
         Base.prototype.init.call(this, canvas);
 
         this.settings = settings;
-        this.color = {};
+        this.modules = {};
 
         for(let module in modules){
             this[module] = modules[module].dataProvider;
-            this.color[module] = modules[module].color;
+            this.modules[module] = modules[module];
         }
     },
 
@@ -139,7 +139,7 @@ Overview.prototype = {
     },
 
     setColor: function(module, colorName){
-        Base.prototype.setColor.call(this, this.color[module][colorName]);
+        Base.prototype.setColor.call(this, this.modules[module].color[colorName]);
     }
 };
 

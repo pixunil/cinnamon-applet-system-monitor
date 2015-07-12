@@ -27,6 +27,7 @@ const iconName = imports.iconName;
 const Graph = imports.graph;
 
 const Module = imports.modules.Module;
+const GraphMenuItem = imports.modules.GraphMenuItem;
 
 const Modules = {
     loadAvg: imports.modules.loadAvg,
@@ -79,46 +80,71 @@ SystemMonitorApplet.prototype = {
         this._applet_tooltip.addActor(new St.Label({text: _("System Monitor")}));
         this.set_applet_icon_symbolic_name(iconName);
 
+        this.modules = {};
         this.time = [];
 
-        this.graphSubMenu = new PopupMenu.PopupSubMenuMenuItem(_("Graph"));
-
-        this.graphMenuItems = [
-            new PopupMenu.PopupMenuItem(_("Overview"))
-        ];
-
         this.settings = {};
-        this.colors = {};
         this.settingProvider = new Settings.AppletSettings(this.settings, uuid, instanceId);
         this.settingProvider.bindProperties = function(keys, onSettingsChanged){
             keys.forEach(function(keyDash){
-                let keyCamelCase = stringDashToCamelCase(keyDash);
+                let keyCamelCase = keyDash.replace(/-(.)/g, function(match, char){
+                    return char.toUpperCase();
+                });
 
                 this.bindProperty(Settings.BindingDirection.IN, keyDash, keyCamelCase, onSettingsChanged);
             }, this);
         };
 
-        // Applet settings keys
+        // applet settings keys
         this.settingProvider.bindProperties([
             "show-icon", "interval", "byte-unit", "rate-unit", "thermal-unit", "order",
             "graph-size", "graph-steps", "graph-overview", "graph-connection"
         ], bind(this.onSettingsChanged, this));
+        this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", bind(this.onGraphTypeChanged, this));
 
         this.menuManager = new PopupMenu.PopupMenuManager(this);
         this.menu = new Applet.AppletPopupMenu(this, orientation);
         this.menuManager.addMenu(this.menu);
 
-        this.modules = {};
+        this.canvas = new St.DrawingArea({height: this.settings.graphSize});
+        this.canvas.connect("repaint", bind(this.draw, this));
+        this.canvasHolder = new PopupMenu.PopupBaseMenuItem({activate: false, sensitive: false});
+        this.canvasHolder.actor.connect("scroll-event", bind(this.onScroll, this));
+        this.canvasHolder.addActor(this.canvas, {span: -1, expand: true});
+
+        this.graphs = [null];
+
+        this.graphSubMenu = new PopupMenu.PopupSubMenuMenuItem(_("Graph"));
+
+        this.graphMenuItems = [
+            new GraphMenuItem(this, _("Overview"), 0)
+        ];
+
+        this.graphSubMenu.menu.addMenuItem(this.graphMenuItems[0]);
+
+        let index = 1;
         for(let module in Modules){
-            this.modules[module] = new Module(Modules[module], this.settings, this.time, this.colors);
+            this.modules[module] = new Module(Modules[module], this.settings, this.time);
             module = this.modules[module];
 
             if(module.unavailable)
                 continue;
 
+            // add data displaying widgets
             this.menu.addMenuItem(module.menuItem);
             this._applet_tooltip.addActor(module.tooltip);
 
+            // build the menu graph and graph menu item
+            let graph = module.buildMenuGraph(this, index);
+
+            if(graph){
+                this.graphs.push(graph);
+                this.graphMenuItems.push(module.graphMenuItem);
+                this.graphSubMenu.menu.addMenuItem(module.graphMenuItem);
+                index++;
+            }
+
+            // apply the module setting keys
             if(module.settingKeys){
                 this.settingProvider.bindProperties(module.settingKeys, bind(module.onSettingsChanged, module));
                 module.onSettingsChanged();
@@ -126,23 +152,17 @@ SystemMonitorApplet.prototype = {
 
             if(module.panelWidget)
                 this.actor.add(module.panelWidget.box);
+
+            module.modules = this.modules;
         }
 
-        this.modules.mem.swap = this.modules.swap;
+        // after all modules are ready, create the overview graphs
+        this.graphs[0] = [
+            new Graph.PieOverview(this.canvas, this.modules, this.settings),
+            new Graph.ArcOverview(this.canvas, this.modules, this.settings)
+        ];
 
-        this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", bind(this.onGraphTypeChanged, this));
-
-        this.initGraphs();
-
-        this.onGraphTypeChanged();
-        this.graphMenuItems.forEach(function(item, i){
-            // supress menu from closing
-            item.activate = bind(function(){
-                this.settings.graphType = i;
-                this.onGraphTypeChanged();
-            }, this);
-            this.graphSubMenu.menu.addMenuItem(item, {span: -1, expand: true});
-        }, this);
+        this.menu.addMenuItem(this.canvasHolder);
         this.menu.addMenuItem(this.graphSubMenu);
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem);
@@ -153,37 +173,13 @@ SystemMonitorApplet.prototype = {
         });
 
         this.onSettingsChanged();
+        this.onGraphTypeChanged();
+
         this.getData();
 
         this.paintTimeline = new Clutter.Timeline({duration: 100, repeat_count: -1});
         this.paintTimeline.connect("new-frame", bind(this.paint, this));
         this.paintTimeline.start();
-    },
-
-    initGraphs: function(){
-        this.canvas = new St.DrawingArea({height: this.settings.graphSize});
-        this.canvas.connect("repaint", bind(this.draw, this));
-        this.canvasHolder = new PopupMenu.PopupBaseMenuItem({activate: false, sensitive: false});
-        this.canvasHolder.actor.connect("scroll-event", bind(this.onScroll, this));
-        this.canvasHolder.addActor(this.canvas, {span: -1, expand: true});
-        this.menu.addMenuItem(this.canvasHolder);
-
-        let overviewGraphs = [
-            new Graph.PieOverview(this.canvas, this.modules, this.settings, this.colors),
-            new Graph.ArcOverview(this.canvas, this.modules, this.settings, this.colors)
-        ];
-
-        this.graphs = [overviewGraphs];
-
-        for(let module in this.modules){
-            module = this.modules[module];
-            let graph = module.import.HistoryGraph;
-
-            if(graph){
-                this.graphs.push(new graph(this.canvas, module));
-                this.graphMenuItems.push(new PopupMenu.PopupMenuItem(module.historyGraphDisplay));
-            }
-        }
     },
 
     getData: function(){

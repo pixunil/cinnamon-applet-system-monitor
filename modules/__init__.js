@@ -101,8 +101,8 @@ const ModulePartPrototype = {
         return this.module.settings;
     },
 
-    get colors(){
-        return this.module.colors;
+    get modules(){
+        return this.module.modules;
     },
 
     get time(){
@@ -148,12 +148,11 @@ function Module(){
 }
 
 Module.prototype = {
-    init: function(imports, settings, time, colors){
+    init: function(imports, settings, time){
         this.import = imports;
         this.name = imports.name;
         this.settingsName = imports.settingsName;
         this.display = imports.display;
-        this.historyGraphDisplay = imports.historyGraphDisplay;
 
         if(!this.settingsName){
             this.settingKeys = [this.name];
@@ -177,7 +176,6 @@ Module.prototype = {
 
         this.settings = settings;
         this.time = time;
-        this.colors = colors;
 
         this.dataProvider = new imports.DataProvider(this);
 
@@ -191,6 +189,14 @@ Module.prototype = {
 
         if(imports.PanelLabel || imports.BarGraph)
             this.panelWidget = new PanelWidget(this);
+    },
+
+    buildMenuGraph: function(applet, index){
+        if(!this.import.HistoryGraph)
+            return null;
+
+        this.graphMenuItem = new GraphMenuItem(applet, this.import.historyGraphDisplay, index);
+        return new this.import.HistoryGraph(applet.canvas, this);
     },
 
     getSetting: ModulePartPrototype.getSetting,
@@ -240,6 +246,8 @@ Module.prototype = {
         this.menuItem.onSettingsChanged();
         if(this.panelWidget)
             this.panelWidget.onSettingsChanged();
+        if(this.graphMenuItem)
+            this.graphMenuItem.onSettingsChanged(this.getSetting(""));
     }
 };
 
@@ -456,6 +464,38 @@ BaseSubMenuMenuItem.prototype = {
     setText: BaseMenuItem.prototype.setText,
     onSettingsChanged: BaseMenuItem.prototype.onSettingsChanged
 };
+
+function GraphMenuItem(){
+    this.init.apply(this, arguments);
+}
+
+GraphMenuItem.prototype = {
+    __proto__: PopupMenu.PopupMenuItem.prototype,
+
+    init: function(applet, display, index){
+        PopupMenu.PopupMenuItem.prototype._init.call(this, display);
+
+        this.index = index;
+        this.settings = applet.settings;
+        this.onGraphTypeChanged = bind(applet.onGraphTypeChanged, applet);
+    },
+
+    // overwriting instead of connecting to supress menu from closing
+    activate: function(){
+        this.settings.graphType = this.index;
+        this.onGraphTypeChanged();
+    },
+
+    onSettingsChanged: function(active){
+        this.actor.visible = active;
+
+        // if the module was deactivated, but the menu graph is active, set it to "Overview"
+        if(!active && this.settings.graphType === this.index){
+            this.settings.graphType = 0;
+            this.onGraphTypeChanged();
+        }
+    }
+}
 
 function PanelWidget(){
     this.init.apply(this, arguments);

@@ -154,7 +154,7 @@ BarGraph.prototype = {
 
         if(this.mode === "mem-swap"){
             this.next("swap");
-            this.bar(this.module.swap.dataProvider.data.used / this.module.swap.dataProvider.data.total);
+            this.bar(this.modules.swap.dataProvider.data.used / this.modules.swap.dataProvider.data.total);
         }
     }
 };
@@ -188,10 +188,10 @@ HistoryGraph.prototype = {
         this.line(this.history.buffer);
 
         if(this.mode === "mem-swap"){
-            this.max = this.module.swap.dataProvider.data.total;
+            this.max = this.modules.swap.dataProvider.data.total;
 
             this.next("swap");
-            this.line(this.module.swap.dataProvider.history.used);
+            this.line(this.modules.swap.dataProvider.history.used);
         }
     }
 };
