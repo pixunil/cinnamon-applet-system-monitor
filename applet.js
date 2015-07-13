@@ -217,10 +217,15 @@ SystemMonitorApplet.prototype = {
     },
 
     draw: function(){
+        let graph;
+
         if(this.settings.graphType === 0)
-            this.graphs[0][this.settings.graphOverview].draw();
+            graph = this.graphs[0][this.settings.graphOverview];
         else
-            this.graphs[this.settings.graphType].draw();
+            graph = this.graphs[this.settings.graphType];
+
+        graph.draw();
+        graph.ctx.$dispose();
     },
 
     updateText: function(){

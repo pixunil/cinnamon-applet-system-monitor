@@ -577,6 +577,7 @@ PanelWidget.prototype = {
             graph.mode = this.getSetting("PanelMode");
 
         graph.draw();
+        graph.ctx.$dispose();
     },
 
     paint: function(){
