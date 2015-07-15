@@ -127,21 +127,20 @@ SystemMonitorApplet.prototype = {
             this.modules[module] = new Module(Modules[module], this.settings, this.time);
             module = this.modules[module];
 
-            if(module.unavailable)
-                continue;
+            if(!module.unavailable){
+                // add data displaying widgets
+                this.menu.addMenuItem(module.menuItem);
+                this._applet_tooltip.addActor(module.tooltip);
 
-            // add data displaying widgets
-            this.menu.addMenuItem(module.menuItem);
-            this._applet_tooltip.addActor(module.tooltip);
+                // build the menu graph and graph menu item
+                let graph = module.buildMenuGraph(this, index);
 
-            // build the menu graph and graph menu item
-            let graph = module.buildMenuGraph(this, index);
-
-            if(graph){
-                this.graphs.push(graph);
-                this.graphMenuItems.push(module.graphMenuItem);
-                this.graphSubMenu.menu.addMenuItem(module.graphMenuItem);
-                index++;
+                if(graph){
+                    this.graphs.push(graph);
+                    this.graphMenuItems.push(module.graphMenuItem);
+                    this.graphSubMenu.menu.addMenuItem(module.graphMenuItem);
+                    index++;
+                }
             }
 
             // apply the module setting keys

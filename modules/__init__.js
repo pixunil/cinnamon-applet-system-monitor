@@ -80,8 +80,8 @@ const ModulePartPrototype = {
 
     formatRate: function(bytes, dir){
         let prefix = " KMGTPEZY";
-        let size = this.settings.rateUnit[1] === "byte"? 1 : .125;
-        let sizeMultiplicator = this.settings.rateUnit[0] === "binary"? 1024 : 1000;
+        let size = this.settings.rateUnit.endsWith("byte")? 1 : .125;
+        let sizeMultiplicator = this.settings.rateUnit.startsWith("binary")? 1024 : 1000;
         let prefixIndex = 0;
 
         while(bytes / size > MAXSIZE){
@@ -90,7 +90,7 @@ const ModulePartPrototype = {
         }
 
         let number = (bytes / size).toFixed(1);
-        let unit = prefix[prefixIndex] + (this.settings.rateUnit[0] === "binary" && prefixIndex? "i" : "") + (this.settings.rateUnit[1] === "byte"? "B" : "bit") + "/s";
+        let unit = prefix[prefixIndex] + (this.settings.rateUnit.startsWith("binary") && prefixIndex? "i" : "") + (this.settings.rateUnit.endsWith("byte")? "B" : "bit") + "/s";
         let arrow = dir? "\u25B2" : "\u25BC";
         return number + " " + unit + " " + arrow;
     },
@@ -193,7 +193,7 @@ Module.prototype = {
         this.dataProvider = new imports.DataProvider(this);
 
         if(this.dataProvider.unavailable){
-            this.unvailable = true;
+            this.unavailable = true;
             return;
         }
 
@@ -256,7 +256,8 @@ Module.prototype = {
         if(this.dataProvider.onSettingsChanged)
             this.dataProvider.onSettingsChanged();
 
-        this.menuItem.onSettingsChanged();
+        if(this.menuItem)
+            this.menuItem.onSettingsChanged();
         if(this.panelWidget)
             this.panelWidget.onSettingsChanged();
         if(this.graphMenuItem)

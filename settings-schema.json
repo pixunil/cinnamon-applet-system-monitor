@@ -30,12 +30,12 @@
     },
     "rate-unit": {
         "type": "combobox",
-        "default": ["binary", "byte"],
+        "default": "binary-byte",
         "options": {
-            "B/s, KiB/s, MiB/s": ["binary", "byte"],
-            "B/s, KB/s, MB/s": ["decimal", "byte"],
-            "bit/s Kibit/s, Mibit/s": ["binary", "bit"],
-            "bit/s Kbit/s, Mbit/s": ["decimal", "bit"]
+            "B/s, KiB/s, MiB/s": "binary-byte",
+            "B/s, KB/s, MB/s": "decimal-byte",
+            "bit/s Kibit/s, Mibit/s": "binary-bit",
+            "bit/s Kbit/s, Mbit/s": "decimal-bit"
         },
         "description": "Rates unit",
         "tooltip": "Unit for disk and network usage"
