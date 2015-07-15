@@ -143,14 +143,17 @@ function PanelLabel(){
 PanelLabel.prototype = {
     __proto__: Modules.ModulePartPrototype,
 
-    r: function(n){
-        if(n === "w")
-            return this.format("rate", this.data.write, true);
+    main: {
+        write: /^(?:write|w)$/i,
+        read: /^(?:read|r)$/i
+    },
 
-        if(n === "r")
-            return this.format("rate", this.data.read, false);
+    write: function(){
+        return this.formatRate(this.data.write);
+    },
 
-        return false;
+    read: function(){
+        return this.formatRate(this.data.read);
     }
 };
 

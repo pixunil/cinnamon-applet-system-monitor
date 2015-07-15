@@ -54,9 +54,12 @@ function PanelLabel(){
 PanelLabel.prototype = {
     __proto__: Modules.ModulePartPrototype,
 
-    l: function(n){
-        return this.formatNumber(this.data[n]);
+    main: {
+        load: /(?:load|l)([0-2])/i
+    },
 
-        return false;
+    load: function(load){
+        load = parseInt(load);
+        return this.formatNumber(this.data[load]);
     }
 };

@@ -151,11 +151,18 @@ function PanelLabel(){
 PanelLabel.prototype = {
     __proto__: Modules.ModulePartPrototype,
 
-    t: function(n){
-        if(this.data[n - 0])
-            return this.format("thermal", this.data[n - 0]);
+    main: {
+        value: /^(?:value|v|min|max|m|average|avg|a)$/i,
+        sensor: /^(?:sensor|s)(\d+)$/i
+    },
 
-        return false;
+    value: function(){
+        return this.formatThermal(this.data[0]);
+    },
+
+    sensor: function(sensor){
+        sensor = parseInt(sensor);
+        return this.formatThermal(this.data[sensor]);
     }
 };
 

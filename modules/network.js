@@ -108,14 +108,25 @@ function PanelLabel(){
 PanelLabel.prototype = {
     __proto__: Modules.ModulePartPrototype,
 
-    r: function(n){
-        if(n === "u")
-            return this.format("rate", this.data.up, true);
+    main: {
+        up: /^(?:up|u)$/i,
+        down: /^(?:down|d)$/i
+    },
 
-        if(n === "d")
-            return this.format("rate", this.data.down, false);
+    formats: ["rate", "total"],
 
-        return false;
+    up: function(format){
+        if(format === "rate")
+            return this.formatRate(this.data.up);
+
+        return this.formatBytes(this.raw.up);
+    },
+
+    down: function(format){
+        if(format === "rate")
+            return this.formatRate(this.data.down);
+
+        return this.formatBytes(this.raw.down);
     }
 };
 

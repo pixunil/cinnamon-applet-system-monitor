@@ -90,41 +90,33 @@ function PanelLabel(){
 PanelLabel.prototype = {
     __proto__: Modules.ModulePartPrototype,
 
-    mem: {
-        u: "usedup",
-        U: "used",
-        c: "cached",
-        b: "buffer",
-        t: "total"
+    main: {
+        mem: /^(?:memory|mem|m)/i,
+        swap: /^(?:swap|s)$/i
     },
 
-    swap: {
-        u: "used",
-        t: "total"
+    defaultSub: "used",
+    sub: {
+        usedup: /^(?:usedup|u)$/i,
+        cached: /^(?:cached|c)$/i,
+        buffer: /^(?:buffer|b)$/i,
+        total: /^(?:total|t)$/i
     },
 
-    m: function(n){
-        if(this.mem[n])
-            return this.format("bytes", this.data[this.mem[n]]);
+    formats: ["percent", "size"],
 
-        return false;
+    mem: function(sub, format){
+        if(format === "percent")
+            return this.formatPercent(this.data[sub], this.data.total);
+
+        return this.formatBytes(this.data[sub]);
     },
 
-    s: function(n){
-        if(n === "p")
-            return this.format("percent", this.swap.data.used, this.swap.data.total);
+    swap: function(sub, format){
+        if(format === "percent")
+            return this.formatPercent(this.modules.swap.dataProvider.data[sub], this.modules.swap.dataProvider.data.total);
 
-        if(this.swap[n])
-            return this.format("bytes", this.swap.data[this.swap[n]]);
-
-        return false;
-    },
-
-    p: function(n){
-        if(this.mem[n])
-            return this.format("percent", this.data[this.mem[n]], this.data.total);
-
-        return false;
+        return this.formatBytes(this.modules.swap.dataProvider.data[sub]);
     }
 };
 

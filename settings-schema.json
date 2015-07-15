@@ -192,7 +192,7 @@
         "default": "",
         "description": "Label in the panel",
         "dependency": "cpu",
-        "tooltip": "Common placeholders: \n %tn \t usage of core n (replace n with a number) \n %ta \t average usage"
+        "tooltip": "Common placeholders: \n %core(digit) \t usage of a core \n %avg \t average usage"
     },
     "cpu-panel-graph": {
         "type": "combobox",
@@ -290,7 +290,7 @@
         "default": "",
         "description": "Label in the panel",
         "dependency": "mem",
-        "tooltip": "Common placeholders: \n %mu \t memory usage in bytes \n %pu \t memory usage in percent \n %su \t swap usage in bytes \n %sp \t swap usage in bytes"
+        "tooltip": "Common placeholders: \n %mem.usedp#size \t memory usage in bytes \n %mem.usedup \t memory usage in percent \n %swap#size \t swap usage in bytes \n %swap \t swap usage in bytes"
     },
     "mem-panel-graph": {
         "type": "combobox",
@@ -361,7 +361,7 @@
         "default": "",
         "description": "Label in the panel",
         "dependency": "disk",
-        "tooltip": "Common placeholders: \n %rw \t write usage \n %rr \t read usage"
+        "tooltip": "Common placeholders: \n %write \t write usage \n %read \t read usage"
     },
     "disk-panel-graph": {
         "type": "combobox",
@@ -421,7 +421,7 @@
         "default": "",
         "description": "Label in the panel",
         "dependency": "network",
-        "tooltip": "Common placeholders: \n %ru \t up usage \n %rd \t down usage"
+        "tooltip": "Common placeholders: \n %up \t up usage \n %down \t down usage"
     },
     "network-panel-graph": {
         "type": "combobox",
@@ -485,7 +485,7 @@
         "default": "",
         "description": "Label in the panel",
         "dependency": "thermal",
-        "tooltip": "Common placeholders: \n %t0 \t thermal value (specified in \"Thermal Mode\") \n %tn \t sensor temperature (replace n with a number)"
+        "tooltip": "Common placeholders: \n %value \t thermal value (specified in \"Thermal Mode\") \n %sensor(digit) \t sensor temperature"
     },
     "thermal-panel-graph": {
         "type": "combobox",

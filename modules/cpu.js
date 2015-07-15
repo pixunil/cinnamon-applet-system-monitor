@@ -152,28 +152,32 @@ function PanelLabel(){
 PanelLabel.prototype = {
     __proto__: Modules.ModulePartPrototype,
 
-    process: function(n, prop){
-        if(n === "a"){
-            let value = 0;
-            for(var i = 0; i < this.count; ++i)
-                value += this.data[prop][i] / this.count;
-
-            return this.format("percent", value);
-        } else if(n - 0 > -1 && n - 0 < this.count)
-            return this.format("percent", this.data[prop][n - 0]);
-        return false;
+    main: {
+        core: /^(?:core|c)(\d+)$/i,
+        average: /^(?:average|avg|all|a)$/i
     },
 
-    t: function(n){
-        return this.process(n, "usage");
+    defaultSub: "usage",
+    sub: {
+        user: /^(?:user|usr|u)$/i,
+        system: /^(?:system|sys|s)$/i
     },
 
-    u: function(n){
-        return this.process(n, "user");
+    core: function(core, sub){
+        let core = parseInt(core) - 1;
+
+        if(0 > core || core > this.count)
+            return null;
+
+        return this.formatPercent(this.data[sub][core]);
     },
 
-    s: function(n){
-        return this.process(n, "system");
+    average: function(sub){
+        let value = 0;
+        for(let i = 0; i < this.count; ++i)
+            value += this.data[sub][i] / this.count;
+
+        return this.formatPercent(value);
     }
 };
 

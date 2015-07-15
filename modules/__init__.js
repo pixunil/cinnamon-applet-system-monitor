@@ -548,20 +548,56 @@ PanelWidget.prototype = {
 
     update: function(){
         if(this.getSetting("PanelLabel") && this.label){
-            let text = this.getSetting("PanelLabel").replace(/%(\w)(\w)/g, bind(this.panelLabelReplace, this));
+            let text = this.getSetting("PanelLabel").replace(/[%$](\w+)(?:\.(\w+))?(?:#(\w+))?\b/g, bind(this.panelLabelReplace, this));
             this.label.set_text(text);
             this.label.margin_left = text.length? 6 : 0;
         }
     },
 
-    panelLabelReplace: function(match, main, sub){
-        if(this.panelLabel[main]){
-            let output = this.panelLabel[main](sub);
+    panelLabelReplace: function(match, main, sub, format){
+        for(let name in this.panelLabel.main){
+            // run the regEx against the matched main part
+            let result = main.match(this.panelLabel.main[name]);
+
+            if(!result)
+                continue;
+
+            // remove the match entry
+            result.shift();
+
+            if(this.panelLabel.sub){
+                // in the case nothing applies, use the standard value
+                let subUsed = this.panelLabel.defaultSub;
+
+                for(let name in this.panelLabel.sub){
+                    // run the regEx against the matched sub part
+                    let result = sub.match(this.panelLabel.sub[name]);
+
+                    // when it success, use it
+                    if(result){
+                        subUsed = name;
+                        break;
+                    }
+                }
+
+                result.push(subUsed);
+            }
+
+            if(this.panelLabel.formats){
+                // when the format is in the list, use it
+                if(this.panelLabel.formats.indexOf(format) > -1)
+                    result.push(format);
+                // if nothing found, use the first item
+                else
+                    result.push(this.panelLabel.formats[0]);
+            }
+
+            // call the method with the groups of the main regEx, the sub and format
+            let output = this.panelLabel[name].apply(this.panelLabel, result);
 
             if(output)
                 return output;
-        } else if(main === "%")
-            return main + sub;
+        }
 
         return match;
     },
