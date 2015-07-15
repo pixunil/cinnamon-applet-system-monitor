@@ -11,7 +11,7 @@ You need the `GTop` bindings to use the modules CPU, Memory, Swap, Disk and Netw
 
 Install the latest version via Cinnamon Applet Settings, or:
 
-1. Download [`applet.js`](applet.js), [`modules.js`](modules.js), [`graph.js`](graph.js), [`terminal.js`](terminal.js), [`metadata.json`](metadata.json) and [`settings-schema.json`](settings-schema.json)
+1. Download all `.js` and `.json` files
 2. Create a new directory `~/.local/share/cinnamon/applets/system-monitor@pixunil`
 3. Copy the files in this directory
 4. Activate the applet in Cinnamon Settings
@@ -19,6 +19,7 @@ Install the latest version via Cinnamon Applet Settings, or:
 # Modules
 This applet offers information about five modules. These are:
 
+- **Load averages** - Load averages of the last 1, 5 and 15 minutes
 - **CPU** - multi-core CPU usage (total, user and system)
 - **Memory and Swap** - usage of the Memory (used, cached and buffered) and of the Swap
 - **Disk** - read / write and space usage of the disk
@@ -55,8 +56,6 @@ If it doesn't show up, you should check by running the command and look if you s
 * °C: Celsius
 * °F: Fahrenheit
 
-**Maximal size** - The highest value of a byte or rate before the prefix is incremented
-
 **Order of Disk and Network items**
 * Read - Write / Down - Up: Display the data received first
 * Write - Read / Up - Down: Display the data send first
@@ -67,7 +66,7 @@ If it doesn't show up, you should check by running the command and look if you s
 * Overview: a chart showing you the current status of all modules
 * _..._ History: a chart showing you only one modul, but as a history
 
-_Note:_ If the vailable module is deactivated, this setting will be set to "Overview"  
+_Note:_ If the vailable module is deactivated, this setting will be set to "Overview"
 _Hint:_ You can change the type also by scrolling on the graph or by selecting it in the graphs submenu
 
 **Height of graph** - How big the chart is in pixels
@@ -82,8 +81,6 @@ _Hint:_ You can change the type also by scrolling on the graph or by selecting i
 * Line - a normal line
 * Straight - a line like steps
 * Curve - a bézier curve
-
-**History graphs draw interval** - Interval in which history graphs refresh
 
 ## Modules
 
@@ -100,24 +97,25 @@ _**Colors**_ - The color widgets let you set the color for the graphs
 * Stack - all points of a history are connected and filled, the histories are stacked - only available for CPU
 * Bar - every point is represented by a bar, the histories are combined - only available for CPU, Disk and Network
 
-**Label in the panel** - Text which is displayed in the panel    
-You should use placeholders to display data.
+**Label in the panel** - Text which is displayed in the panel
+You should use [placeholders](#placeholders) to display data.
 
 **Graph in the panel** - Which graph the applet should show directly in the panel
 * None - No Graph
 * Bar - Show the current usage
 * History - Show the history
 
-**Mode of Graph** - Wheter to show swap usage also in graph - only for Memory and Swap
+**Mode of Graph** - Whether to show swap usage also in graph - only for Memory and Swap
 
 **Width of graph** - How big the panel graph is
 
 ### Warnings
-The CPU and Thermal module also offers you warnings
+The CPU and Thermal module also offers you warnings.
+A warning triggers when a data value is over a trigger value for a specific time.
 
 **Warnings** - With the checkbox you can enable or disbale the warnings
 
-**Trigger value** - The trigger value  
+**Trigger value** - The trigger value
 _Note_: the thermal unit is equal the unit you set before
 
 **Time** - After how many intervals the warning is displayed
@@ -127,72 +125,76 @@ _Note_: the thermal unit is equal the unit you set before
 * Average - warns if the average value is over the trigger value
 
 ### Placeholders
-All placeholders are written as `%mn`
-`%%` will become `%` (useful for escaping)
-#### CPU
-  m  | Function
-:---:| --------
-  t  | total usage
-  u  | user usage
-  s  | system usage
+All placeholders begin with `%` or `$` proceeded by a word (the main part).
+Optional, it is continued with a second word (the sub part) separated by a `.`, and a format separated by a `#`.
 
-  n  | Function
-:---:| --------
-  a  | Average usage
-_digit_ | Usage of the core (begins with 0)
+`[%$]main(.sub)?(#format)?`
+
+#### Load averages
+
+**main**
+* `load(digit)` - load average of the last minute (digit = `0`), 5 minutes (digit = `1`) or 15 minutes (digit = `2`)
+
+#### CPU
+
+**main**
+* `avg` - average usage
+* `core(digit)` - a specific core (digit starting from 1)
+
+**sub**
+* `total` _Default_
+* `user`
+* `total`
+
+Usage in percent.
 
 ##### Examples
-`CPU: %ta` - Displays "CPU: " followed by the average usage  
-`%t0 %t1 %t2 %t3` - Displays the usage of all four cores
+`%avg`
+`%core1 %core2 %core3 %core4`
+`%avg.system %avg.user %avg.total`
 
 #### Memory
-  m  | Function
-:---:| --------
-  m  | memory usage / size in bytes
-  p  | memory usage in percent
-  s  | swap usage
 
-For `m` = `m` or `p` (memory):
+**main**
+* `memory`
+* `swap`
 
-  n  | Function
-:---:| --------
-  u  | usedup
-  c  | cached
-  b  | buffered
-  U  | used (usedup + cached + buffered)
-  t  | total
+**sub**
+* `used` _Default_
+* `usedup`
+* `cached`
+* `buffer`
+* `total`
 
-For `m` = `s` (swap):
-
-  n  | Function
-:---:| --------
-  u  | usage in bytes
-  t  | total size in bytes
-  p  | usage in percent
+**format**
+* `percent` - Usage in percent of the total value _Default_
+* `size` - Usage in bytes
 
 ##### Examples
-`%pu (%bu / %bt)` - Displays the usage of Memory in percent followed by the size of the usage and the total capacity in bytes
+`%memory.usedup`
+`%memory.usedup#size`
+`%swap`
 
 #### Disk
-`m` is always `r`
 
-  n  | Function
-:---:| --------
-  w  | write usage
-  r  | read usage
+**main**
+* `write`
+* `read`
+
+Usage in rates.
 
 #### Network
-`m` is always `r`
 
-  n  | Function
-:---:| --------
-  u  | up usage
-  d  | down usage
+**main**
+* `write`
+* `read`
+
+**format**
+* `rate` - Usage in rates _Default_
+* `total` - Total traffic in bytes
 
 #### Thermal
-`m` is always `t`
 
-  n  | Function
-:---:| --------
-  0  | value specified in **Thermal mode**
-_digit_ | sensor
+**main**
+* `value` - Thermal value specified in "Thermal mode"
+* `sensor(digit)` - Temperature of a sensor
