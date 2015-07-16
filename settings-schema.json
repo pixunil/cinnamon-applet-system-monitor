@@ -131,7 +131,7 @@
         "default": "",
         "description": "Label in the panel",
         "dependency": "loadAvg",
-        "tooltip": "Common placeholders: \n %l0 \t load average for the last minute \n %l1 \t load average for the last 5 minutes \n %l2 \t load average for the last 15 minutes"
+        "tooltip": "Common placeholders: \n %load0 \t load average for the last minute \n %load1 \t load average for the last 5 minutes \n %load2 \t load average for the last 15 minutes"
     },
     "cpu-section": {
         "type": "separator"
@@ -290,7 +290,7 @@
         "default": "",
         "description": "Label in the panel",
         "dependency": "mem",
-        "tooltip": "Common placeholders: \n %mem.usedp#size \t memory usage in bytes \n %mem.usedup \t memory usage in percent \n %swap#size \t swap usage in bytes \n %swap \t swap usage in bytes"
+        "tooltip": "Common placeholders: \n %mem.usedup#size \t memory usage in bytes \n %mem.usedup \t memory usage in percent \n %swap#size \t swap usage in bytes \n %swap \t swap usage in bytes"
     },
     "mem-panel-graph": {
         "type": "combobox",
