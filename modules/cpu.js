@@ -164,7 +164,7 @@ PanelLabel.prototype = {
     },
 
     core: function(core, sub){
-        let core = parseInt(core) - 1;
+        core = parseInt(core) - 1;
 
         if(0 > core || core > this.count)
             return null;

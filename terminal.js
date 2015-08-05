@@ -45,7 +45,7 @@ TerminalReader.prototype = {
                     this.resErr = 1;
                     this._readStderror();
 
-                    this._childWatch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, Lang.bind(this, function(pid, status, requestObj){
+                    this._childWatch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, Lang.bind(this, function(pid, status){
                         GLib.source_remove(this._childWatch);
                         this._childWatch = null;
                         this._stdin.close(null);
