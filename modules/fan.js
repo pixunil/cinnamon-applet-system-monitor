@@ -6,10 +6,10 @@ const bind = imports.bind;
 const Terminal = imports.terminal;
 const Modules = imports.modules;
 
-const name = "thermal";
-const display = _("Thermal");
+const name = "fan";
+const display = _("Fan");
 const additionalSettingKeys = ["mode", "warning", "warning-time", "warning-value"];
-const colorSettingKeys = ["thermal"];
+const colorSettingKeys = ["fan"];
 
 function DataProvider(){
     this.init.apply(this, arguments);
@@ -23,7 +23,7 @@ DataProvider.prototype = {
     min: null,
     max: null,
 
-    notificationFormat: "thermal",
+    notificationFormat: "rpm",
 
     init: function(){
         Modules.BaseDataProvider.prototype.init.apply(this, arguments);
@@ -33,7 +33,6 @@ DataProvider.prototype = {
 
         this.sensors = [];
         this.sensorNames = [];
-        this.colorRefs = [];
 
         let result = GLib.spawn_command_line_sync("which sensors");
 
@@ -56,7 +55,7 @@ DataProvider.prototype = {
                     inAdapter = true;
             }
 
-            if(inAdapter && line.match(/\d+\.\d+\xb0C/))
+            if(inAdapter && line.match(/\d+ RPM/))
                 this.parseSensorLine(line, i);
         }
 
@@ -65,13 +64,8 @@ DataProvider.prototype = {
     },
 
     parseSensorLine: function(line, lineNumber){
-        let name = line.match(/[^:]+/)[0];
-        let coreMatch = name.match(/core\s*(\d)/i);
-
-        if(coreMatch !== null)
-            this.colorRefs.push(parseInt(coreMatch[1]) % 4 + 1);
-        else
-            this.colorRefs.push(null);
+        // extract the name (the chars before the first colon), but remove "fan speed"
+        let name = line.match(/^(.+?)(?:fan speed)?:/i)[1];
 
         this.sensors.push(lineNumber);
         this.sensorNames.push(name);
@@ -86,35 +80,33 @@ DataProvider.prototype = {
         this.time[1] = GLib.get_monotonic_time() / 1e6;
 
         result = result.split("\n");
-        let temp = 0;
-        for(let i = 0, l = this.sensors.length; i < l; ++i){
-            this.saveData(i + 1, parseFloat(result[this.sensors[i]].match(/\d+\.\d+/)));
+        let rpm = 0;
+        let l = this.sensors.length;
+        for(let i = 0; i < l; ++i){
+            this.saveData(i + 1, parseFloat(result[this.sensors[i]].match(/\d+/)));
 
-            if(this.settings.thermalMode === "min" && temp > this.data[i + 1] || temp === 0)
-                temp = this.data[i + 1];
-            else if(this.settings.thermalMode === "avg")
-                temp += this.data[i + 1];
-            else if(this.settings.thermalMode === "max" && temp < this.data[i + 1])
-                temp = this.data[i + 1];
+            if(this.settings.fanMode === "min" && rpm > this.data[i + 1] || rpm === 0)
+                rpm = this.data[i + 1];
+            else if(this.settings.fanMode === "avg")
+                rpm += this.data[i + 1];
+            else if(this.settings.fanMode === "max" && rpm < this.data[i + 1])
+                rpm = this.data[i + 1];
         }
 
-        if(this.settings.thermalMode === "avg")
-            temp /= this.sensors.length;
+        if(this.settings.fanMode === "avg")
+            rpm /= l;
 
-        this.saveData(0, temp);
+        this.saveData(0, fan);
 
         this.updateMinMax();
 
-        if(this.settings.thermalWarning)
-            this.checkWarning(temp, _("Temperature was over %s for %fsec"));
+        if(this.settings.fanWarning)
+            this.checkWarning(rpm, _("Fan rotation was over %s for %fsec"));
     },
 
     onSettingsChanged: function(){
-        if(this.settings.thermalWarning){
-            this.notifications = this.settings.thermalWarningTime;
-            if(!this.settings.thermalUnit)
-                this.settings.thermalWarningValue = (this.settings.thermalWarningValue - 32) * 5 / 9; // Fahrenheit => Celsius
-        }
+        if(this.settings.fanWarning)
+            this.notifications = this.settings.fanWarningTime;
     },
 };
 
@@ -139,7 +131,7 @@ MenuItem.prototype = {
 
     update: function(){
         for(let i = 0, l = this.data.length; i < l; ++i)
-            this.setText(i, 0, "thermal", this.data[i]);
+            this.setText(i, 0, "rpm", this.data[i]);
     }
 };
 
@@ -156,12 +148,12 @@ PanelLabel.prototype = {
     },
 
     value: function(){
-        return this.formatThermal(this.data[0]);
+        return this.formatRPM(this.data[0]);
     },
 
     sensor: function(sensor){
         sensor = parseInt(sensor);
-        return this.formatThermal(this.data[sensor]);
+        return this.formatRPM(this.data[sensor]);
     }
 };
 
@@ -175,12 +167,12 @@ BarGraph.prototype = {
     draw: function(){
         this.begin(1);
 
-        this.next("thermal");
+        this.next("fan");
         this.bar((this.data[0] - this.module.min) / (this.module.max - this.module.min));
     }
 };
 
-const historyGraphDisplay = _("Thermal History");
+const historyGraphDisplay = _("Fan History");
 
 function HistoryGraph(){
     this.init.apply(this, arguments);
@@ -196,20 +188,14 @@ HistoryGraph.prototype = {
 
         // first draw the sensors
         for(let i = 1, l = this.history.length; i < l; ++i){
-            // if this sensor is labelled after a cpu core, use a cpu color
-            if(this.colorRefs[i])
-                this.next(this.modules.cpu.color["core" + this.colorRefs[i]]);
-            // otherwise the normal thermal color
-            else {
-                this.next("thermal");
-                this.setAlpha((l - i / 4) / l);
-            }
+            this.next("fan");
+            this.setAlpha((l - i / 4) / l);
 
             this.line(this.history[i], i, l);
         }
 
         // then the min / average / max data
-        this.next("thermal");
+        this.next("fan");
         this.section = 0;
         this.ctx.setDash([5, 5], 0);
         this.line(this.history[0], 0, this.history.length);
