@@ -537,6 +537,95 @@
         "indent": true,
         "dependency": "thermal-warning"
     },
+    "fan": {
+        "type": "checkbox",
+        "default": true,
+        "description": "Fan"
+    },
+    "fan-color-fan": {
+        "type": "colorchooser",
+        "default": "rgba(29, 186, 238, 1)",
+        "description": "Fan",
+        "dependency": "fan"
+    },
+    "fan-mode": {
+        "type": "combobox",
+        "default": "avg",
+        "options": {
+            "Minimum": "min",
+            "Average": "avg",
+            "Maximum": "max"
+        },
+        "description": "Fan mode",
+        "dependency": "fan"
+    },
+    "fan-appearance": {
+        "type": "combobox",
+        "default": "area",
+        "options": {
+            "Line": "line",
+            "Area": "area"
+        },
+        "description": "Appearance of history graphs",
+        "dependency": "fan"
+    },
+    "fan-panel-label": {
+        "type": "entry",
+        "default": "",
+        "description": "Label in the panel",
+        "dependency": "fan",
+        "tooltip": "Common placeholders: \n %value \t fan value (specified in \"Fan Mode\") \n %sensor(digit) \t sensor rotations"
+    },
+    "fan-panel-graph": {
+        "type": "combobox",
+        "default": -1,
+        "options": {
+            "None": -1,
+            "Bar": 0,
+            "History": 1
+        },
+        "description": "Graph in the panel",
+        "dependency": "fan"
+    },
+    "fan-panel-width": {
+        "type": "spinbutton",
+        "default": 50,
+        "min": 5,
+        "max": 400,
+        "step": 5,
+        "units": "px",
+        "description": "Width of graph",
+        "indent": true,
+        "dependency": "fan"
+    },
+    "fan-warning": {
+        "type": "checkbox",
+        "default": false,
+        "description": "Warning",
+        "dependency": "fan"
+    },
+    "fan-warning-value": {
+        "type": "spinbutton",
+        "min": 200,
+        "max": 4000,
+        "default": 500,
+        "step": 10,
+        "units": "RPM",
+        "description": "Trigger rotations",
+        "indent": true,
+        "dependency": "fan-warning"
+    },
+    "fan-warning-time": {
+        "type": "spinbutton",
+        "min": 1,
+        "max": 40,
+        "default": 5,
+        "step": 1,
+        "units": "intervals",
+        "description": "Time",
+        "indent": true,
+        "dependency": "fan-warning"
+    },
     "help": {
         "type": "button",
         "description": "Read Readme",

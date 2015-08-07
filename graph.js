@@ -63,9 +63,15 @@ Overview.prototype = {
             this.center((this.thermal.data[0] - this.thermal.min) / (this.thermal.max - this.thermal.min));
         }
 
+        if(this.settings.fan){
+            this.setColor("fan", "fan");
+            this.center((this.fan.data[0] - this.fan.min) / (this.fan.max - this.fan.min));
+        }
+
         if(this.settings.disk){
             this.next("disk", "write");
             this.small(this.disk.data.write / this.disk.max, true, false);
+
             this.setColor("disk", "read");
             this.small(this.disk.data.read / this.disk.max, false, false);
         }
@@ -75,7 +81,9 @@ Overview.prototype = {
                 this.next("network", "up");
             else
                 this.setColor("network", "up");
+
             this.small(this.network.data.up / this.network.max, true, true);
+
             this.setColor("network", "down");
             this.small(this.network.data.down / this.network.max, false, true);
         }
@@ -113,22 +121,33 @@ Overview.prototype = {
 
         if(this.settings.thermal)
             count.center++;
+
+        if(this.settings.fan)
+            count.center++;
+
         if(this.settings.disk)
             count.small++;
+
         if(this.settings.network)
             count.small++;
+
         if(this.settings.cpu)
             count.normal += this.cpu.count;
+
         if(this.settings.mem)
             count.normal += 2;
 
         if(this.smallMerged && count.small)
             count.small = 1;
-        let n = count.center + count.small + count.normal;
+
+        let n = (count.center? 1 : 0) + count.small + count.normal;
 
         this.dr = Math.min(this.w / n * this.xScale, this.h / n * this.yScale);
-        this.r = -this.dr / 2;
         this.ctx.setLineWidth(this.dr);
+
+        this.r = -this.dr / 2;
+        this.countCenter = count.center;
+        this.centerSection = -1;
     },
 
     next: function(module, colorName){
@@ -155,37 +174,50 @@ PieOverview.prototype = {
     smallMerged: true,
 
     normal: function(angle, dir){
-        if(!process(angle)) return;
+        if(!process(angle))
+            return;
 
         angle *= Math.PI * 2;
+
         if(dir)
             this.ctx.arc(this.w / 2, this.h / 2, this.r, this.a, this.a += angle);
         else
             this.ctx.arcNegative(this.w / 2, this.h / 2, this.r, this.a, this.a -= angle);
+
         this.ctx.stroke();
     },
 
     small: function(angle, dir, side){
-        if(!process(angle)) return;
+        if(!process(angle))
+            return;
 
         var a = -Math.PI;
+
         if(side){
             a = 0;
             dir = !dir;
         }
+
         angle *= Math.PI / 2;
 
         if(dir)
             this.ctx.arc(this.w / 2, this.h / 2, this.r, a, a + angle);
         else
             this.ctx.arcNegative(this.w / 2, this.h / 2, this.r, a, a - angle);
+
         this.ctx.stroke();
     },
 
     center: function(radius){
-        if(!process(radius)) return;
+        this.centerSection++;
 
-        this.ctx.arc(this.w / 2, this.h / 2, radius * this.dr, 0, Math.PI * 2);
+        if(!process(radius))
+            return;
+
+        let startAngle = this.centerSection * Math.PI * 2 / this.countCenter;
+        let endAngle = (this.centerSection + 1) * Math.PI * 2 / this.countCenter;
+
+        this.ctx.arc(this.w / 2, this.h / 2, radius * this.dr, startAngle, endAngle);
         this.ctx.fill();
     }
 };
@@ -205,6 +237,7 @@ ArcOverview.prototype = {
             return;
 
         angle *= Math.PI / 2;
+
         if(this.a === 0){
             this.a = angle;
             this.ctx.arc(this.w / 2, this.h, this.r, -this.a - Math.PI / 2, this.a - Math.PI / 2);
@@ -214,6 +247,7 @@ ArcOverview.prototype = {
             this.ctx.arcNegative(this.w / 2, this.h, this.r, -this.a - Math.PI / 2, -this.a - angle - Math.PI / 2);
             this.a += angle;
         }
+
         this.ctx.stroke();
     },
 
@@ -227,14 +261,20 @@ ArcOverview.prototype = {
             this.ctx.arc(this.w / 2, this.h, this.r, -Math.PI / 2, angle - Math.PI / 2);
         else
             this.ctx.arcNegative(this.w / 2, this.h, this.r, -Math.PI / 2, -angle - Math.PI / 2);
+
         this.ctx.stroke();
     },
 
     center: function(radius){
+        this.centerSection++;
+
         if(!process(radius))
             return;
 
-        this.ctx.arc(this.w / 2, this.h, radius * this.dr, -Math.PI, Math.PI);
+        let startAngle = this.centerSection * Math.PI / this.countCenter - Math.PI;
+        let endAngle = (this.centerSection + 1) * Math.PI / this.countCenter - Math.PI;
+
+        this.ctx.arc(this.w / 2, this.h, radius * this.dr, startAngle, endAngle);
         this.ctx.fill();
     }
 };

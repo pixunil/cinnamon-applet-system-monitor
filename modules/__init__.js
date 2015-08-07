@@ -43,6 +43,9 @@ const ModulePartPrototype = {
         if(format === "number")
             return this.formatNumber(value);
 
+        if(format === "bytes")
+            return this.formatBytes(value);
+
         if(format === "rate")
             return this.formatRate(value, ext);
 
@@ -52,8 +55,8 @@ const ModulePartPrototype = {
         if(format === "thermal")
             return this.formatThermal(value);
 
-        if(format === "bytes")
-            return this.formatBytes(value);
+        if(format === "rpm")
+            return this.formatRPM(value);
 
         return value;
     },
@@ -103,6 +106,10 @@ const ModulePartPrototype = {
         let number = this.settings.thermalUnit? celsius : celsius * 1.8 + 32;
         let unit = this.settings.thermalUnit === "celsius"? "\u2103" : "\u2109"; //2103: Celsius, 2109: Fahrenheit
         return number.toFixed(1) + unit;
+    },
+
+    formatRPM: function(number){
+        return number.toFixed(0) + " RPM";
     },
 
     // shortcuts
@@ -287,6 +294,7 @@ BaseDataProvider.prototype = {
     format: ModulePartPrototype.format,
     formatPercent: ModulePartPrototype.formatPercent,
     formatThermal: ModulePartPrototype.formatThermal,
+    formatRPM: ModulePartPrototype.formatRPM,
 
     saveRaw: function(name, value){
         this.raw[name] = value;

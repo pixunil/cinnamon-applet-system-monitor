@@ -36,7 +36,8 @@ const Modules = {
     swap: imports.modules.swap,
     disk: imports.modules.disk,
     network: imports.modules.network,
-    thermal: imports.modules.thermal
+    thermal: imports.modules.thermal,
+    fan: imports.modules.fan
 };
 
 imports.searchPath.splice(imports.searchPath.indexOf(path), 1);
