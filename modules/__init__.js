@@ -245,7 +245,7 @@ Module.prototype = {
         if(this.colorSettingKeys){
             this.colorSettingKeys.forEach(function(key){
                 let color = this.getSetting("Color" + key[0].toUpperCase() + key.substr(1));
-                color = color.match(/(\d+), (\d+), (\d+)/); // get the values of red, green and blue
+                color = color.match(/(\d+).+?(\d+).+?(\d+)/); // get the values of red, green and blue
                 color.shift(); // remove the match index
                 color = color.map(colorPart => parseInt(colorPart) / 255); // make the color parts to be integers in the range 0 to 1
 
