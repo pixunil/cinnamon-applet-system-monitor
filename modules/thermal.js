@@ -42,7 +42,6 @@ DataProvider.prototype = {
             return;
         }
 
-
         this.path = result[1].toString().split("\n", 1)[0];
         let lines = GLib.spawn_command_line_sync(this.path)[1].toString().split("\n");
         let inAdapter = false;
@@ -60,7 +59,6 @@ DataProvider.prototype = {
             if(inAdapter && line.match(/\d+.\d+\xb0C/))
                 this.parseSensorLine(line, i);
         }
-
 
         if(!this.sensors.length)
             this.unavailable = true;
@@ -89,7 +87,7 @@ DataProvider.prototype = {
 
         result = result.split("\n");
         let temp = 0;
-        for(var i = 0, l = this.sensors.length; i < l; ++i){
+        for(let i = 0, l = this.sensors.length; i < l; ++i){
             this.saveData(i + 1, parseFloat(result[this.sensors[i]].match(/\d+\.\d+/)));
 
             if(this.settings.thermalMode === "min" && temp > this.data[i + 1] || temp === 0)
@@ -101,7 +99,8 @@ DataProvider.prototype = {
         }
 
         if(this.settings.thermalMode === "avg")
-            temp /= l;
+            temp /= this.sensors.length;
+
         this.saveData(0, temp);
 
         this.updateMinMax();
