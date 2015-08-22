@@ -168,7 +168,7 @@ Module.prototype = {
         this.display = imports.display;
 
         if(!this.settingsName){
-            this.settingKeys = [this.name];
+            this.settingKeys = [];
 
             if(imports.additionalSettingKeys)
                 this.settingKeys = this.settingKeys.concat(imports.additionalSettingKeys.map(key => this.name + "-" + key));

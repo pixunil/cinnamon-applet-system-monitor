@@ -145,6 +145,7 @@ SystemMonitorApplet.prototype = {
 
             // apply the module setting keys
             if(module.settingKeys){
+                this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, module.name, module.name, bind(module.onSettingsChanged, module));
                 this.settingProvider.bindProperties(module.settingKeys, bind(module.onSettingsChanged, module));
                 module.onSettingsChanged();
             }
