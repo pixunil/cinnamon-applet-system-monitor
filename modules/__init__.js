@@ -455,8 +455,19 @@ BaseSubMenuMenuItem.prototype = {
         this.module = module;
         this.containers = [];
 
+        let children = this.actor.get_children();
+        let expander = null;
+        // in cinnamon 2.8, there is a last children, the expander
+        if(children.length === 2){
+            expander = children[children.length - 1];
+            this.removeActor(expander);
+        }
+
         let box = this.makeBox();
         this.addActor(box);
+
+        if(expander)
+            this.addActor(expander);
     },
 
     makeBox: BaseMenuItem.prototype.makeBox,
