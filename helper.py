@@ -13,13 +13,11 @@ from zipfile import ZipFile
 try:
     import polib
 except:
-    print """
-
+    print("""
     Module "polib" not available.
 
     Please install the package "python-polib" and try again
-
-    """
+    """)
     quit()
 
 home = os.path.expanduser("~")
@@ -41,7 +39,7 @@ def remove_empty_folders(path):
     # if folder empty, delete it
     files = os.listdir(path)
     if len(files) == 0:
-        print "Removing empty folder:", path
+        print("Removing empty folder", path)
         os.rmdir(path)
 
 
@@ -51,9 +49,9 @@ class Main:
             file = open("metadata.json")
             self.md = json.load(file, object_pairs_hook = OrderedDict)
             file.close()
-        except Exception, detail:
-            print "Failed to get metadata - missing, corrupt, or incomplete metadata.json file"
-            print detail
+        except Exception as detail:
+            print("Failed to get metadata - missing, corrupt, or incomplete metadata.json file")
+            print(detail)
             quit()
 
         self.potname = self.md["uuid"] + ".pot"
@@ -95,29 +93,22 @@ class Main:
         self.call("msginit", options)
 
     def makepot(self):
-        print "Running xgettext on JavaScript files..."
-        try:
-            data = {
-                "language":         "JavaScript",
-                "keyword":          "_",
-                "output":           self.potname,
-                "package-name":     self.md["uuid"],
-                "package-version":  self.md["version"],
-                "copyright-holder": ""
-            }
-            arguments = ["xgettext"]
-            for flag, value in data.items():
-                arguments.append("--%s=%s" % (flag, value))
-            arguments += self.get_js_files()
+        print("Running xgettext on JavaScript files...")
 
-            subprocess.call(arguments)
-        except OSError:
-            print "xgettext not found, you may need to install the gettext package"
-            quit()
+        options = {
+            "language":         "JavaScript",
+            "keyword":          "_",
+            "output":           self.potname,
+            "package-name":     self.md["uuid"],
+            "package-version":  self.md["version"],
+            "copyright-holder": ""
+        }
+
+        self.call("xgettext", options, self.js_files)
 
         self.pot = polib.pofile(self.potname)
 
-        print "Scanning metadata.json..."
+        print("Scanning metadata.json...")
         for key in self.md:
             if key in ("name", "description", "comments"):
                 comment = "metadata->%s" % key
@@ -126,7 +117,7 @@ class Main:
                 comment = "metadata->%s" % key
 
                 values = self.md[key]
-                if isinstance(values, basestring):
+                if isinstance(values, str):
                     values = values.split(",")
 
                 for value in values:
@@ -134,7 +125,7 @@ class Main:
 
         try:
             file = open("settings-schema.json")
-            print "Scanning settings-schema.json..."
+            print("Scanning settings-schema.json...")
 
             data = json.load(file)
             file.close()
@@ -146,9 +137,10 @@ class Main:
 
         self.pot.save()
 
-        print "Extraction complete"
+        print("Extraction complete")
 
-    def get_js_files(self):
+    @property
+    def js_files(self):
         files = []
 
         for dirpath, dirnames, filenames in os.walk("."):
@@ -169,7 +161,7 @@ class Main:
             po.metadata["POT-Creation-Date"] = self.pot.metadata["POT-Creation-Date"]
             po.save()
 
-        print "PO files updated"
+        print("PO files updated")
 
     def extract_strings(self, data, parent):
         for key in data:
@@ -206,7 +198,7 @@ class Main:
             parts = os.path.splitext(file)
             if parts[1] == ".po":
                 this_locale_dir = os.path.join(locale_inst, parts[0], "LC_MESSAGES")
-                GLib.mkdir_with_parents(this_locale_dir, 0755)
+                GLib.mkdir_with_parents(this_locale_dir, 0o755)
                 arguments = (
                     "--check",
                     os.path.join("po", file),
@@ -216,26 +208,26 @@ class Main:
                 self.call("msgfmt", arguments = arguments)
                 done_one = True
         if done_one:
-            print "Install complete for domain %s" % self.md["uuid"]
+            print("Install complete for domain %s" % self.md["uuid"])
         else:
-            print "Nothing installed"
+            print("Nothing installed")
 
     def remove(self):
         done_one = False
         if os.path.exists(locale_inst):
             for i19_folder in os.listdir(locale_inst):
-                if os.path.isfile(os.path.join(locale_inst, i19_folder, 'LC_MESSAGES', "%s.mo" % self.md["uuid"])):
+                if os.path.isfile(os.path.join(locale_inst, i19_folder, "LC_MESSAGES", "%s.mo" % self.md["uuid"])):
                     done_one = True
-                    os.remove(os.path.join(locale_inst, i19_folder, 'LC_MESSAGES', "%s.mo" % self.md["uuid"]))
+                    os.remove(os.path.join(locale_inst, i19_folder, "LC_MESSAGES", "%s.mo" % self.md["uuid"]))
                 remove_empty_folders(os.path.join(locale_inst, i19_folder))
         if done_one:
-            print "Removal complete for domain %s" % self.md["uuid"]
+            print("Removal complete for domain %s" % self.md["uuid"])
         else:
-            print "Nothing to remove"
+            print("Nothing to remove")
 
     def release(self):
-        print "Current version is " + self.md["version"]
-        self.md["version"] = raw_input("New version number ")
+        print("Current version is " + self.md["version"])
+        self.md["version"] = input("New version number ")
 
         file = open("metadata.json", "w")
         json.dump(self.md, file, indent = 4, separators = (",", ": "))
@@ -244,12 +236,13 @@ class Main:
 
         zip = ZipFile(self.md["uuid"] + ".zip", "w")
 
-        for file in self.get_js_files() + glob("po/*.po") + ["metadata.json", "settings-schema.json"]:
+        files = self.js_files + glob("po/*.po") + ["metadata.json", "settings-schema.json"]
+        for file in files:
             zip.write(file, "%s/%s" % (self.md["uuid"], file))
 
         zip.close()
 
-        print "Zip file %s created" % (self.md["uuid"] + ".zip")
+        print("Zip file %s created" % (self.md["uuid"] + ".zip"))
 
     def call(self, command, options = {}, arguments = ()):
         try:
@@ -259,7 +252,7 @@ class Main:
             args += arguments
             subprocess.call(args)
         except:
-            print "ERROR: command %s not found" % command
+            print("ERROR: command %s not found" % command)
             quit()
 
 if __name__ == "__main__":
