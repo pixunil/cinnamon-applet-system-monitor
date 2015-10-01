@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import os
@@ -16,7 +16,7 @@ except:
     print("""
     Module "polib" not available.
 
-    Please install the package "python-polib" and try again
+    Please install the package "python3-polib" and try again
     """)
     quit()
 
@@ -226,7 +226,7 @@ class Main:
             print("Nothing to remove")
 
     def release(self):
-        print("Current version is " + self.md["version"])
+        print("Current version is", self.md["version"])
         self.md["version"] = input("New version number ")
 
         file = open("metadata.json", "w")

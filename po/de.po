@@ -2,12 +2,12 @@
 # German translation for system-monitor@pixunil.
 # This file is put in the public domain.
 # pixunil <pixunil@gmx.de>, 2015.
-#
+# 
 msgid ""
 msgstr ""
-"Project-Id-Version: system-monitor@pixunil 3.7\n"
+"Project-Id-Version: system-monitor@pixunil 3.9\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-16 18:11+0200\n"
+"POT-Creation-Date: 2015-10-01 17:14+0200\n"
 "PO-Revision-Date: 2015-07-16 18:12+0200\n"
 "Last-Translator: pixunil <pixunil@gmx.de>\n"
 "Language-Team: German\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 1.5.4\n"
 
-#: applet.js:80 applet.js:168
+#: applet.js:80 applet.js:169
 msgid "System Monitor"
 msgstr "Systemüberwachung"
 
@@ -52,7 +52,7 @@ msgid "Network History"
 msgstr "Netzwerkchronik"
 
 #. settings->graph-type->options
-#: modules/thermal.js:184
+#: modules/thermal.js:183
 msgid "Thermal History"
 msgstr "Temperaturchronik"
 
@@ -484,7 +484,7 @@ msgstr ""
 "Zeigt CPU, Arbeitsspeicher- und Auslagerungsauslastung, Festplatten- und "
 "Netzwerkraten als Text und in Graphen"
 
-#: modules/thermal.js:110
+#: modules/thermal.js:109
 #, javascript-format
 msgid "Temperature was over %s for %fsec"
 msgstr "Temperatur war über %s für %fsec"
