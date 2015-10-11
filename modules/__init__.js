@@ -215,7 +215,9 @@ Module.prototype = {
             this.settingKeys = [];
 
             if(imports.additionalSettingKeys)
-                this.settingKeys = this.settingKeys.concat(imports.additionalSettingKeys.map(key => this.name + "-" + key));
+                this.settingKeys = this.settingKeys.concat(imports.additionalSettingKeys.map(function(key){
+                    return this.name + "-" + key;
+                }, this));
 
             if(imports.HistoryGraph)
                 this.settingKeys.push(this.name + "-appearance", this.name + "-panel-graph", this.name + "-panel-width");
@@ -225,7 +227,9 @@ Module.prototype = {
 
             if(imports.colorSettingKeys){
                 this.colorSettingKeys = imports.colorSettingKeys;
-                this.settingKeys = this.settingKeys.concat(this.colorSettingKeys.map(key => this.name + "-color-" + key));
+                this.settingKeys = this.settingKeys.concat(this.colorSettingKeys.map(function(key){
+                    return this.name + "-color-" + key;
+                }, this));
             }
         }
 
@@ -287,7 +291,10 @@ Module.prototype = {
                 let color = this.getSetting("Color" + key[0].toUpperCase() + key.substr(1));
                 color = color.match(/(\d+).+?(\d+).+?(\d+)/); // get the values of red, green and blue
                 color.shift(); // remove the match index
-                color = color.map(colorPart => parseInt(colorPart) / 255); // make the color parts to be integers in the range 0 to 1
+                // make the color parts to be integers in the range 0 to 1
+                color = color.map(function(colorPart){
+                    return parseInt(colorPart) / 255;
+                }, this);
 
                 this.color[key] = color;
             }, this);

@@ -118,7 +118,9 @@ SystemMonitorApplet.prototype = {
         this.graphSubMenu = new PopupMenu.PopupSubMenuMenuItem("");
         this.graphSubMenu.actor.connect("scroll-event", bind(this.onScroll, this));
         // ignore the width of the text content, avoids big menu
-        this.graphSubMenu.getColumnWidths = () => [0];
+        this.graphSubMenu.getColumnWidths = function(){
+            return [0];
+        };
 
         this.graphMenuItems = [
             new Modules.GraphMenuItem(this, _("Overview"), 0)
