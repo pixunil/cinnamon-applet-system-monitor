@@ -539,7 +539,9 @@ BaseMenuItem.prototype = {
     },
 
     makeTooltip: function(){
-        let labelWidths = this.labelWidths.map(labelWidth => labelWidth * .75);
+        let labelWidths = this.labelWidths.map(function(labelWidth) {
+                return labelWidth * .75;
+        });
         let margin = (this.margin || 0) * .75;
 
         this.tooltipBox = this.makeBox(labelWidths, margin, true);
