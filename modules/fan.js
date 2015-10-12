@@ -81,7 +81,8 @@ DataProvider.prototype = {
 
         result = result.split("\n");
         let rpm = 0;
-        for(let i = 0, l = this.sensors.length; i < l; ++i){
+        let l = this.sensors.length;
+        for(let i = 0; i < l; ++i){
             this.saveData(i + 1, parseFloat(result[this.sensors[i]].match(/\d+\.\d+/)));
 
             if(this.settings.fanMode === "min" && rpm > this.data[i + 1] || rpm === 0)
@@ -95,7 +96,7 @@ DataProvider.prototype = {
         if(this.settings.fanMode === "avg")
             rpm /= l;
 
-        this.saveData(0, fan);
+        this.saveData(0, rpm);
 
         this.updateMinMax();
 
