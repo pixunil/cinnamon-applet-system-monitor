@@ -1,5 +1,3 @@
-const GLib = imports.gi.GLib;
-
 const _ = imports._;
 const Graph = imports.graph;
 const bind = imports.bind;
@@ -16,52 +14,16 @@ function DataProvider(){
 }
 
 DataProvider.prototype = {
-    __proto__: Modules.BaseDataProvider.prototype,
-
-    path: "",
-
-    min: null,
-    max: null,
+    __proto__: Modules.SensorDataProvider.prototype,
 
     notificationFormat: "thermal",
 
+    dataMatcher: /([+-]?\d+\.\d+)\xb0C/,
+
     init: function(){
-        Modules.BaseDataProvider.prototype.init.apply(this, arguments);
-
-        this.data = [];
-        this.history = [[]];
-
-        this.sensors = [];
-        this.sensorNames = [];
         this.colorRefs = [];
 
-        let result = GLib.spawn_command_line_sync("which sensors");
-
-        if(!result[0] || result[3] !== 0){
-            this.unavailable = true;
-            return;
-        }
-
-        this.path = result[1].toString().split("\n", 1)[0];
-        let lines = GLib.spawn_command_line_sync(this.path)[1].toString().split("\n");
-        let inAdapter = false;
-
-        for(let i = 0, l = lines.length; i < l; ++i){
-            let line = lines[i];
-
-            if(line.substr(0, 8) === "Adapter:"){
-                if(line.match(/virtual/i))
-                    inAdapter = false;
-                else
-                    inAdapter = true;
-            }
-
-            if(inAdapter && line.match(/\d+\.\d+\xb0C/))
-                this.parseSensorLine(line, i);
-        }
-
-        if(!this.sensors.length)
-            this.unavailable = true;
+        Modules.SensorDataProvider.prototype.init.apply(this, arguments);
     },
 
     parseSensorLine: function(line, lineNumber){
@@ -83,30 +45,10 @@ DataProvider.prototype = {
     },
 
     parseResult: function(result){
-        this.time[1] = GLib.get_monotonic_time() / 1e6;
-
-        result = result.split("\n");
-        let temp = 0;
-        for(let i = 0, l = this.sensors.length; i < l; ++i){
-            this.saveData(i + 1, parseFloat(result[this.sensors[i]].match(/\d+\.\d+/)));
-
-            if(this.settings.thermalMode === "min" && temp > this.data[i + 1] || temp === 0)
-                temp = this.data[i + 1];
-            else if(this.settings.thermalMode === "avg")
-                temp += this.data[i + 1];
-            else if(this.settings.thermalMode === "max" && temp < this.data[i + 1])
-                temp = this.data[i + 1];
-        }
-
-        if(this.settings.thermalMode === "avg")
-            temp /= this.sensors.length;
-
-        this.saveData(0, temp);
-
-        this.updateMinMax();
+        Modules.SensorDataProvider.prototype.parseResult.call(this, result);
 
         if(this.settings.thermalWarning)
-            this.checkWarning(temp, _("Temperature was over %s for %fsec"));
+            this.checkWarning(this.data[0], _("Temperature was over %s for %fsec"));
     },
 
     onSettingsChanged: function(){
@@ -115,7 +57,7 @@ DataProvider.prototype = {
             if(!this.settings.thermalUnit)
                 this.settings.thermalWarningValue = (this.settings.thermalWarningValue - 32) * 5 / 9; // Fahrenheit => Celsius
         }
-    },
+    }
 };
 
 function MenuItem(){

@@ -1,3 +1,4 @@
+const GLib = imports.gi.GLib;
 const Pango = imports.gi.Pango;
 const St = imports.gi.St;
 
@@ -380,6 +381,92 @@ BaseDataProvider.prototype = {
         source.notify(notification);
     }
 };
+
+function SensorDataProvider(){
+    throw new TypeError("Trying to instantiate abstract class [" + uuid + "] modules.BaseMenuItem");
+}
+
+SensorDataProvider.prototype = {
+    __proto__: BaseDataProvider.prototype,
+
+    path: "",
+
+    min: null,
+    max: null,
+
+    init: function(){
+        BaseDataProvider.prototype.init.apply(this, arguments);
+
+        this.data = [];
+        this.history = [[]];
+
+        this.sensors = [];
+        this.sensorNames = [];
+
+        let result = GLib.spawn_command_line_sync("which sensors");
+
+        if(!result[0] || result[3] !== 0){
+            this.unavailable = true;
+            return;
+        }
+
+        this.path = result[1].toString().split("\n", 1)[0];
+        let lines = GLib.spawn_command_line_sync(this.path)[1].toString().split("\n");
+        let inAdapter = false;
+
+        for(let i = 0, l = lines.length; i < l; ++i){
+            let line = lines[i];
+
+            if(line.substr(0, 8) === "Adapter:"){
+                if(line.match(/virtual/i))
+                    inAdapter = false;
+                else
+                    inAdapter = true;
+            }
+
+            if(inAdapter && line.match(this.dataMatcher))
+                this.parseSensorLine(line, i);
+        }
+
+        global.log(this.sensors.join(", "));
+
+        if(!this.sensors.length)
+            this.unavailable = true;
+    },
+
+    getData: function(){
+        Terminal.call(this.path, bind(this.parseResult, this));
+    },
+
+    parseResult: function(result){
+        this.time[1] = GLib.get_monotonic_time() / 1e6;
+        let mode = this.getSetting("mode");
+
+        result = result.split("\n");
+        let value = null;
+        for(let i = 0, l = this.sensors.length; i < l; ++i){
+            // get the line containing the next sensor data value
+            let data = result[this.sensors[i]];
+            // get the number (first capture group)
+            data = parseFloat(data.match(this.dataMatcher)[1]);
+            this.saveData(i + 1, data);
+
+            if(mode === "min" && value > data || value === null)
+                value = data;
+            else if(mode === "avg")
+                value += data;
+            else if(mode === "max" && value < data)
+                value = data;
+        }
+
+        if(mode === "avg")
+            value /= this.sensors.length;
+
+        this.saveData(0, value);
+
+        this.updateMinMax();
+    }
+}
 
 function BaseMenuItem(){
     throw new TypeError("Trying to instantiate abstract class [" + uuid + "] modules.BaseMenuItem");

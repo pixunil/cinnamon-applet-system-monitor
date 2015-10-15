@@ -1,5 +1,3 @@
-const GLib = imports.gi.GLib;
-
 const _ = imports._;
 const Graph = imports.graph;
 const bind = imports.bind;
@@ -16,52 +14,11 @@ function DataProvider(){
 }
 
 DataProvider.prototype = {
-    __proto__: Modules.BaseDataProvider.prototype,
-
-    path: "",
-
-    min: null,
-    max: null,
+    __proto__: Modules.SensorDataProvider.prototype,
 
     notificationFormat: "rpm",
 
-    init: function(){
-        Modules.BaseDataProvider.prototype.init.apply(this, arguments);
-
-        this.data = [];
-        this.history = [[]];
-
-        this.sensors = [];
-        this.sensorNames = [];
-
-        let result = GLib.spawn_command_line_sync("which sensors");
-
-        if(!result[0] || result[3] !== 0){
-            this.unavailable = true;
-            return;
-        }
-
-        this.path = result[1].toString().split("\n", 1)[0];
-        let lines = GLib.spawn_command_line_sync(this.path)[1].toString().split("\n");
-        let inAdapter = false;
-
-        for(let i = 0, l = lines.length; i < l; ++i){
-            let line = lines[i];
-
-            if(line.substr(0, 8) === "Adapter:"){
-                if(line.match(/virtual/i))
-                    inAdapter = false;
-                else
-                    inAdapter = true;
-            }
-
-            if(inAdapter && line.match(/\d+ RPM/))
-                this.parseSensorLine(line, i);
-        }
-
-        if(!this.sensors.length)
-            this.unavailable = true;
-    },
+    dataMatcher: /(\d+) RPM/,
 
     parseSensorLine: function(line, lineNumber){
         // extract the name (the chars before the first colon), but remove "fan speed"
@@ -72,42 +29,17 @@ DataProvider.prototype = {
         this.history.push([]);
     },
 
-    getData: function(){
-        Terminal.call(this.path, bind(this.parseResult, this));
-    },
-
     parseResult: function(result){
-        this.time[1] = GLib.get_monotonic_time() / 1e6;
-
-        result = result.split("\n");
-        let rpm = 0;
-        let l = this.sensors.length;
-        for(let i = 0; i < l; ++i){
-            this.saveData(i + 1, parseFloat(result[this.sensors[i]].match(/\d+/)));
-
-            if(this.settings.fanMode === "min" && rpm > this.data[i + 1] || rpm === 0)
-                rpm = this.data[i + 1];
-            else if(this.settings.fanMode === "avg")
-                rpm += this.data[i + 1];
-            else if(this.settings.fanMode === "max" && rpm < this.data[i + 1])
-                rpm = this.data[i + 1];
-        }
-
-        if(this.settings.fanMode === "avg")
-            rpm /= l;
-
-        this.saveData(0, fan);
-
-        this.updateMinMax();
+        Modules.SensorDataProvider.prototype.parseResult.call(this, result);
 
         if(this.settings.fanWarning)
-            this.checkWarning(rpm, _("Fan rotation was over %s for %fsec"));
+            this.checkWarning(this.data[0], _("Fan rotation was over %s for %fsec"));
     },
 
     onSettingsChanged: function(){
         if(this.settings.fanWarning)
             this.notifications = this.settings.fanWarningTime;
-    },
+    }
 };
 
 function MenuItem(){
