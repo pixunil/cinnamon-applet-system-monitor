@@ -2,7 +2,7 @@ const Cairo = imports.cairo;
 
 const GLib = imports.gi.GLib;
 
-const ModulePart = imports.modules.ModulePart;
+const ModulePart = imports.applet.modules.ModulePart;
 
 function process(number){
     return number > 0 && !isNaN(number) && isFinite(number);
@@ -479,15 +479,17 @@ History.prototype = {
             this.last[i] = history[i] + (this.last[i] || 0);
     },
 
-    begin: function(numberSections, numberSteps, timeIndex, max, min){
+    begin: function(numberSections, numberSteps, max, min){
         Base.prototype.begin.call(this);
 
         this.section = -1;
         this.numberSections = numberSections;
 
         this.dw = this.w / this.settings.graphSteps;
-        let time = this.time[timeIndex || 0];
-        var deltaT = (GLib.get_monotonic_time() / 1e3 - time * 1e3) / this.settings.interval;
+
+        // calculate the time difference (in milliseconds), note that this.time is in seconds, monotonic time from GLib in microseconds
+        let deltaT = GLib.get_monotonic_time() / 1e3 - this.time * 1e3;
+        deltaT /= this.settings.interval;
         this.tx = this.settings.graphSteps + 2 - deltaT - numberSteps;
 
         this.min = min || 0;

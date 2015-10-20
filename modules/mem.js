@@ -168,7 +168,7 @@ HistoryGraph.prototype = {
         if(this.mode === "mem-swap")
             num = 2;
 
-        this.begin(num, this.history.usedup.length, 0, this.data.total);
+        this.begin(num, this.history.usedup.length, this.data.total);
 
         this.next("mem");
         this.line(this.history.usedup);

@@ -127,7 +127,7 @@ const ModulePartPrototype = {
     },
 
     get time(){
-        return this.module.time;
+        return this.module.container.time;
     },
 
     get raw(){
@@ -169,7 +169,7 @@ function Module(){
 }
 
 Module.prototype = {
-    init: function(imports, settings, time){
+    init: function(imports, container, sensorLines){
         this.import = imports;
         this.name = imports.name;
         this.settingsName = imports.settingsName;
@@ -195,10 +195,11 @@ Module.prototype = {
 
         this.module = this;
 
-        this.settings = settings;
-        this.time = time;
+        this.container = container;
+        this.modules = container.modules;
+        this.settings = container.settings;
 
-        this.dataProvider = new imports.DataProvider(this);
+        this.dataProvider = new imports.DataProvider(this, sensorLines);
 
         if(this.dataProvider.unavailable){
             this.unavailable = true;
@@ -228,11 +229,6 @@ Module.prototype = {
 
     get max(){
         return this.dataProvider.max || 1;
-    },
-
-    getData: function(delta){
-        if(this.getSetting(""))
-            this.dataProvider.getData(delta);
     },
 
     update: function(){
@@ -280,7 +276,6 @@ function BaseDataProvider(){
 BaseDataProvider.prototype = {
     init: function(module){
         this.module = module;
-        this.time = module.time;
         this.settings = module.settings;
     },
 
@@ -389,12 +384,10 @@ function SensorDataProvider(){
 SensorDataProvider.prototype = {
     __proto__: BaseDataProvider.prototype,
 
-    path: "",
-
     min: null,
     max: null,
 
-    init: function(){
+    init: function(module, sensorLines){
         BaseDataProvider.prototype.init.apply(this, arguments);
 
         this.data = [];
@@ -403,19 +396,15 @@ SensorDataProvider.prototype = {
         this.sensors = [];
         this.sensorNames = [];
 
-        let result = GLib.spawn_command_line_sync("which sensors");
+        let inAdapter = false;
 
-        if(!result[0] || result[3] !== 0){
+        if(!sensorLines){
             this.unavailable = true;
             return;
         }
 
-        this.path = result[1].toString().split("\n", 1)[0];
-        let lines = GLib.spawn_command_line_sync(this.path)[1].toString().split("\n");
-        let inAdapter = false;
-
-        for(let i = 0, l = lines.length; i < l; ++i){
-            let line = lines[i];
+        for(let i = 0, l = sensorLines.length; i < l; ++i){
+            let line = sensorLines[i];
 
             if(line.substr(0, 8) === "Adapter:"){
                 if(line.match(/virtual/i))
@@ -428,21 +417,13 @@ SensorDataProvider.prototype = {
                 this.parseSensorLine(line, i);
         }
 
-        global.log(this.sensors.join(", "));
-
         if(!this.sensors.length)
             this.unavailable = true;
     },
 
-    getData: function(){
-        Terminal.call(this.path, bind(this.parseResult, this));
-    },
-
-    parseResult: function(result){
-        this.time[1] = GLib.get_monotonic_time() / 1e6;
+    getData: function(result){
         let mode = this.getSetting("mode");
 
-        result = result.split("\n");
         let value = null;
         for(let i = 0, l = this.sensors.length; i < l; ++i){
             // get the line containing the next sensor data value

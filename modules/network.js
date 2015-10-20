@@ -158,7 +158,7 @@ HistoryGraph.prototype = {
     __proto__: Graph.History.prototype,
 
     draw: function(){
-        this.begin(2, this.history.up.length, 0, this.module.max);
+        this.begin(2, this.history.up.length, this.module.max);
 
         this.next("up");
         this.line(this.history.up);

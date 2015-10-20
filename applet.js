@@ -74,6 +74,8 @@ function SystemMonitorApplet(){
 SystemMonitorApplet.prototype = {
     __proto__: Applet.IconApplet.prototype,
 
+    sensorPath: "",
+
     init: function(orientation, panelHeight, instanceId){
         Applet.IconApplet.prototype._init.call(this, orientation, panelHeight);
 
@@ -82,7 +84,6 @@ SystemMonitorApplet.prototype = {
         this.set_applet_icon_symbolic_name(iconName);
 
         this.modules = {};
-        this.time = [];
 
         this.settings = {};
         this.settingProvider = new Settings.AppletSettings(this.settings, uuid, instanceId);
@@ -103,6 +104,13 @@ SystemMonitorApplet.prototype = {
         ], bind(this.onSettingsChanged, this));
         this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", bind(this.onGraphTypeChanged, this));
 
+        // a little wrapper object to access values
+        this.container = {
+            modules: this.modules,
+            settings: this.settings,
+            time: 0
+        };
+
         this.menuManager = new PopupMenu.PopupMenuManager(this);
         this.menu = new Applet.AppletPopupMenu(this, orientation);
         this.menuManager.addMenu(this.menu);
@@ -118,14 +126,27 @@ SystemMonitorApplet.prototype = {
         this.graphSubMenu = new PopupMenu.PopupSubMenuMenuItem(_("Graph"));
 
         this.graphMenuItems = [
-            new GraphMenuItem(this, _("Overview"), 0)
+            new Modules.GraphMenuItem(this, _("Overview"), 0)
         ];
 
         this.graphSubMenu.menu.addMenuItem(this.graphMenuItems[0]);
 
+        let result = GLib.spawn_command_line_sync("which sensors");
+        let sensorLines;
+
+        // if the command is not found, set the result to null, sensor modules will fail then
+        if(!result[0] || result[3] !== 0)
+            sensorLines = null;
+        else {
+            // get the first line
+            this.sensorPath = result[1].toString().split("\n", 1)[0];
+            sensorLines = GLib.spawn_command_line_sync(this.sensorPath)[1].toString().split("\n");
+        }
+
         let index = 1;
-        for(let module in Modules){
-            this.modules[module] = new Module(Modules[module], this.settings, this.time);
+        for(let module in ModuleImports){
+            // create the module
+            this.modules[module] = new Modules.Module(ModuleImports[module], this.container, sensorLines);
             module = this.modules[module];
 
             if(!module.unavailable){
@@ -176,28 +197,53 @@ SystemMonitorApplet.prototype = {
         this.onSettingsChanged();
         this.onGraphTypeChanged();
 
-        this.getData();
+        this.getDataLoop();
 
         this.paintTimeline = new Clutter.Timeline({duration: 100, repeat_count: -1});
         this.paintTimeline.connect("new-frame", bind(this.paint, this));
         this.paintTimeline.start();
     },
 
-    getData: function(){
-        // calculate the time since the last update and save the time
+    getDataLoop: function(){
+        // if a sensor module is active, first request the results of the sensor output
+        if(this.settings.thermal || this.settings.fan)
+            Terminal.call(this.sensorPath, bind(this.getData, this));
+        // if none is active, skip the request
+        else
+            this.getData();
+    },
+
+    getData: function(result){
+        global.log("Entered: " + result);
+        if(result)
+            result = result.split("\n");
+
+        // calculate the time (in seconds) since the last update and save the time
         let time = GLib.get_monotonic_time() / 1e6;
-        let delta = time - this.time[0];
-        this.time[0] = time;
+        let delta = time - this.container.time;
+        this.container.time = time;
 
         // generate data
-        for(let module in this.modules)
-            this.modules[module].getData(delta);
+        for(let module in this.modules){
+            // skip disabled modules
+            if(!this.modules[module].getSetting(""))
+                continue;
+
+            let dataProvider = this.modules[module].dataProvider;
+
+            // if it is a sensor module, pass the output of the sensor command to it
+            if(dataProvider instanceof Modules.SensorDataProvider)
+                dataProvider.getData(result);
+            // for all other modules, pass the difference of the time since last data generating (used only by disk and network, but for other it is no harm)
+            else
+                dataProvider.getData(delta);
+        }
 
         // data generated, now update the text
         this.updateText();
 
         // queue the next data request
-        this.timeout = Mainloop.timeout_add(this.settings.interval, bind(this.getData, this));
+        this.timeout = Mainloop.timeout_add(this.settings.interval, bind(this.getDataLoop, this));
 
         // refresh independently of the drawing timeline the Overview graph
         if(this.settings.graphType === 0)

@@ -183,7 +183,7 @@ HistoryGraph.prototype = {
     __proto__: Graph.History.prototype,
 
     draw: function(){
-        this.begin(2, this.history.write.length, 0, this.module.max);
+        this.begin(2, this.history.write.length, this.module.max);
 
         this.next("write");
         this.line(this.history.write);

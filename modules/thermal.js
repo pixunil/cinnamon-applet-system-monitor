@@ -40,12 +40,8 @@ DataProvider.prototype = {
         this.history.push([]);
     },
 
-    getData: function(){
-        Terminal.call(this.path, bind(this.parseResult, this));
-    },
-
-    parseResult: function(result){
-        Modules.SensorDataProvider.prototype.parseResult.call(this, result);
+    getData: function(result){
+        Modules.SensorDataProvider.prototype.getData.call(this, result);
 
         if(this.settings.thermalWarning)
             this.checkWarning(this.data[0], _("Temperature was over %s for %fsec"));
@@ -132,7 +128,7 @@ HistoryGraph.prototype = {
     __proto__: Graph.History.prototype,
 
     draw: function(){
-        this.begin(this.history.length, this.history[0].length, 1, this.module.max, this.module.min);
+        this.begin(this.history.length, this.history[0].length, this.module.max, this.module.min);
 
         this.section = 0;
 

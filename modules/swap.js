@@ -17,7 +17,7 @@ DataProvider.prototype = {
         Modules.BaseDataProvider.prototype.init.apply(this, arguments);
 
         try {
-            this.gtop = new GTop.glibtop_swap;
+            this.gtop = new Modules.GTop.glibtop_swap;
         } catch(e){
             this.unavailable = true;
             return;
