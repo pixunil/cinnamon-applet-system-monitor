@@ -2,10 +2,10 @@ const Cinnamon = imports.gi.Cinnamon;
 
 const Mainloop = imports.mainloop;
 
-const _ = imports.applet._;
-const Graph = imports.applet.graph;
-const bind = imports.applet.bind;
-const Modules = imports.applet.modules;
+const _ = imports._;
+const Graph = imports.graph;
+const bind = imports.bind;
+const Modules = imports.modules;
 
 const name = "disk";
 const display = _("Disk");

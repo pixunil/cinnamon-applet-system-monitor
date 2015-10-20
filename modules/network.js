@@ -1,8 +1,8 @@
 const Cinnamon = imports.gi.Cinnamon;
 
-const _ = imports.applet._;
-const Graph = imports.applet.graph;
-const Modules = imports.applet.modules;
+const _ = imports._;
+const Graph = imports.graph;
+const Modules = imports.modules;
 
 const name = "network";
 const display = _("Network");

@@ -7,11 +7,11 @@ const PopupMenu = imports.ui.popupMenu;
 
 const messageTray = Main.messageTray;
 
-const uuid = imports.applet.uuid;
-const iconName = imports.applet.iconName;
+const uuid = imports.uuid;
+const iconName = imports.iconName;
 
-const _ = imports.applet._;
-const bind = imports.applet.bind;
+const _ = imports._;
+const bind = imports.bind;
 
 // prefixes for byte sizes (kilo, mega, giga, …)
 const PREFIX = " KMGTEZY";

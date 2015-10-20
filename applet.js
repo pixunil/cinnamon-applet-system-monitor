@@ -13,26 +13,33 @@ const Tooltips = imports.ui.tooltips;
 
 const Mainloop = imports.mainloop;
 
-const _ = imports.applet._;
-const bind = imports.applet.bind;
+const uuid = "system-monitor@pixunil";
+const path = imports.ui.appletManager.appletMeta[uuid].path;
 
-const uuid = imports.applet.uuid;
-const iconName = imports.applet.iconName;
+if(imports.searchPath.indexOf(path) === -1)
+    imports.searchPath.push(path);
 
-const Graph = imports.applet.graph;
-const Modules = imports.applet.modules;
-const Terminal = imports.applet.terminal;
+const _ = imports._;
+const bind = imports.bind;
+
+const iconName = imports.iconName;
+
+const Graph = imports.graph;
+const Modules = imports.modules;
+const Terminal = imports.terminal;
 
 const ModuleImports = {
-    loadAvg: imports.applet.modules.loadAvg,
-    cpu: imports.applet.modules.cpu,
-    mem: imports.applet.modules.mem,
-    swap: imports.applet.modules.swap,
-    disk: imports.applet.modules.disk,
-    network: imports.applet.modules.network,
-    thermal: imports.applet.modules.thermal,
-    fan: imports.applet.modules.fan
+    loadAvg: imports.modules.loadAvg,
+    cpu: imports.modules.cpu,
+    mem: imports.modules.mem,
+    swap: imports.modules.swap,
+    disk: imports.modules.disk,
+    network: imports.modules.network,
+    thermal: imports.modules.thermal,
+    fan: imports.modules.fan
 };
+
+imports.searchPath.splice(imports.searchPath.indexOf(path), 1);
 
 function SystemMonitorTooltip(){
     this._init.apply(this, arguments);

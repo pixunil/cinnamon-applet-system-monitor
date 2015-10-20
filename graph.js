@@ -2,7 +2,7 @@ const Cairo = imports.cairo;
 
 const GLib = imports.gi.GLib;
 
-const ModulePart = imports.applet.modules.ModulePart;
+const ModulePart = imports.modules.ModulePart;
 
 function process(number){
     return number > 0 && !isNaN(number) && isFinite(number);

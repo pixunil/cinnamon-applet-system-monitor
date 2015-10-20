@@ -1,5 +1,5 @@
-const _ = imports.applet._;
-const Modules = imports.applet.modules;
+const _ = imports._;
+const Modules = imports.modules;
 
 const name = "loadAvg";
 const display = _("Load averages");
