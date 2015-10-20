@@ -275,7 +275,9 @@ SystemMonitorApplet.prototype = {
             graph = this.graphs[this.settings.graphType];
 
         graph.draw();
-        graph.ctx.$dispose();
+
+        if(graph.ctx.$dispose)
+            graph.ctx.$dispose();
     },
 
     updateText: function(){
