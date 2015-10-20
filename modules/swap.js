@@ -1,6 +1,5 @@
-const _ = imports._;
-const Modules = imports.modules;
-const GTop = imports.modules.GTop;
+const _ = imports.applet._;
+const Modules = imports.applet.modules;
 
 const name = "swap";
 const settingsName = "mem";

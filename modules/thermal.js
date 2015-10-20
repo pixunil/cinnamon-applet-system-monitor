@@ -1,8 +1,7 @@
-const _ = imports._;
-const Graph = imports.graph;
-const bind = imports.bind;
-const Terminal = imports.terminal;
-const Modules = imports.modules;
+const _ = imports.applet._;
+const Graph = imports.applet.graph;
+const bind = imports.applet.bind;
+const Modules = imports.applet.modules;
 
 const name = "thermal";
 const display = _("Thermal");

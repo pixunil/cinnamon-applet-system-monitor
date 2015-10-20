@@ -8,11 +8,11 @@ const PopupMenu = imports.ui.popupMenu;
 
 const messageTray = Main.messageTray;
 
-const uuid = imports.uuid;
-const iconName = imports.iconName;
+const uuid = imports.applet.uuid;
+const iconName = imports.applet.iconName;
 
-const _ = imports._;
-const bind = imports.bind;
+const _ = imports.applet._;
+const bind = imports.applet.bind;
 
 const MAXSIZE = 1500;
 
