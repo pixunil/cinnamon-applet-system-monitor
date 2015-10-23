@@ -1,4 +1,3 @@
-const GLib = imports.gi.GLib;
 const Pango = imports.gi.Pango;
 const St = imports.gi.St;
 
@@ -68,44 +67,94 @@ const ModulePartPrototype = {
 
     formatBytes: function(bytes){
         let prefix = " KMGTPEZY";
+        // the multiplicator the unit means is without prefix 1
         let size = 1;
-        let sizeMultiplicator = this.settings.byteUnit === "binary"? 1024 : 1000;
+        // for binary prefix, the factor is 2 ** 10 (1024), decimal is 1000
+        let sizeMultiplicator;
+        if(this.settings.byteUnit.startsWith("binary"))
+            sizeMultiplicator = 1024;
+        else
+            sizeMultiplicator = 1000;
+        // we start with no prefix
         let prefixIndex = 0;
 
+        // increase the prefix if the resulting number is too big
         while(bytes / size > MAXSIZE){
             size *= sizeMultiplicator;
             ++prefixIndex;
         }
 
         let number = (bytes / size).toFixed(1);
-        let unit = prefix[prefixIndex] + (this.settings.byteUnit === "binary" && prefixIndex? "i" : "") + "B";
+        let unit = prefix[prefixIndex];
+        // show the letter "i" to indicate a binary prefix, but only then when there is one
+        if(prefixIndex && this.settings.byteUnit === "binary")
+            unit += "i";
+        // use a capital "B" for bytes
+        unit += "B";
         return number + " " + unit;
     },
 
     formatRate: function(bytes, dir){
         let prefix = " KMGTPEZY";
-        let size = this.settings.rateUnit.endsWith("byte")? 1 : .125;
-        let sizeMultiplicator = this.settings.rateUnit.startsWith("binary")? 1024 : 1000;
+        // the multiplicator the unit means is (without prefix) for byte 1, for bit 1/8
+        let size;
+        if(this.settings.rateUnit.endsWith("byte"))
+            size = 1;
+        else
+            size = .125;
+
+        // for binary prefix, the factor is 2 ** 10 (1024), decimal is 1000
+        let sizeMultiplicator;
+        if(this.settings.rateUnit.startsWith("binary"))
+            sizeMultiplicator = 1024;
+        else
+            sizeMultiplicator = 1000;
+        // we start with no prefix
         let prefixIndex = 0;
 
+        // increase the prefix if the resulting number is too big
         while(bytes / size > MAXSIZE){
             size *= sizeMultiplicator;
             ++prefixIndex;
         }
 
         let number = (bytes / size).toFixed(1);
-        let unit = prefix[prefixIndex] + (this.settings.rateUnit.startsWith("binary") && prefixIndex? "i" : "") + (this.settings.rateUnit.endsWith("byte")? "B" : "bit") + "/s";
-        let arrow = dir? "\u25B2" : "\u25BC";
+        let unit = prefix[prefixIndex];
+        // show the letter "i" to indicate a binary prefix, but only then when there is one
+        if(prefixIndex && this.settings.rateUnit.startsWith("binary"))
+            unit += "i";
+        // use a capital "B" for bytes, "bit" for bits
+        if(this.settings.rateUnit.endsWith("byte"))
+            unit += "B";
+        else
+            unit += "bit";
+        unit += "/s";
+
+        // use unicode arrow up and arrow down for indication of the direction of stream
+        let arrow;
+        if(dir)
+            arrow = "\u25B2";
+        else
+            arrow = "\u25BC";
+
         return number + " " + unit + " " + arrow;
     },
 
     formatPercent: function(part, total){
-        return (100 * part / (total || 1)).toFixed(1) + "%";
+        total = total || 1;
+        let percentage = 100 * part / total;
+        return percentage.toFixed(1) + "%";
     },
 
     formatThermal: function(celsius){
         let number = this.settings.thermalUnit? celsius : celsius * 1.8 + 32;
-        let unit = this.settings.thermalUnit === "celsius"? "\u2103" : "\u2109"; //2103: Celsius, 2109: Fahrenheit
+        let unit;
+        // use unicode to represent the unit, it combines both degree symbol and character
+        if(this.settings.thermalUnit === "celsius")
+            unit = "\u2103";
+        else
+            unit = "\u2109";
+
         return number.toFixed(1) + unit;
     },
 
@@ -447,7 +496,7 @@ SensorDataProvider.prototype = {
 
         this.updateMinMax();
     }
-}
+};
 
 function BaseMenuItem(){
     throw new TypeError("Trying to instantiate abstract class [" + uuid + "] modules.BaseMenuItem");

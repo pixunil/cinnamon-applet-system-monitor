@@ -13,12 +13,10 @@ const Tooltips = imports.ui.tooltips;
 
 const Mainloop = imports.mainloop;
 
-const uuid = "system-monitor@pixunil";
-const path = imports.ui.appletManager.appletMeta[uuid].path;
-
 const _ = imports.applet._;
 const bind = imports.applet.bind;
 
+const uuid = imports.applet.uuid;
 const iconName = imports.applet.iconName;
 
 const Graph = imports.applet.graph;
