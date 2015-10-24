@@ -206,7 +206,6 @@ SystemMonitorApplet.prototype = {
     },
 
     getData: function(result){
-        global.log("Entered: " + result);
         if(result)
             result = result.split("\n");
 

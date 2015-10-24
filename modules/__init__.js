@@ -13,7 +13,8 @@ const iconName = imports.applet.iconName;
 const _ = imports.applet._;
 const bind = imports.applet.bind;
 
-const MAXSIZE = 1500;
+// prefixes for byte sizes (kilo, mega, giga, …)
+const PREFIX = " KMGTEZY";
 
 let GTop = null;
 
@@ -66,68 +67,26 @@ const ModulePartPrototype = {
     },
 
     formatBytes: function(bytes){
-        let prefix = " KMGTPEZY";
-        // the multiplicator the unit means is without prefix 1
-        let size = 1;
-        // for binary prefix, the factor is 2 ** 10 (1024), decimal is 1000
-        let sizeMultiplicator;
-        if(this.settings.byteUnit.startsWith("binary"))
-            sizeMultiplicator = 1024;
-        else
-            sizeMultiplicator = 1000;
-        // we start with no prefix
-        let prefixIndex = 0;
-
-        // increase the prefix if the resulting number is too big
-        while(bytes / size > MAXSIZE){
-            size *= sizeMultiplicator;
-            ++prefixIndex;
-        }
-
-        let number = (bytes / size).toFixed(1);
-        let unit = prefix[prefixIndex];
-        // show the letter "i" to indicate a binary prefix, but only then when there is one
-        if(prefixIndex && this.settings.byteUnit === "binary")
-            unit += "i";
+        let [value, unit] = this.determinatePrefix(bytes, this.settings.byteUnit === "binary");
         // use a capital "B" for bytes
         unit += "B";
-        return number + " " + unit;
+
+        return value.toFixed(1) + " " + unit;
     },
 
     formatRate: function(bytes, dir){
-        let prefix = " KMGTPEZY";
-        // the multiplicator the unit means is (without prefix) for byte 1, for bit 1/8
-        let size;
-        if(this.settings.rateUnit.endsWith("byte"))
-            size = 1;
-        else
-            size = .125;
+        // the value must be multiplicated by eight when using bits, as it is in bytes per default
+        if(this.settings.rateUnit.endsWith("bit"))
+            bytes *= 8;
 
-        // for binary prefix, the factor is 2 ** 10 (1024), decimal is 1000
-        let sizeMultiplicator;
-        if(this.settings.rateUnit.startsWith("binary"))
-            sizeMultiplicator = 1024;
-        else
-            sizeMultiplicator = 1000;
-        // we start with no prefix
-        let prefixIndex = 0;
+        let [value, unit] = this.determinatePrefix(bytes, this.settings.rateUnit.startsWith("binary"));
 
-        // increase the prefix if the resulting number is too big
-        while(bytes / size > MAXSIZE){
-            size *= sizeMultiplicator;
-            ++prefixIndex;
-        }
-
-        let number = (bytes / size).toFixed(1);
-        let unit = prefix[prefixIndex];
-        // show the letter "i" to indicate a binary prefix, but only then when there is one
-        if(prefixIndex && this.settings.rateUnit.startsWith("binary"))
-            unit += "i";
         // use a capital "B" for bytes, "bit" for bits
         if(this.settings.rateUnit.endsWith("byte"))
             unit += "B";
         else
             unit += "bit";
+        // lastly, this is a rate unit, so append per second
         unit += "/s";
 
         // use unicode arrow up and arrow down for indication of the direction of stream
@@ -137,7 +96,38 @@ const ModulePartPrototype = {
         else
             arrow = "\u25BC";
 
-        return number + " " + unit + " " + arrow;
+        return value.toFixed(1) + " " + unit + " " + arrow;
+    },
+
+    determinatePrefix: function(value, binary){
+        // there is no need to calculate the prefix for invalid or zero values
+        if(value <= 0)
+            return [value, ""];
+
+        // for binary prefix, the factor is 2 ** 10 (1024), decimal is 1000
+        let sizeMultiplicator;
+        if(binary)
+            sizeMultiplicator = 1024;
+        else
+            sizeMultiplicator = 1000;
+
+        // use logarithm to determinate the exponent
+        let exponent = Math.log(value) / Math.log(sizeMultiplicator);
+        exponent = Math.floor(exponent);
+
+        // value is too small for a prefix
+        if(exponent === 0)
+            return [value, ""];
+
+        // choose the prefix
+        let prefix = PREFIX[exponent];
+        // show the letter "i" to indicate a binary prefix
+        if(binary)
+            prefix += "i";
+        // shrink the value according to the prefix
+        value /= Math.pow(sizeMultiplicator, exponent);
+
+        return [value, prefix];
     },
 
     formatPercent: function(part, total){

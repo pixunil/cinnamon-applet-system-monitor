@@ -29,13 +29,13 @@ DataProvider.prototype = {
         }
 
         this.raw = {
-            up: [],
-            down: []
+            up: 0,
+            down: 0
         };
 
         this.data = {
-            up: [],
-            down: []
+            up: 0,
+            down: 0
         };
 
         this.history = {
