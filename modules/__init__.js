@@ -674,13 +674,16 @@ PanelWidget.prototype = {
 
     update: function(){
         if(this.getSetting("PanelLabel") && this.label){
-            let text = this.getSetting("PanelLabel").replace(/[%$](\w+)(?:\.(\w+))?(?:#(\w+))?\b/g, bind(this.panelLabelReplace, this));
+            let text = this.getSetting("PanelLabel").replace(/[%$](\w+(?:\(\d+\))?)(?:\.(\w+))?(?:#(\w+))?/g, bind(this.panelLabelReplace, this));
             this.label.set_text(text);
             this.label.margin_left = text.length? 6 : 0;
         }
     },
 
     panelLabelReplace: function(match, main, sub, format){
+        // remove parentheses
+        main = main.replace(/[()]/g, "");
+
         for(let name in this.panelLabel.main){
             // run the regEx against the matched main part
             let result = main.match(this.panelLabel.main[name]);
