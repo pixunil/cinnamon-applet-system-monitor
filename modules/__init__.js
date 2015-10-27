@@ -38,9 +38,7 @@ const ModulePartPrototype = {
         return this.module.settings[(this.module.settingsName || this.module.name) + value];
     },
 
-    format: function(format, value, ext){
-        value = value || 0;
-
+    format: function(format, value = 0, ext = null){
         if(format === "number")
             return this.formatNumber(value);
 
@@ -130,13 +128,12 @@ const ModulePartPrototype = {
         return [value, prefix];
     },
 
-    formatPercent: function(part, total){
-        total = total || 1;
+    formatPercent: function(part, total = 1){
         let percentage = 100 * part / total;
         return percentage.toFixed(1) + "%";
     },
 
-    formatThermal: function(celsius){
+    formatThermal: function(celsius = 0){
         let number = this.settings.thermalUnit? celsius : celsius * 1.8 + 32;
         let unit;
         // use unicode to represent the unit, it combines both degree symbol and character
@@ -461,7 +458,7 @@ SensorDataProvider.prototype = {
     },
 
     getData: function(result){
-        let mode = this.getSetting("mode");
+        let mode = this.getSetting("Mode");
 
         let value = null;
         for(let i = 0, l = this.sensors.length; i < l; ++i){
