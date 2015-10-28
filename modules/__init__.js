@@ -612,6 +612,7 @@ GraphMenuItem.prototype = {
     init: function(applet, display, index){
         PopupMenu.PopupMenuItem.prototype._init.call(this, display);
 
+        this.display = display;
         this.index = index;
         this.settings = applet.settings;
         this.onGraphTypeChanged = bind(applet.onGraphTypeChanged, applet);
@@ -621,6 +622,11 @@ GraphMenuItem.prototype = {
     activate: function(){
         this.settings.graphType = this.index;
         this.onGraphTypeChanged();
+    },
+
+    // ignore the width of the text content, avoids big menu
+    getColumnWidths: function(){
+        return [0];
     },
 
     onSettingsChanged: function(active){

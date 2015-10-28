@@ -115,7 +115,10 @@ SystemMonitorApplet.prototype = {
 
         this.graphs = [null];
 
-        this.graphSubMenu = new PopupMenu.PopupSubMenuMenuItem(_("Graph"));
+        this.graphSubMenu = new PopupMenu.PopupSubMenuMenuItem("");
+        this.graphSubMenu.actor.connect("scroll-event", bind(this.onScroll, this));
+        // ignore the width of the text content, avoids big menu
+        this.graphSubMenu.getColumnWidths = () => [0];
 
         this.graphMenuItems = [
             new Modules.GraphMenuItem(this, _("Overview"), 0)
@@ -296,12 +299,16 @@ SystemMonitorApplet.prototype = {
             item.setShowDot(false);
         });
 
+        // if selected graph type is none, hide both graph and chooser
         let show = this.settings.graphType !== -1;
         this.graphSubMenu.actor.visible = show;
         this.canvasHolder.actor.visible = show;
 
         if(show){
-            this.graphMenuItems[this.settings.graphType].setShowDot(true);
+            let graphMenuItem = this.graphMenuItems[this.settings.graphType];
+            this.graphSubMenu.label.text = graphMenuItem.display;
+            graphMenuItem.setShowDot(true);
+            // redraw the graph independent on the graph draw timeline
             this.paint(this.paintTimeline, 0, true);
         }
     },
