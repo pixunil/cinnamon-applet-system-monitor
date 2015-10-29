@@ -38,7 +38,7 @@ const ModulePartPrototype = {
         return this.module.settings[(this.module.settingsName || this.module.name) + value];
     },
 
-    format: function(format, value = 0, ext = null){
+    format: function(format, value = 0, ext = undefined){
         if(format === "number")
             return this.formatNumber(value);
 
