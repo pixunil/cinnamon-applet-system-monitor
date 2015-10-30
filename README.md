@@ -25,6 +25,7 @@ This applet offers information about five modules. These are:
 - **Disk** - read / write and space usage of the disk
 - **Network** - up / down usage and total traffic
 - **Thermal** - temperature of some compenents
+- **Fan** - fan rotations of some compenents
 
 # FAQ
 
@@ -33,13 +34,22 @@ You can choose for every module a panel label and graph.
 Go to settings and select in the ComboBox next to "Label in the panel" the information you want to see.
 With the ComboBox "Graph in the panel" you can choose a graph.
 
-### The Thermal module is not working.
-The Thermal modules gets its information from the command `sensors`.
-If it doesn't show up, you should check by running the command and look if you see a line including `--.-°C`.
+### The Thermal and the Fan module is not working.
+Both Thermal and Fan modules gets its information from the command `sensors`.
+That is also the reason why they are called sensor modules sometimes.
+If it doesn't show up, you should check by running the command and look after these in the output:
+
+Thermal | Fan
+--------|----
+`--.-°C`| `--RPM`
 
 # Settings
 
 ## General
+**Show Icon** - Option to hide the icon
+
+_Note:_ If you have no other panel widgets (like graphs or labels) you can not access the applet menu
+
 **Interval** - Interval in which the applet refreshes data in milliseconds
 
 **Bytes unit** - Unit for memory, swap, disk space usage and total network usage
@@ -198,3 +208,9 @@ Usage in rates.
 **main**
 * `value` - Thermal value specified in "Thermal mode"
 * `sensor(digit)` - Temperature of a sensor
+
+#### Fan
+
+**main**
+* `value` - Fan value specified in "Fan mode"
+* `sensor(digit)` - Rotations of a sensor
