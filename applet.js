@@ -100,7 +100,7 @@ SystemMonitorApplet.prototype = {
         this.container = {
             modules: this.modules,
             settings: this.settings,
-            time: 0
+            time: GLib.get_monotonic_time() / 1e6
         };
 
         this.menuManager = new PopupMenu.PopupMenuManager(this);
@@ -217,6 +217,9 @@ SystemMonitorApplet.prototype = {
         let delta = time - this.container.time;
         this.container.time = time;
 
+        // try to calculate the balance, so that the timeout between the updates is more to the setting value
+        let timeBalance = (delta * 1e3 - this.settings.interval) / 2;
+
         // generate data
         for(let module in this.modules){
             // skip disabled modules
@@ -237,7 +240,8 @@ SystemMonitorApplet.prototype = {
         this.updateText();
 
         // queue the next data request
-        this.timeout = Mainloop.timeout_add(this.settings.interval, bind(this.getDataLoop, this));
+        let interval = Math.ceil(this.settings.interval - timeBalance);
+        this.timeout = Mainloop.timeout_add(interval, bind(this.getDataLoop, this));
 
         // refresh independently of the drawing timeline the Overview graph
         if(this.settings.graphType === 0)
