@@ -251,7 +251,7 @@ SystemMonitorApplet.prototype = {
         this.updateText();
 
         // queue the next data request
-        let interval = Math.ceil(this.settings.interval - timeBalance);
+        let interval = Math.max(Math.ceil(this.settings.interval - timeBalance), 0);
         this.timeout = Mainloop.timeout_add(interval, bind(this.getDataLoop, this));
 
         // refresh independently of the drawing timeline the Overview graph
