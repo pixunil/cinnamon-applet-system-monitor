@@ -27,13 +27,12 @@ DataProvider.prototype = {
         this.data = {
             total: 1,
             used: 0,
-            usedup: 0,
             cached: 0,
             buffer: 0
         };
 
         this.history = {
-            usedup: [],
+            used: [],
             cached: [],
             buffer: []
         };
@@ -43,8 +42,7 @@ DataProvider.prototype = {
         Modules.GTop.glibtop_get_mem(this.gtop);
 
         this.saveData("total", this.gtop.total);
-        this.saveData("used", this.gtop.used);
-        this.saveData("usedup", this.gtop.used - this.gtop.cached - this.gtop.buffer);
+        this.saveData("used", this.gtop.used - this.gtop.cached - this.gtop.buffer);
         this.saveData("cached", this.gtop.cached);
         this.saveData("buffer", this.gtop.buffer);
     }
@@ -62,7 +60,6 @@ MenuItem.prototype = {
     init: function(module){
         Modules.BaseSubMenuMenuItem.prototype.init.call(this, module);
 
-        this.addRow(_("used"));
         this.addRow(_("cached"));
         this.addRow(_("buffered"));
     },
@@ -72,14 +69,12 @@ MenuItem.prototype = {
         this.setText(0, 1, "bytes", this.data.total);
         this.setText(0, 2, "percent", this.data.used, this.data.total);
 
-        this.setText(1, 0, "bytes", this.data.usedup);
-        this.setText(1, 2, "percent", this.data.usedup, this.data.total);
 
-        this.setText(2, 0, "bytes", this.data.cached);
-        this.setText(2, 2, "percent", this.data.cached, this.data.total);
+        this.setText(1, 0, "bytes", this.data.cached);
+        this.setText(1, 2, "percent", this.data.cached, this.data.total);
 
-        this.setText(3, 0, "bytes", this.data.buffer);
-        this.setText(3, 2, "percent", this.data.buffer, this.data.total);
+        this.setText(2, 0, "bytes", this.data.buffer);
+        this.setText(2, 2, "percent", this.data.buffer, this.data.total);
     }
 };
 
@@ -97,7 +92,7 @@ PanelLabel.prototype = {
 
     defaultSub: "used",
     sub: {
-        usedup: /^(?:usedup|u)$/i,
+        used: /^(?:used|usedup|u)$/i,
         cached: /^(?:cached|c)$/i,
         buffer: /^(?:buffer|b)$/i,
         total: /^(?:total|t)$/i
@@ -136,7 +131,7 @@ BarGraph.prototype = {
             this.begin(2);
 
         this.next("mem");
-        this.bar(this.data.usedup / this.data.total);
+        this.bar(this.data.used / this.data.total);
 
         this.setAlpha(.75);
         this.bar(this.data.cached / this.data.total);
@@ -168,10 +163,10 @@ HistoryGraph.prototype = {
         if(this.mode === "mem-swap")
             num = 2;
 
-        this.begin(num, this.history.usedup.length, this.data.total);
+        this.begin(num, this.history.used.length, this.data.total);
 
         this.next("mem");
-        this.line(this.history.usedup);
+        this.line(this.history.used);
 
         this.setAlpha(.75);
         this.line(this.history.cached);
