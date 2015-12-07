@@ -58,17 +58,17 @@ Overview.prototype = {
     draw: function(){
         this.begin();
 
-        if(this.settings.thermal){
+        if(this.modules.thermal.settings.enabled){
             this.next("thermal", "thermal");
             this.center((this.thermal.data[0] - this.thermal.min) / (this.thermal.max - this.thermal.min));
         }
 
-        if(this.settings.fan){
+        if(this.modules.fan.settings.enabled){
             this.setColor("fan", "fan");
             this.center((this.fan.data[0] - this.fan.min) / (this.fan.max - this.fan.min));
         }
 
-        if(this.settings.disk){
+        if(this.modules.disk.settings.enabled){
             this.next("disk", "write");
             this.small(this.disk.data.write / this.disk.max, true, false);
 
@@ -76,7 +76,7 @@ Overview.prototype = {
             this.small(this.disk.data.read / this.disk.max, false, false);
         }
 
-        if(this.settings.network){
+        if(this.modules.network.settings.enabled){
             if(!this.smallMerged)
                 this.next("network", "up");
             else
@@ -88,7 +88,7 @@ Overview.prototype = {
             this.small(this.network.data.down / this.network.max, false, true);
         }
 
-        if(this.settings.cpu){
+        if(this.modules.cpu.settings.enabled){
             for(let i = 0; i < this.cpu.count; ++i){
                 this.next("cpu", "core" + (i % 4 + 1));
                 this.normal(this.cpu.data.user[i], true);
@@ -97,7 +97,7 @@ Overview.prototype = {
             }
         }
 
-        if(this.settings.mem){
+        if(this.modules.mem.settings.enabled){
             this.next("mem", "mem");
             this.normal(this.mem.data.usedup / this.mem.data.total, false);
             this.setAlpha(.75);
@@ -119,22 +119,22 @@ Overview.prototype = {
             normal: 0
         };
 
-        if(this.settings.thermal)
+        if(this.modules.thermal.settings.enabled)
             count.center++;
 
-        if(this.settings.fan)
+        if(this.modules.fan.settings.enabled)
             count.center++;
 
-        if(this.settings.disk)
+        if(this.modules.disk.settings.enabled)
             count.small++;
 
-        if(this.settings.network)
+        if(this.modules.network.settings.enabled)
             count.small++;
 
-        if(this.settings.cpu)
+        if(this.modules.cpu.settings.enabled)
             count.normal += this.cpu.count;
 
-        if(this.settings.mem)
+        if(this.modules.mem.settings.enabled)
             count.normal += 2;
 
         if(this.smallMerged && count.small)
@@ -495,12 +495,12 @@ History.prototype = {
         this.min = min || 0;
         this.max = max || 1;
 
-        this.line = this._line[this.settings[this.name + "Appearance"]];
+        this.line = this._line[this.settings.appearance];
 
         if(!this.line)
             this.line = this._line.area;
 
-        if(this.settings[this.name + "Appearance"] === "line")
+        if(this.settings.appearance === "line")
             this.ctx.setLineJoin(Cairo.LineJoin.ROUND);
 
         this.connection = this._connection[this.settings.graphConnection];
@@ -512,11 +512,12 @@ History.prototype = {
 
     next: function(color){
         this.section++;
-        if(this.settings[this.name + "Appearance"] !== "stack")
+        if(this.settings.appearance !== "stack")
             this.last = [];
 
         if(typeof color === "string")
             color = this.module.color[color];
+
         this.setColor(color);
     }
 };

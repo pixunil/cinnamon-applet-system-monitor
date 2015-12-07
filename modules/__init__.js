@@ -4,6 +4,7 @@ const St = imports.gi.St;
 const Main = imports.ui.main;
 const MessageTray = imports.ui.messageTray;
 const PopupMenu = imports.ui.popupMenu;
+const Settings = imports.ui.settings;
 
 const messageTray = Main.messageTray;
 
@@ -12,6 +13,9 @@ const iconName = imports.applet.iconName;
 
 const _ = imports.applet._;
 const bind = imports.applet.bind;
+const dashToCamelCase = imports.applet.dashToCamelCase;
+
+const SettingsProvider = imports.applet.applet.SettingsProvider;
 
 // prefixes for byte sizes (kilo, mega, giga, …)
 const PREFIX = " KMGTEZY";
@@ -21,10 +25,6 @@ let GTop = null;
 const ModulePartPrototype = {
     init: function(module){
         this.module = module;
-    },
-
-    getSetting: function(value){
-        return this.module.settings[(this.module.settingsName || this.module.name) + value];
     },
 
     format: function(format, value = 0, ext = undefined){
@@ -189,53 +189,86 @@ function ModulePart(superClass){
     return proto;
 }
 
+function ModuleSettings(){
+    this.init.apply(this, arguments);
+}
+
+ModuleSettings.prototype = {
+    __proto__: SettingsProvider.prototype,
+
+    init: function(module, appletSettings, instanceId){
+        this.name = module.import.name;
+        // some settings of the applet settings object will be used,
+        // for that reason the module settings object has it as prototype
+        module.settings = {
+            __proto__: appletSettings
+        };
+
+        SettingsProvider.prototype.init.call(this, module.settings, instanceId);
+
+        let keys = ["enabled"];
+
+        if(module.import.additionalSettingKeys)
+            keys = keys.concat(module.import.additionalSettingKeys);
+
+        if(module.import.HistoryGraph)
+            keys.push("appearance", "panel-graph", "panel-width");
+
+        if(module.import.PanelLabel)
+            keys.push("panel-label");
+
+        if(module.import.colorSettingKeys)
+            keys = keys.concat(module.import.colorSettingKeys.map(key => "color-" + key));
+
+        this.bindProperties(keys, bind(module.onSettingsChanged, module));
+    },
+
+    bindProperty: function(key, callback){
+        let keyCamelCase = dashToCamelCase(key);
+        // prepend the module name and a dash
+        key = this.name + "-" + key;
+
+        Settings.AppletSettings.prototype.bindProperty.call(this, Settings.BindingDirection.IN, key, keyCamelCase, callback);
+    }
+};
+
 function Module(){
     this.init.apply(this, arguments);
 }
 
 Module.prototype = {
-    init: function(imports, container, sensorLines){
+    init: function(imports, container, sensorLines, instanceId){
         this.import = imports;
-        this.name = imports.name;
-        this.settingsName = imports.settingsName;
         this.display = imports.display;
 
-        if(!this.settingsName){
-            this.settingKeys = [];
-
-            if(imports.additionalSettingKeys)
-                this.settingKeys = this.settingKeys.concat(imports.additionalSettingKeys.map(key => this.name + "-" + key));
-
-            if(imports.HistoryGraph)
-                this.settingKeys.push(this.name + "-appearance", this.name + "-panel-graph", this.name + "-panel-width");
-
-            if(imports.PanelLabel)
-                this.settingKeys.push(this.name + "-panel-label");
-
-            if(imports.colorSettingKeys){
+        // the swap module shares its settings with memory, for this reason only a simple reference is needed
+        if(imports.settingsName)
+            this.settings = container.modules[imports.settingsName].settings;
+        // for all other modules an own settings object and provider is created
+        else {
+            if(imports.colorSettingKeys)
                 this.colorSettingKeys = imports.colorSettingKeys;
-                this.settingKeys = this.settingKeys.concat(this.colorSettingKeys.map(key => this.name + "-color-" + key));
-            }
-        }
 
-        this.module = this;
+            this.settingsProvider = new ModuleSettings(this, container.settings, instanceId);
+        }
 
         this.container = container;
         this.modules = container.modules;
-        this.settings = container.settings;
 
         this.dataProvider = new imports.DataProvider(this, sensorLines);
 
-        if(this.dataProvider.unavailable){
+        if(this.dataProvider.unavailable)
             this.unavailable = true;
-            return;
+        else {
+            this.menuItem = new imports.MenuItem(this);
+            this.tooltip = this.menuItem.makeTooltip();
+
+            // only if one of panel label or graph is available, create a panel widget
+            if(imports.PanelLabel || imports.BarGraph)
+                this.panelWidget = new PanelWidget(this);
         }
 
-        this.menuItem = new imports.MenuItem(this);
-        this.tooltip = this.menuItem.makeTooltip();
-
-        if(imports.PanelLabel || imports.BarGraph)
-            this.panelWidget = new PanelWidget(this);
+        this.onSettingsChanged();
     },
 
     buildMenuGraph: function(applet, index){
@@ -246,8 +279,6 @@ Module.prototype = {
         return new this.import.HistoryGraph(applet.canvas, this);
     },
 
-    getSetting: ModulePartPrototype.getSetting,
-
     get min(){
         return this.dataProvider.min || 0;
     },
@@ -257,8 +288,9 @@ Module.prototype = {
     },
 
     update: function(){
-        if(this.getSetting("")){
-            this.menuItem.update();
+        if(this.settings.enabled){
+            if(this.menuItem)
+                this.menuItem.update();
 
             if(this.panelWidget)
                 this.panelWidget.update();
@@ -267,13 +299,13 @@ Module.prototype = {
 
     onSettingsChanged: function(){
         if(this.dataProvider.unavailable)
-            this.settings[this.name] = false;
+            this.settings.enabled = false;
 
         this.color = {};
 
         if(this.colorSettingKeys){
             this.colorSettingKeys.forEach(function(key){
-                let color = this.getSetting("Color" + key[0].toUpperCase() + key.substr(1));
+                let color = this.settings["color" + key[0].toUpperCase() + key.substr(1)];
                 color = color.match(/(\d+).+?(\d+).+?(\d+)/); // get the values of red, green and blue
                 color.shift(); // remove the match index
                 color = color.map(colorPart => parseInt(colorPart) / 255); // make the color parts to be integers in the range 0 to 1
@@ -290,7 +322,7 @@ Module.prototype = {
         if(this.panelWidget)
             this.panelWidget.onSettingsChanged();
         if(this.graphMenuItem)
-            this.graphMenuItem.onSettingsChanged(this.getSetting(""));
+            this.graphMenuItem.onSettingsChanged(this.settings.enabled);
     }
 };
 
@@ -304,7 +336,6 @@ BaseDataProvider.prototype = {
         this.settings = module.settings;
     },
 
-    getSetting: ModulePartPrototype.getSetting,
     format: ModulePartPrototype.format,
     formatPercent: ModulePartPrototype.formatPercent,
     formatThermal: ModulePartPrototype.formatThermal,
@@ -371,7 +402,7 @@ BaseDataProvider.prototype = {
     },
 
     checkWarning: function(value, body, index){
-        if(value >= this.getSetting("WarningValue")){
+        if(value >= this.settings.warningValue){
             var notify = false;
             if(index !== undefined)
                 notify = --this.notifications[index] === 0;
@@ -379,14 +410,14 @@ BaseDataProvider.prototype = {
                 notify = --this.notifications === 0;
 
             if(notify){
-                let value = this.format(this.notificationFormat, this.getSetting("WarningValue"));
-                this.notify(_("Warning"), body.format(value, this.getSetting("WarningTime") * this.settings.interval / 1000));
+                let value = this.format(this.notificationFormat, this.settings.warningValue);
+                this.notify(_("Warning"), body.format(value, this.settings.warningTime * this.settings.interval / 1000));
             }
         } else {
             if(index !== undefined)
-                this.notifications[index] = this.getSetting("WarningTime");
+                this.notifications[index] = this.settings.warningTime;
             else
-                this.notifications = this.getSetting("WarningTime");
+                this.notifications = this.settings.warningTime;
         }
     },
 
@@ -447,7 +478,7 @@ SensorDataProvider.prototype = {
     },
 
     getData: function(result){
-        let mode = this.getSetting("Mode");
+        let mode = this.settings.mode;
 
         let value = null;
         for(let i = 0, l = this.sensors.length; i < l; ++i){
@@ -538,8 +569,8 @@ BaseMenuItem.prototype = {
     },
 
     onSettingsChanged: function(){
-        this.actor.visible = this.getSetting("");
-        this.tooltipBox.visible = this.getSetting("");
+        this.actor.visible = this.settings.enabled;
+        this.tooltipBox.visible = this.settings.enabled;
     }
 };
 
@@ -665,8 +696,8 @@ PanelWidget.prototype = {
     },
 
     update: function(){
-        if(this.getSetting("PanelLabel") && this.label){
-            let text = this.getSetting("PanelLabel").replace(/[%$](\w+(?:\(\d+\))?)(?:\.(\w+))?(?:#(\w+))?/g, bind(this.panelLabelReplace, this));
+        if(this.settings.panelLabel && this.label){
+            let text = this.settings.panelLabel.replace(/[%$](\w+(?:\(\d+\))?)(?:\.(\w+))?(?:#(\w+))?/g, bind(this.panelLabelReplace, this));
             this.label.set_text(text);
             this.label.margin_left = text.length? 6 : 0;
         }
@@ -724,15 +755,15 @@ PanelWidget.prototype = {
     },
 
     draw: function(){
-        let graph = this.getSetting("PanelGraph");
+        let graph = this.settings.panelGraph;
 
         if(graph === -1)
             return;
 
         graph = this.graphs[graph];
 
-        if(this.getSetting("PanelMode") !== undefined)
-            graph.mode = this.getSetting("PanelMode");
+        if(this.settings.panelMode !== undefined)
+            graph.mode = this.settings.panelMode;
 
         graph.draw();
         graph.ctx.$dispose();
@@ -747,14 +778,14 @@ PanelWidget.prototype = {
         let showBox = false;
 
         if(this.label){
-            let show = this.getSetting("") && this.getSetting("PanelLabel") !== "";
+            let show = this.settings.enabled && this.settings.panelLabel !== "";
             this.label.visible = show;
             showBox = show;
         }
 
         if(this.canvas){
-            this.canvas.width = this.getSetting("PanelWidth");
-            let show = this.getSetting("") && this.getSetting("PanelGraph") !== -1;
+            this.canvas.width = this.settings.panelWidth;
+            let show = this.settings.enabled && this.settings.panelGraph !== -1;
             this.canvas.visible = show;
             this.canvas.margin_left = show? 6 : 0;
 

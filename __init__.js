@@ -22,3 +22,9 @@ function bind(func, context){
 
     return callback;
 }
+
+function dashToCamelCase(string){
+    return string.replace(/-(.)/g, function(match, char){
+        return char.toUpperCase();
+    });
+}

@@ -15,6 +15,7 @@ const Mainloop = imports.mainloop;
 
 const _ = imports.applet._;
 const bind = imports.applet.bind;
+const dashToCamelCase = imports.applet.dashToCamelCase;
 
 const uuid = imports.applet.uuid;
 const iconName = imports.applet.iconName;
@@ -69,6 +70,27 @@ SystemMonitorTooltip.prototype = {
     }
 };
 
+function SettingsProvider(){
+    this.init.apply(this, arguments);
+}
+
+SettingsProvider.prototype = {
+    __proto__: Settings.AppletSettings.prototype,
+
+    init: function(bindObject, instanceId){
+        Settings.AppletSettings.prototype._init.call(this, bindObject, uuid, instanceId);
+    },
+
+    bindProperty: function(key, callback, bindingDirection = Settings.BindingDirection.IN){
+        let keyCamelCase = dashToCamelCase(key);
+
+        Settings.AppletSettings.prototype.bindProperty.call(this, bindingDirection, key, keyCamelCase, callback);
+    },
+
+    bindProperties: function(keys, callback){
+        keys.forEach(key => this.bindProperty(key, callback));
+    }
+};
 
 function SystemMonitorApplet(){
     this.init.apply(this, arguments);
@@ -89,23 +111,14 @@ SystemMonitorApplet.prototype = {
         this.modules = {};
 
         this.settings = {};
-        this.settingProvider = new Settings.AppletSettings(this.settings, uuid, instanceId);
-        this.settingProvider.bindProperties = function(keys, onSettingsChanged){
-            keys.forEach(function(keyDash){
-                let keyCamelCase = keyDash.replace(/-(.)/g, function(match, char){
-                    return char.toUpperCase();
-                });
-
-                this.bindProperty(Settings.BindingDirection.IN, keyDash, keyCamelCase, onSettingsChanged);
-            }, this);
-        };
+        this.settingProvider = new SettingsProvider(this.settings, instanceId);
 
         // applet settings keys
         this.settingProvider.bindProperties([
             "show-icon", "interval", "byte-unit", "rate-unit", "thermal-unit", "order",
             "graph-size", "graph-steps", "graph-overview", "graph-connection"
         ], bind(this.onSettingsChanged, this));
-        this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, "graph-type", "graphType", bind(this.onGraphTypeChanged, this));
+        this.settingProvider.bindProperty("graph-type", bind(this.onGraphTypeChanged, this), Settings.BindingDirection.BIDIRECTIONAL);
 
         // a little wrapper object to access values
         this.container = {
@@ -152,36 +165,28 @@ SystemMonitorApplet.prototype = {
         let index = 1;
         for(let module in ModuleImports){
             // create the module
-            this.modules[module] = new Modules.Module(ModuleImports[module], this.container, sensorLines);
+            this.modules[module] = new Modules.Module(ModuleImports[module], this.container, sensorLines, instanceId);
             module = this.modules[module];
 
-            if(!module.unavailable){
-                // add data displaying widgets
-                this.menu.addMenuItem(module.menuItem);
-                this._applet_tooltip.addActor(module.tooltip);
+            if(module.unavailable)
+                continue;
 
-                // build the menu graph and graph menu item
-                let graph = module.buildMenuGraph(this, index);
+            // add data displaying widgets
+            this.menu.addMenuItem(module.menuItem);
+            this._applet_tooltip.addActor(module.tooltip);
 
-                if(graph){
-                    this.graphs.push(graph);
-                    this.graphMenuItems.push(module.graphMenuItem);
-                    this.graphSubMenu.menu.addMenuItem(module.graphMenuItem);
-                    index++;
-                }
-            }
+            // build the menu graph and graph menu item
+            let graph = module.buildMenuGraph(this, index);
 
-            // apply the module setting keys
-            if(module.settingKeys){
-                this.settingProvider.bindProperty(Settings.BindingDirection.BIDIRECTIONAL, module.name, module.name, bind(module.onSettingsChanged, module));
-                this.settingProvider.bindProperties(module.settingKeys, bind(module.onSettingsChanged, module));
-                module.onSettingsChanged();
+            if(graph){
+                this.graphs.push(graph);
+                this.graphMenuItems.push(module.graphMenuItem);
+                this.graphSubMenu.menu.addMenuItem(module.graphMenuItem);
+                index++;
             }
 
             if(module.panelWidget)
                 this.actor.add(module.panelWidget.box);
-
-            module.modules = this.modules;
         }
 
         // after all modules are ready, create the overview graphs
@@ -212,7 +217,7 @@ SystemMonitorApplet.prototype = {
 
     getDataLoop: function(){
         // if a sensor module is active, first request the results of the sensor output
-        if(this.settings.thermal || this.settings.fan)
+        if(this.modules.thermal.settings.enabled || this.modules.fan.settings.enabled)
             Terminal.call(this.sensorPath, bind(this.getData, this));
         // if none is active, skip the request
         else
@@ -234,7 +239,7 @@ SystemMonitorApplet.prototype = {
         // generate data
         for(let module in this.modules){
             // skip disabled modules
-            if(!this.modules[module].getSetting(""))
+            if(!this.modules[module].settings.enabled)
                 continue;
 
             let dataProvider = this.modules[module].dataProvider;

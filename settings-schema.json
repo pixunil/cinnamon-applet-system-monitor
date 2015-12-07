@@ -121,7 +121,7 @@
     "loadAvg-section": {
         "type": "separator"
     },
-    "loadAvg": {
+    "loadAvg-enabled": {
         "type": "checkbox",
         "default": true,
         "description": "Load averages"
@@ -136,7 +136,7 @@
     "cpu-section": {
         "type": "separator"
     },
-    "cpu": {
+    "cpu-enabled": {
         "type": "checkbox",
         "default": true,
         "description": "CPU"
@@ -258,7 +258,7 @@
     "mem-section": {
         "type": "separator"
     },
-    "mem": {
+    "mem-enabled": {
         "type": "checkbox",
         "default": true,
         "description": "Memory and Swap"
@@ -328,7 +328,7 @@
     "disk-section": {
         "type": "separator"
     },
-    "disk": {
+    "disk-enabled": {
         "type": "checkbox",
         "default": true,
         "description": "Disk"
@@ -388,7 +388,7 @@
     "network-section": {
         "type": "separator"
     },
-    "network": {
+    "network-enabled": {
         "type": "checkbox",
         "default": true,
         "description": "Network"
@@ -448,7 +448,7 @@
     "thermal-section": {
         "type": "separator"
     },
-    "thermal": {
+    "thermal-enabled": {
         "type": "checkbox",
         "default": true,
         "description": "Thermal"
@@ -537,7 +537,7 @@
         "indent": true,
         "dependency": "thermal-warning"
     },
-    "fan": {
+    "fan-enabled": {
         "type": "checkbox",
         "default": true,
         "description": "Fan"
