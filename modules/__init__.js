@@ -241,14 +241,17 @@ Module.prototype = {
         this.import = imports;
         this.display = imports.display;
 
-        // the swap module shares its settings with memory, for this reason only a simple reference is needed
-        if(imports.settingsName)
+        if(imports.settingsName){
+            // the swap module shares its settings with memory, for this reason only a simple reference is needed
             this.settings = container.modules[imports.settingsName].settings;
-        // for all other modules an own settings object and provider is created
-        else {
+            // as changed values will only be reported to the owning module, connect to them
+            let settingsProvider = container.modules[imports.settingsName].settingsProvider;
+            settingsProvider.connect("settings-changed", bind(this.onSettingsChanged, this));
+        } else {
             if(imports.colorSettingKeys)
                 this.colorSettingKeys = imports.colorSettingKeys;
 
+            // for all other modules an own settings object and provider is created
             this.settingsProvider = new ModuleSettings(this, container.settings, instanceId);
         }
 
@@ -298,7 +301,7 @@ Module.prototype = {
     },
 
     onSettingsChanged: function(){
-        if(this.dataProvider.unavailable)
+        if(this.dataProvider.unavailable && this.settings.enabled)
             this.settings.enabled = false;
 
         this.color = {};
@@ -323,6 +326,11 @@ Module.prototype = {
             this.panelWidget.onSettingsChanged();
         if(this.graphMenuItem)
             this.graphMenuItem.onSettingsChanged(this.settings.enabled);
+    },
+
+    finalize: function(){
+        if(this.settingsProvider)
+            this.settingsProvider.finalize();
     }
 };
 
@@ -434,7 +442,7 @@ BaseDataProvider.prototype = {
 };
 
 function SensorDataProvider(){
-    throw new TypeError("Trying to instantiate abstract class [" + uuid + "] modules.BaseMenuItem");
+    throw new TypeError("Trying to instantiate abstract class [" + uuid + "] modules.SensorDataProvider");
 }
 
 SensorDataProvider.prototype = {

@@ -303,6 +303,9 @@ SystemMonitorApplet.prototype = {
         Mainloop.source_remove(this.timeout);
         this.paintTimeline.run_dispose();
         this.settingProvider.finalize();
+
+        for(let module in this.modules)
+            this.modules[module].finalize();
     },
 
     onSettingsChanged: function(){
@@ -326,6 +329,13 @@ SystemMonitorApplet.prototype = {
 
         if(show){
             let graphMenuItem = this.graphMenuItems[this.settings.graphType];
+
+            // if the graph type is invalid (like setting it from settings, but the module is disabled), set it to "Overview"
+            if(!graphMenuItem || !graphMenuItem.actor.visible){
+                this.settings.graphType = 0;
+                return;
+            }
+
             this.graphSubMenu.label.text = graphMenuItem.display;
             graphMenuItem.setShowDot(true);
             // redraw the graph independent on the graph draw timeline
