@@ -75,7 +75,8 @@
             "Memory and Swap History": 2,
             "Disk History": 3,
             "Network History": 4,
-            "Thermal History": 5
+            "Thermal History": 5,
+            "Fan History": 6
         },
         "description": "Type of graph",
         "tooltip": "The graph shown in the menu"
@@ -290,7 +291,7 @@
         "default": "",
         "description": "Label in the panel",
         "dependency": "mem",
-        "tooltip": "Common placeholders: \n %mem.usedup#size \t memory usage in bytes \n %mem.usedup \t memory usage in percent \n %swap#size \t swap usage in bytes \n %swap \t swap usage in bytes"
+        "tooltip": "Common placeholders: \n %mem#size \t memory usage in bytes \n %mem \t memory usage in percent \n %swap#size \t swap usage in bytes \n %swap \t swap usage in bytes"
     },
     "mem-panel-graph": {
         "type": "combobox",

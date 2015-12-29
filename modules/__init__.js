@@ -79,9 +79,9 @@ const ModulePartPrototype = {
         // use unicode arrow up and arrow down for indication of the direction of stream
         let arrow;
         if(dir)
-            arrow = "\u25B2";
+            arrow = "▲";
         else
-            arrow = "\u25BC";
+            arrow = "▼";
 
         return value.toFixed(1) + " " + unit + " " + arrow;
     },
@@ -127,9 +127,9 @@ const ModulePartPrototype = {
         let unit;
         // use unicode to represent the unit, it combines both degree symbol and character
         if(this.settings.thermalUnit === "celsius")
-            unit = "\u2103";
+            unit = "℃";
         else
-            unit = "\u2109";
+            unit = "℉";
 
         return number.toFixed(1) + unit;
     },
@@ -309,9 +309,12 @@ Module.prototype = {
         if(this.colorSettingKeys){
             this.colorSettingKeys.forEach(function(key){
                 let color = this.settings["color" + key[0].toUpperCase() + key.substr(1)];
-                color = color.match(/(\d+).+?(\d+).+?(\d+)/); // get the values of red, green and blue
-                color.shift(); // remove the match index
-                color = color.map(colorPart => parseInt(colorPart) / 255); // make the color parts to be integers in the range 0 to 1
+                // get the values of red, green and blue
+                color = color.match(/(\d+).+?(\d+).+?(\d+)/);
+                // remove the match index
+                color.shift();
+                // make the color parts to be integers in the range 0 to 1
+                color = color.map(colorPart => parseInt(colorPart) / 255);
 
                 this.color[key] = color;
             }, this);

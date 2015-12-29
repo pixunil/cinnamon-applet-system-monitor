@@ -171,7 +171,6 @@ Usage in percent.
 
 **sub**
 * `used` _Default_
-* `usedup`
 * `cached`
 * `buffer`
 * `total`
@@ -181,8 +180,8 @@ Usage in percent.
 * `size` - Usage in bytes
 
 ##### Examples
-`%memory.usedup`
-`%memory.usedup#size`
+`%memory#size`
+`%memory.cached`
 `%swap`
 
 #### Disk

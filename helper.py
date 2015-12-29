@@ -97,6 +97,7 @@ class Main:
 
         options = {
             "language":         "JavaScript",
+            "from-code":        "utf-8",
             "keyword":          "_",
             "output":           self.potname,
             "package-name":     self.md["uuid"],
