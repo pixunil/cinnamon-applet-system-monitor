@@ -141,7 +141,7 @@ function PanelLabel(){
 }
 
 PanelLabel.prototype = {
-    __proto__: Modules.ModulePartPrototype,
+    __proto__: Modules.PanelLabelPrototype,
 
     main: {
         write: /^(?:write|w)$/i,

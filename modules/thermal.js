@@ -84,7 +84,7 @@ function PanelLabel(){
 }
 
 PanelLabel.prototype = {
-    __proto__: Modules.ModulePartPrototype,
+    __proto__: Modules.PanelLabelPrototype,
 
     main: {
         value: /^(?:value|v|min|max|m|average|avg|a)$/i,

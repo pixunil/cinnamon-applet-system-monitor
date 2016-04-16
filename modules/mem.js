@@ -83,7 +83,7 @@ function PanelLabel(){
 }
 
 PanelLabel.prototype = {
-    __proto__: Modules.ModulePartPrototype,
+    __proto__: Modules.PanelLabelPrototype,
 
     main: {
         mem: /^(?:memory|mem|m)/i,

@@ -150,7 +150,7 @@ function PanelLabel(){
 }
 
 PanelLabel.prototype = {
-    __proto__: Modules.ModulePartPrototype,
+    __proto__: Modules.PanelLabelPrototype,
 
     main: {
         core: /^(?:core|c)(\d+)$/i,

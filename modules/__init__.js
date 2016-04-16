@@ -806,3 +806,75 @@ PanelWidget.prototype = {
         this.box.visible = showBox;
     }
 };
+
+const PanelLabelPrototype = {
+    __proto__: ModulePartPrototype,
+
+    addSpaces: function(number, spaces = 3){
+        // calculate written digits and remove those spaces
+        if(number > 0)
+            spaces -= Math.floor(Math.log(number) / Math.log(10)) + 1;
+
+        // use \u2007 as replacement for each digit
+        return " ".repeat(spaces);
+    },
+
+    formatNumber: function(number){
+        return this.addSpaces(number) + number.toFixed(2);
+    },
+
+    formatBytes: function(bytes){
+        let [value, unit] = this.determinatePrefix(bytes, this.settings.byteUnit === "binary");
+        // if no prefix was used, use two spaces as replacement (not ideal)
+        if(!unit)
+            unit = "  ";
+
+        // use a capital "B" for bytes
+        unit += "B";
+
+        return this.addSpaces(value, 4) + value.toFixed(1) + " " + unit;
+    },
+
+    formatRate: function(bytes, dir){
+        // the value must be multiplicated by eight when using bits, as it is in bytes per default
+        if(this.settings.rateUnit.endsWith("bit"))
+            bytes *= 8;
+
+        let [value, unit] = this.determinatePrefix(bytes, this.settings.rateUnit.startsWith("binary"));
+
+        // if no prefix was used, use two spaces as replacement (not ideal)
+        if(!unit)
+            unit = "  ";
+
+        // use a capital "B" for bytes, "bit" for bits
+        if(this.settings.rateUnit.endsWith("byte"))
+            unit += "B";
+        else
+            unit += "bit";
+        // lastly, this is a rate unit, so append per second
+        unit += "/s";
+
+        return this.addSpaces(value, 4) + value.toFixed(1) + " " + unit;
+    },
+
+    formatPercent: function(part, total = 1){
+        let percent = 100 * part / total;
+        return this.addSpaces(percent) + percent.toFixed(2) + "%";
+    },
+
+    formatThermal: function(celsius = 0){
+        let number = this.settings.thermalUnit? celsius : celsius * 1.8 + 32;
+        let unit;
+        // use unicode to represent the unit, it combines both degree symbol and character
+        if(this.settings.thermalUnit === "celsius")
+            unit = "℃";
+        else
+            unit = "℉";
+
+        return this.addSpaces(number) + number.toFixed(1) + unit;
+    },
+
+    formatRPM: function(number){
+        return this.addSpaces(number) + number.toFixed(0) + " RPM";
+    }
+};

@@ -52,7 +52,7 @@ function PanelLabel(){
 }
 
 PanelLabel.prototype = {
-    __proto__: Modules.ModulePartPrototype,
+    __proto__: Modules.PanelLabelPrototype,
 
     main: {
         load: /(?:load|l)([0-2])/i
