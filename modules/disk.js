@@ -149,11 +149,11 @@ PanelLabel.prototype = {
     },
 
     write: function(){
-        return this.formatRate(this.data.write);
+        return this.formatRate(this.data.write, true);
     },
 
     read: function(){
-        return this.formatRate(this.data.read);
+        return this.formatRate(this.data.read, false);
     }
 };
 
