@@ -5,9 +5,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: system-monitor@pixunil 3.9\n"
+"Project-Id-Version: system-monitor@pixunil 3.10\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-10-01 17:14+0200\n"
+"POT-Creation-Date: 2016-07-17 19:29+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,41 +16,67 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: \n"
 
-#: applet.js:80 applet.js:169
+#: applet.js:31
+msgid "Dependence missing"
+msgstr ""
+
+#: applet.js:31
+#, javascript-format
+msgid ""
+"Please install the GTop package\n"
+"\tUbuntu / Mint: gir1.2-gtop-2.0\n"
+"\tFedora: libgtop2-devel\n"
+"\tArch: libgtop\n"
+"to use the applet %s"
+msgstr ""
+
+#: applet.js:108 applet.js:202
 msgid "System Monitor"
 msgstr ""
 
-#: applet.js:117
-msgid "Graph"
-msgstr ""
-
 #. settings->graph-type->options
-#: applet.js:120
+#: applet.js:148
 msgid "Overview"
 msgstr ""
 
-#. settings->thermal->description
 #. settings->thermal-color-thermal->description
-#: modules/thermal.js:10
+#. settings->thermal-enabled->description
+#: modules/thermal.js:6
 msgid "Thermal"
 msgstr ""
 
-#: modules/thermal.js:109
+#: modules/thermal.js:45
 #, javascript-format
 msgid "Temperature was over %s for %fsec"
 msgstr ""
 
 #. settings->graph-type->options
-#: modules/thermal.js:183
+#: modules/thermal.js:119
 msgid "Thermal History"
 msgstr ""
 
-#. settings->loadAvg->description
+#. settings->loadAvg-enabled->description
 #: modules/loadAvg.js:5
 msgid "Load averages"
 msgstr ""
 
-#. settings->disk->description
+#. settings->fan-enabled->description
+#. settings->fan-color-fan->description
+#: modules/fan.js:6
+msgid "Fan"
+msgstr ""
+
+#: modules/fan.js:34
+#, javascript-format
+msgid "Fan rotation was over %s for %fsec"
+msgstr ""
+
+#. settings->graph-type->options
+#: modules/fan.js:105
+msgid "Fan History"
+msgstr ""
+
+#. settings->disk-enabled->description
 #: modules/disk.js:11
 msgid "Disk"
 msgstr ""
@@ -60,7 +86,7 @@ msgstr ""
 msgid "Disk History"
 msgstr ""
 
-#. settings->network->description
+#. settings->network-enabled->description
 #: modules/network.js:8
 msgid "Network"
 msgstr ""
@@ -79,24 +105,20 @@ msgstr ""
 msgid "Memory"
 msgstr ""
 
-#: modules/mem.js:65
-msgid "used"
-msgstr ""
-
-#: modules/mem.js:66
+#: modules/mem.js:63
 msgid "cached"
 msgstr ""
 
-#: modules/mem.js:67
+#: modules/mem.js:64
 msgid "buffered"
 msgstr ""
 
 #. settings->graph-type->options
-#: modules/mem.js:154
+#: modules/mem.js:149
 msgid "Memory and Swap History"
 msgstr ""
 
-#. settings->cpu->description
+#. settings->cpu-enabled->description
 #: modules/cpu.js:6
 msgid "CPU"
 msgstr ""
@@ -124,28 +146,15 @@ msgstr ""
 msgid "CPU History"
 msgstr ""
 
-#: modules/__init__.js:24
-msgid "Dependence missing"
-msgstr ""
-
-#: modules/__init__.js:24
-#, javascript-format
-msgid ""
-"Please install the GTop package\n"
-"\tUbuntu / Mint: gir1.2-gtop-2.0\n"
-"\tFedora: libgtop2-devel\n"
-"\tArch: libgtop\n"
-"to use the applet %s"
-msgstr ""
-
 #. settings->thermal-warning->description
+#. settings->fan-warning->description
 #. settings->cpu-warning->description
-#: modules/__init__.js:354
+#: modules/__init__.js:425
 msgid "Warning"
 msgstr ""
 
 #. settings->mem-color-swap->description
-#: modules/swap.js:7
+#: modules/swap.js:6
 msgid "Swap"
 msgstr ""
 
@@ -168,7 +177,7 @@ msgid "only Memory"
 msgstr ""
 
 #. settings->mem-panel-mode->options
-#. settings->mem->description
+#. settings->mem-enabled->description
 msgid "Memory and Swap"
 msgstr ""
 
@@ -203,17 +212,19 @@ msgstr ""
 #. settings->thermal-panel-width->description
 #. settings->disk-panel-width->description
 #. settings->mem-panel-width->description
-#. settings->network-panel-width->description
 #. settings->cpu-panel-width->description
+#. settings->network-panel-width->description
+#. settings->fan-panel-width->description
 msgid "Width of graph"
 msgstr ""
 
 #. settings->thermal-panel-width->units
 #. settings->disk-panel-width->units
 #. settings->mem-panel-width->units
+#. settings->cpu-panel-width->units
 #. settings->graph-size->units
 #. settings->network-panel-width->units
-#. settings->cpu-panel-width->units
+#. settings->fan-panel-width->units
 msgid "px"
 msgstr ""
 
@@ -228,35 +239,39 @@ msgstr ""
 #. settings->network-appearance->options
 #. settings->thermal-appearance->options
 #. settings->graph-connection->options
-#. settings->disk-appearance->options
 #. settings->cpu-appearance->options
+#. settings->fan-appearance->options
+#. settings->disk-appearance->options
 #. settings->mem-appearance->options
 msgid "Line"
 msgstr ""
 
 #. settings->network-appearance->options
-#. settings->disk-appearance->options
+#. settings->thermal-panel-graph->options
+#. settings->cpu-appearance->options
 #. settings->cpu-panel-graph->options
 #. settings->mem-panel-graph->options
 #. settings->network-panel-graph->options
-#. settings->thermal-panel-graph->options
-#. settings->cpu-appearance->options
+#. settings->fan-panel-graph->options
+#. settings->disk-appearance->options
 #. settings->disk-panel-graph->options
 msgid "Bar"
 msgstr ""
 
 #. settings->network-appearance->options
 #. settings->thermal-appearance->options
-#. settings->disk-appearance->options
 #. settings->cpu-appearance->options
+#. settings->fan-appearance->options
+#. settings->disk-appearance->options
 #. settings->mem-appearance->options
 msgid "Area"
 msgstr ""
 
 #. settings->network-appearance->description
 #. settings->thermal-appearance->description
-#. settings->disk-appearance->description
 #. settings->cpu-appearance->description
+#. settings->fan-appearance->description
+#. settings->disk-appearance->description
 #. settings->mem-appearance->description
 msgid "Appearance of history graphs"
 msgstr ""
@@ -273,25 +288,33 @@ msgstr ""
 msgid "Connection type for History graphs"
 msgstr ""
 
-#. settings->disk-color-read->description
-msgid "Read"
-msgstr ""
-
 #. settings->thermal-warning-value->description
 msgid "Trigger temperature"
 msgstr ""
 
-#. settings->show-icon->description
-msgid "Show icon"
+#. settings->disk-color-read->description
+msgid "Read"
 msgstr ""
 
-#. settings->loadAvg-panel-label->description
-#. settings->disk-panel-label->description
-#. settings->thermal-panel-label->description
-#. settings->cpu-panel-label->description
 #. settings->network-panel-label->description
+#. settings->loadAvg-panel-label->description
+#. settings->thermal-panel-label->description
+#. settings->fan-panel-label->description
+#. settings->cpu-panel-label->description
+#. settings->disk-panel-label->description
 #. settings->mem-panel-label->description
 msgid "Label in the panel"
+msgstr ""
+
+#. settings->network-panel-label->tooltip
+msgid ""
+"Common placeholders: \n"
+" %up \t up usage \n"
+" %down \t down usage"
+msgstr ""
+
+#. settings->show-icon->description
+msgid "Show icon"
 msgstr ""
 
 #. settings->loadAvg-panel-label->tooltip
@@ -302,21 +325,64 @@ msgid ""
 " %load2 \t load average for the last 15 minutes"
 msgstr ""
 
+#. settings->thermal-warning-time->description
+#. settings->cpu-warning-time->description
+#. settings->fan-warning-time->description
+msgid "Time"
+msgstr ""
+
+#. settings->thermal-warning-time->units
+#. settings->cpu-warning-time->units
+#. settings->fan-warning-time->units
+msgid "intervals"
+msgstr ""
+
 #. settings->thermal-mode->options
+#. settings->fan-mode->options
 #. settings->cpu-warning-mode->options
 msgid "Average"
 msgstr ""
 
 #. settings->thermal-mode->options
+#. settings->fan-mode->options
 msgid "Minimum"
 msgstr ""
 
 #. settings->thermal-mode->options
+#. settings->fan-mode->options
 msgid "Maximum"
 msgstr ""
 
 #. settings->thermal-mode->description
-msgid "Thermal mode"
+msgid "General temperature"
+msgstr ""
+
+#. settings->thermal-panel-graph->options
+#. settings->cpu-panel-graph->options
+#. settings->mem-panel-graph->options
+#. settings->graph-type->options
+#. settings->network-panel-graph->options
+#. settings->fan-panel-graph->options
+#. settings->disk-panel-graph->options
+msgid "None"
+msgstr ""
+
+#. settings->thermal-panel-graph->options
+#. settings->cpu-panel-graph->options
+#. settings->mem-panel-graph->options
+#. settings->network-panel-graph->options
+#. settings->fan-panel-graph->options
+#. settings->disk-panel-graph->options
+msgid "History"
+msgstr ""
+
+#. settings->thermal-panel-graph->description
+#. settings->cpu-panel-graph->description
+#. settings->mem-panel-graph->description
+#. settings->network-panel-graph->description
+#. settings->fan-panel-graph->description
+#. settings->disk-panel-graph->description
+msgid "Graph in the panel"
 msgstr ""
 
 #. settings->cpu-color-core3->description
@@ -331,55 +397,12 @@ msgstr ""
 msgid "CPU1"
 msgstr ""
 
-#. settings->order->options
-msgid "Write - Read / Up - Down"
-msgstr ""
-
-#. settings->order->options
-msgid "Read - Write / Down - Up"
-msgstr ""
-
-#. settings->order->description
-msgid "Order of Disk and Network items"
+#. settings->cpu-appearance->options
+msgid "Stack"
 msgstr ""
 
 #. settings->cpu-color-core4->description
 msgid "CPU4"
-msgstr ""
-
-#. settings->cpu-panel-graph->options
-#. settings->mem-panel-graph->options
-#. settings->graph-type->options
-#. settings->network-panel-graph->options
-#. settings->thermal-panel-graph->options
-#. settings->disk-panel-graph->options
-msgid "None"
-msgstr ""
-
-#. settings->cpu-panel-graph->options
-#. settings->mem-panel-graph->options
-#. settings->network-panel-graph->options
-#. settings->thermal-panel-graph->options
-#. settings->disk-panel-graph->options
-msgid "History"
-msgstr ""
-
-#. settings->cpu-panel-graph->description
-#. settings->mem-panel-graph->description
-#. settings->network-panel-graph->description
-#. settings->thermal-panel-graph->description
-#. settings->disk-panel-graph->description
-msgid "Graph in the panel"
-msgstr ""
-
-#. settings->cpu-warning-time->description
-#. settings->thermal-warning-time->description
-msgid "Time"
-msgstr ""
-
-#. settings->cpu-warning-time->units
-#. settings->thermal-warning-time->units
-msgid "intervals"
 msgstr ""
 
 #. settings->cpu-split->options
@@ -426,22 +449,22 @@ msgstr ""
 msgid "Rates unit"
 msgstr ""
 
-#. settings->disk-panel-label->tooltip
-msgid ""
-"Common placeholders: \n"
-" %write \t write usage \n"
-" %read \t read usage"
-msgstr ""
-
 #. settings->thermal-panel-label->tooltip
 msgid ""
 "Common placeholders: \n"
-" %value \t thermal value (specified in \"Thermal Mode\") \n"
-" %sensor(digit) \t sensor temperature"
+" %value \t general temperature \n"
+" %sensor(digit) \t specific temperature of one sensor"
 msgstr ""
 
 #. settings->graph-size->description
 msgid "Height of graph"
+msgstr ""
+
+#. settings->fan-panel-label->tooltip
+msgid ""
+"Common placeholders: \n"
+" %value \t general fan value \n"
+" %sensor(digit) \t specific rotations of one fan"
 msgstr ""
 
 #. settings->cpu-panel-label->tooltip
@@ -451,15 +474,11 @@ msgid ""
 " %avg \t average usage"
 msgstr ""
 
-#. settings->network-panel-label->tooltip
+#. settings->disk-panel-label->tooltip
 msgid ""
 "Common placeholders: \n"
-" %up \t up usage \n"
-" %down \t down usage"
-msgstr ""
-
-#. settings->cpu-appearance->options
-msgid "Stack"
+" %write \t write usage \n"
+" %read \t read usage"
 msgstr ""
 
 #. settings->byte-unit->options
@@ -478,13 +497,25 @@ msgstr ""
 msgid "Bytes unit"
 msgstr ""
 
+#. settings->fan-mode->description
+msgid "General fan value"
+msgstr ""
+
 #. settings->mem-panel-label->tooltip
 msgid ""
 "Common placeholders: \n"
-" %mem.usedup#size \t memory usage in bytes \n"
-" %mem.usedup \t memory usage in percent \n"
+" %mem#size \t memory usage in bytes \n"
+" %mem \t memory usage in percent \n"
 " %swap#size \t swap usage in bytes \n"
-" %swap \t swap usage in bytes"
+" %swap \t swap usage in percent"
+msgstr ""
+
+#. settings->fan-warning-value->description
+msgid "Trigger rotations"
+msgstr ""
+
+#. settings->fan-warning-value->units
+msgid "RPM"
 msgstr ""
 
 #. settings->network-color-up->description
@@ -521,6 +552,18 @@ msgstr ""
 
 #. settings->network-color-down->description
 msgid "Down"
+msgstr ""
+
+#. settings->order->options
+msgid "Write - Read / Up - Down"
+msgstr ""
+
+#. settings->order->options
+msgid "Read - Write / Down - Up"
+msgstr ""
+
+#. settings->order->description
+msgid "Order of Disk and Network items"
 msgstr ""
 
 #. settings->cpu-warning-mode->description

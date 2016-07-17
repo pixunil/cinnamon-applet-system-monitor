@@ -291,7 +291,7 @@
         "default": "",
         "description": "Label in the panel",
         "dependency": "mem",
-        "tooltip": "Common placeholders: \n %mem#size \t memory usage in bytes \n %mem \t memory usage in percent \n %swap#size \t swap usage in bytes \n %swap \t swap usage in bytes"
+        "tooltip": "Common placeholders: \n %mem#size \t memory usage in bytes \n %mem \t memory usage in percent \n %swap#size \t swap usage in bytes \n %swap \t swap usage in percent"
     },
     "mem-panel-graph": {
         "type": "combobox",
@@ -468,7 +468,7 @@
             "Average": "avg",
             "Maximum": "max"
         },
-        "description": "Thermal mode",
+        "description": "General temperature",
         "dependency": "thermal"
     },
     "thermal-appearance": {
@@ -486,7 +486,7 @@
         "default": "",
         "description": "Label in the panel",
         "dependency": "thermal",
-        "tooltip": "Common placeholders: \n %value \t thermal value (specified in \"Thermal Mode\") \n %sensor(digit) \t sensor temperature"
+        "tooltip": "Common placeholders: \n %value \t general temperature \n %sensor(digit) \t specific temperature of one sensor"
     },
     "thermal-panel-graph": {
         "type": "combobox",
@@ -557,7 +557,7 @@
             "Average": "avg",
             "Maximum": "max"
         },
-        "description": "Fan mode",
+        "description": "General fan value",
         "dependency": "fan"
     },
     "fan-appearance": {
@@ -575,7 +575,7 @@
         "default": "",
         "description": "Label in the panel",
         "dependency": "fan",
-        "tooltip": "Common placeholders: \n %value \t fan value (specified in \"Fan Mode\") \n %sensor(digit) \t sensor rotations"
+        "tooltip": "Common placeholders: \n %value \t general fan value \n %sensor(digit) \t specific rotations of one fan"
     },
     "fan-panel-graph": {
         "type": "combobox",
