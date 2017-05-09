@@ -123,7 +123,12 @@ const ModulePartPrototype = {
     },
 
     formatThermal: function(celsius = 0){
-        let number = this.settings.thermalUnit? celsius : celsius * 1.8 + 32;
+        let number = celsius;
+
+        // convert value respecting the unit if needed
+        if(this.settings.thermalUnit === "fahrenheit")
+            number = celsius * 1.8 + 32;
+
         let unit;
         // use unicode to represent the unit, it combines both degree symbol and character
         if(this.settings.thermalUnit === "celsius")
