@@ -117,14 +117,14 @@ PanelLabel.prototype = {
 
     up: function(format){
         if(format === "rate")
-            return this.formatRate(this.data.up);
+            return this.formatRate(this.data.up, true);
 
         return this.formatBytes(this.raw.up);
     },
 
     down: function(format){
         if(format === "rate")
-            return this.formatRate(this.data.down);
+            return this.formatRate(this.data.down, false);
 
         return this.formatBytes(this.raw.down);
     }
