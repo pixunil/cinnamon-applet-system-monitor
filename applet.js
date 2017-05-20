@@ -36,7 +36,7 @@ try {
 }
 
 const ModuleImports = {
-    loadAvg: imports.applet.modules.loadAvg,
+    loadavg: imports.applet.modules.loadavg,
     cpu: imports.applet.modules.cpu,
     mem: imports.applet.modules.mem,
     swap: imports.applet.modules.swap,

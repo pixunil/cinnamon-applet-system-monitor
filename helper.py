@@ -166,7 +166,7 @@ class Main:
 
     def extract_strings(self, data, parent):
         for key in data:
-            if key in ("description", "tooltip", "units"):
+            if key in ("description", "tooltip", "units", "title") and isinstance(data[key], str):
                 comment = "settings->%s->%s" % (parent, key)
                 self.save_entry(data[key], comment)
             elif key in "options":
@@ -174,12 +174,10 @@ class Main:
                     comment = "settings->%s->%s" % (parent, key)
                     self.save_entry(option, comment)
 
-    def save_entry(self, msgid, comment):
-        try:
-            msgid = msgid.encode("ascii")
-        except UnicodeEncodeError:
-            return
+            if isinstance(data[key], dict):
+                self.extract_strings(data[key], key)
 
+    def save_entry(self, msgid, comment):
         if not msgid.strip():
             return
 

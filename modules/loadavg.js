@@ -1,7 +1,7 @@
 const _ = imports.applet._;
 const Modules = imports.applet.modules;
 
-const name = "loadAvg";
+const name = "loadavg";
 const display = _("Load averages");
 
 function DataProvider(){
