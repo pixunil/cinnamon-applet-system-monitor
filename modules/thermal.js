@@ -48,8 +48,10 @@ DataProvider.prototype = {
     onSettingsChanged: function(){
         if(this.settings.thermalWarning){
             this.notifications = this.settings.thermalWarningTime;
-            if(!this.settings.thermalUnit)
-                this.settings.thermalWarningValue = (this.settings.thermalWarningValue - 32) * 5 / 9; // Fahrenheit => Celsius
+
+            // Fahrenheit => Celsius
+            if(this.settings.thermalUnit === "fahrenheit")
+                this.settings.thermalWarningValue = (this.settings.thermalWarningValue - 32) * 5 / 9;
         }
     }
 };

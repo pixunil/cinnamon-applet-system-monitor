@@ -868,13 +868,16 @@ const PanelLabelPrototype = {
     },
 
     formatThermal: function(celsius = 0){
-        let number = this.settings.thermalUnit? celsius : celsius * 1.8 + 32;
-        let unit;
+        let number, unit;
+
         // use unicode to represent the unit, it combines both degree symbol and character
-        if(this.settings.thermalUnit === "celsius")
+        if(this.settings.thermalUnit === "celsius"){
+            number = celsius;
             unit = "℃";
-        else
+        } else {
+            number = celsius * 1.8 + 32;
             unit = "℉";
+        }
 
         return this.addSpaces(number) + number.toFixed(1) + unit;
     },
