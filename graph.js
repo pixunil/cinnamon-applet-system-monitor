@@ -99,7 +99,7 @@ Overview.prototype = {
 
         if(this.modules.mem.settings.enabled){
             this.next("mem", "mem");
-            this.normal(this.mem.data.usedup / this.mem.data.total, false);
+            this.normal(this.mem.data.used / this.mem.data.total, false);
             this.setAlpha(.75);
             this.normal(this.mem.data.cached / this.mem.data.total, false);
             this.setAlpha(.5);
