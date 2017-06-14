@@ -22,6 +22,39 @@ const SettingsProvider = imports.applet.applet.SettingsProvider;
 const PREFIX = " KMGTEZY";
 
 let GTop = null;
+let UDisks = null;
+
+try {
+    GTop = imports.gi.GTop;
+} catch(e){}
+
+try {
+    UDisks = imports.gi.UDisks;
+} catch(e){}
+
+if(GTop === null){
+    // the gtop binding was not found
+    // as this is a fundamental part of the applet,
+    let message = _("Please install the GTop package\n" +
+        "\tUbuntu / Mint: gir1.2-gtop-2.0\n" +
+        "\tFedora: libgtop2-devel\n" +
+        "\tArch: libgtop\n" +
+        "to use the applet %s").format(uuid);
+
+    if(UDisks === null){
+        // the udisks binding was also not found
+        // the temperatures of the hard drives are not very important,
+        // but the user is already installing a package so the note is bundled
+        message += _("\n\nIf you want to show the temperatures of your disks," +
+            " you should consider to also install the UDisks package\n" +
+            "\tUbuntu / Mint: gir1.2-udisks-2.0\n" +
+            "\tFedora: udisks-devel\n" +
+            "\tArch: udisks2");
+    }
+
+    let icon = new St.Icon({icon_name: iconName, icon_type: St.IconType.FULLCOLOR, icon_size: 24});
+    Main.criticalNotify(_("Dependence missing"), message, icon);
+}
 
 const ModulePartPrototype = {
     init: function(module){

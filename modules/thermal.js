@@ -1,5 +1,3 @@
-const UDisks = imports.gi.UDisks;
-
 const _ = imports.applet._;
 const Graph = imports.applet.graph;
 const Modules = imports.applet.modules;
@@ -25,24 +23,29 @@ DataProvider.prototype = {
 
         Modules.SensorDataProvider.prototype.init.apply(this, arguments);
 
-        this.client = UDisks.Client.new_sync(null, null);
-        this.client.get_object_manager().get_objects().forEach(object => {
-            // check if object is a drive
-            if(!object.drive || !object.drive_ata)
-                return;
+        try {
+            this.client = Modules.UDisks.Client.new_sync(null, null);
+        } catch(e){}
 
-            // check if drive supports temperature
-            if(!object.drive_ata.smart_enabled || !object.drive_ata.smart_temperature)
-                return;
+        if(this.client){
+            this.client.get_object_manager().get_objects().forEach(object => {
+                // check if object is a drive
+                if(!object.drive || !object.drive_ata)
+                    return;
 
-            this.sensors.push({
-                type: "udisks",
-                proxy: object.drive_ata,
-                name: object.drive.id,
-                color: "disk"
+                // check if drive supports temperature
+                if(!object.drive_ata.smart_enabled || !object.drive_ata.smart_temperature)
+                    return;
+
+                this.sensors.push({
+                    type: "udisks",
+                    proxy: object.drive_ata,
+                    name: object.drive.id,
+                    color: "disk"
+                });
+                this.history.push([]);
             });
-            this.history.push([]);
-        });
+        }
 
         if(!this.sensors.length)
             this.unavailable = true;
@@ -166,7 +169,6 @@ HistoryGraph.prototype = {
             if(color.startsWith("core"))
                 color = this.modules.cpu.color[color];
 
-            global.log(color);
             this.next(color);
             this.line(this.history[i], i, l);
         }
