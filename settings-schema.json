@@ -93,7 +93,7 @@
         "thermal-section": {
             "type": "section",
             "title": "Thermal",
-            "keys": ["thermal-enabled", "thermal-color-thermal", "thermal-mode",
+            "keys": ["thermal-enabled", "thermal-color-thermal", "thermal-color-disk", "thermal-mode",
                 "thermal-appearance", "thermal-panel-label", "thermal-panel-graph",
                 "thermal-panel-width"]
         },
@@ -557,6 +557,12 @@
         "type": "colorchooser",
         "default": "rgba(238, 80, 29, 1)",
         "description": "Thermal",
+        "dependency": "thermal-enabled"
+    },
+    "thermal-color-disk": {
+        "type": "colorchooser",
+        "default": "rgba(179, 179, 45, 1)",
+        "description": "Disk",
         "dependency": "thermal-enabled"
     },
     "thermal-mode": {

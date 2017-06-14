@@ -1,3 +1,4 @@
+const GLib = imports.gi.GLib;
 const Pango = imports.gi.Pango;
 const St = imports.gi.St;
 
@@ -180,8 +181,8 @@ const ModulePartPrototype = {
         return this.module.dataProvider.dev;
     },
 
-    get colorRefs(){
-        return this.module.dataProvider.colorRefs;
+    get sensors(){
+        return this.module.dataProvider.sensors;
     }
 };
 
@@ -466,14 +467,7 @@ SensorDataProvider.prototype = {
         this.history = [[]];
 
         this.sensors = [];
-        this.sensorNames = [];
-
         let inAdapter = false;
-
-        if(!sensorLines){
-            this.unavailable = true;
-            return;
-        }
 
         for(let i = 0, l = sensorLines.length; i < l; ++i){
             let line = sensorLines[i];
@@ -488,21 +482,30 @@ SensorDataProvider.prototype = {
             if(inAdapter && line.match(this.dataMatcher))
                 this.parseSensorLine(line, i);
         }
-
-        if(!this.sensors.length)
-            this.unavailable = true;
     },
 
     getData: function(result){
         let mode = this.settings.mode;
 
         let value = null;
-        for(let i = 0, l = this.sensors.length; i < l; ++i){
-            // get the line containing the next sensor data value
-            let data = result[this.sensors[i]];
-            // get the number (first capture group)
-            data = parseFloat(data.match(this.dataMatcher)[1]);
-            this.saveData(i + 1, data);
+        this.sensors.forEach((sensor, index) => {
+            let data;
+
+            if(sensor.type === "sensors"){
+                // get the line containing the next sensor data value
+                data = result[sensor.line];
+                // get the number (first capture group)
+                data = parseFloat(data.match(this.dataMatcher)[1]);
+            } else if(sensor.type === "udisks"){
+                // queue a smart update
+                // (as the temperature changes seldom, it is okay to miss a second)
+                let variant = GLib.Variant.parse(null, "{'nowakeup': <true>}", null, null);
+                sensor.proxy.call_smart_update(variant, null, null, null);
+                // the temperature is given in Kelvin
+                data = sensor.proxy.smart_temperature - 273.15;
+            }
+
+            this.saveData(index + 1, data);
 
             if(mode === "min" && value > data || value === null)
                 value = data;
@@ -510,7 +513,7 @@ SensorDataProvider.prototype = {
                 value += data;
             else if(mode === "max" && value < data)
                 value = data;
-        }
+        });
 
         if(mode === "avg")
             value /= this.sensors.length;

@@ -1,3 +1,5 @@
+const UDisks = imports.gi.UDisks;
+
 const _ = imports.applet._;
 const Graph = imports.applet.graph;
 const Modules = imports.applet.modules;
@@ -5,7 +7,7 @@ const Modules = imports.applet.modules;
 const name = "thermal";
 const display = _("Thermal");
 const additionalSettingKeys = ["mode", "warning", "warning-time", "warning-value"];
-const colorSettingKeys = ["thermal"];
+const colorSettingKeys = ["thermal", "disk"];
 
 function DataProvider(){
     this.init.apply(this, arguments);
@@ -22,19 +24,44 @@ DataProvider.prototype = {
         this.colorRefs = [];
 
         Modules.SensorDataProvider.prototype.init.apply(this, arguments);
+
+        this.client = UDisks.Client.new_sync(null, null);
+        this.client.get_object_manager().get_objects().forEach(object => {
+            // check if object is a drive
+            if(!object.drive || !object.drive_ata)
+                return;
+
+            // check if drive supports temperature
+            if(!object.drive_ata.smart_enabled || !object.drive_ata.smart_temperature)
+                return;
+
+            this.sensors.push({
+                type: "udisks",
+                proxy: object.drive_ata,
+                name: object.drive.id,
+                color: "disk"
+            });
+            this.history.push([]);
+        });
+
+        if(!this.sensors.length)
+            this.unavailable = true;
     },
 
     parseSensorLine: function(line, lineNumber){
         let name = line.match(/[^:]+/)[0];
+        let color = "thermal";
         let coreMatch = name.match(/core\s*(\d)/i);
 
         if(coreMatch !== null)
-            this.colorRefs.push(parseInt(coreMatch[1]) % 4 + 1);
-        else
-            this.colorRefs.push(null);
+            color = "core" + (parseInt(coreMatch[1]) % 4 + 1);
 
-        this.sensors.push(lineNumber);
-        this.sensorNames.push(name);
+        this.sensors.push({
+            type: "sensors",
+            line: lineNumber,
+            name: name,
+            color: color
+        });
         this.history.push([]);
     },
 
@@ -69,10 +96,9 @@ MenuItem.prototype = {
     init: function(module){
         Modules.BaseSubMenuMenuItem.prototype.init.call(this, module);
 
-        for(let i = 0, l = module.dataProvider.sensorNames.length; i < l; ++i)
-            this.addRow(module.dataProvider.sensorNames[i]);
-
-        delete module.dataProvider.sensorNames;
+        module.dataProvider.sensors.forEach(sensor => {
+            this.addRow(sensor.name);
+        });
     },
 
     update: function(){
@@ -134,15 +160,14 @@ HistoryGraph.prototype = {
 
         // first draw the sensors
         for(let i = 1, l = this.history.length; i < l; ++i){
-            // if this sensor is labelled after a cpu core, use a cpu color
-            if(this.colorRefs[i])
-                this.next(this.modules.cpu.color["core" + this.colorRefs[i]]);
-            // otherwise the normal thermal color
-            else {
-                this.next("thermal");
-                this.setAlpha((l - i / 4) / l);
-            }
+            let color = this.sensors[i - 1].color;
 
+            // borrow the cpu colors from the cpu module
+            if(color.startsWith("core"))
+                color = this.modules.cpu.color[color];
+
+            global.log(color);
+            this.next(color);
             this.line(this.history[i], i, l);
         }
 

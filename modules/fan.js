@@ -18,12 +18,22 @@ DataProvider.prototype = {
 
     dataMatcher: /(\d+) RPM/,
 
+    init: function(){
+        Modules.SensorDataProvider.prototype.init.apply(this, arguments);
+
+        if(!this.sensors.length)
+            this.unavailable = true;
+    },
+
     parseSensorLine: function(line, lineNumber){
         // extract the name (the chars before the first colon), but remove "fan speed"
         let name = line.match(/^(.+?)(?:fan speed)?:/i)[1];
 
-        this.sensors.push(lineNumber);
-        this.sensorNames.push(name);
+        this.sensors.push({
+            type: "sensors",
+            line: lineNumber,
+            name: name
+        });
         this.history.push([]);
     },
 
@@ -53,10 +63,9 @@ MenuItem.prototype = {
     init: function(module){
         Modules.BaseSubMenuMenuItem.prototype.init.call(this, module);
 
-        for(let i = 0, l = module.dataProvider.sensorNames.length; i < l; ++i)
-            this.addRow(module.dataProvider.sensorNames[i]);
-
-        delete module.dataProvider.sensorNames;
+        module.dataProvider.sensors.forEach(sensor => {
+            this.addRow(sensor.name);
+        });
     },
 
     update: function(){
