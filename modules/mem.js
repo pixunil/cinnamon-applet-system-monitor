@@ -166,10 +166,10 @@ HistoryGraph.prototype = {
         this.begin(num, this.history.used.length, this.data.total);
 
         this.next("mem");
-        this.line(this.history.used);
+        this.line(this.history.used, true);
 
         this.setAlpha(.75);
-        this.line(this.history.cached);
+        this.line(this.history.cached, true);
 
         this.setAlpha(.5);
         this.line(this.history.buffer);

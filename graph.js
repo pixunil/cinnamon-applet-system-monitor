@@ -328,8 +328,8 @@ History.prototype = {
         this.module = module;
     },
 
-    _line: {
-        line: function(history){
+    lineTypes: {
+        line: function(history, increment){
             this.ctx.translate(this.dw * this.tx, this.h);
             this.ctx.scale(this.dw, -this.h / (this.max - this.min));
             this.ctx.translate(0, -this.min);
@@ -339,13 +339,14 @@ History.prototype = {
             this.ctx.identityMatrix();
             this.ctx.stroke();
 
-            this.incrementLast(history);
+            if(increment)
+                this.incrementLast(history);
         },
 
-        area: function(history){
+        area: function(history, increment){
             this.ctx.save();
             if(this.packDir === "vertical"){
-                this.ctx.translate(this.dw * this.tx, this.h - (this.h * this.section / this.numberSections));
+                this.ctx.translate(this.dw * this.tx, this.h * (this.section + 1) / this.numberSections);
                 this.ctx.scale(this.dw, -this.h / (this.max - this.min) / this.numberSections);
                 this.ctx.translate(0, -this.min);
             } else {
@@ -365,7 +366,8 @@ History.prototype = {
             this.ctx.fill();
             this.ctx.restore();
 
-            this.incrementLast(history);
+            if(increment)
+                this.incrementLast(history);
         },
 
         areaUpDown: function(history){
@@ -398,8 +400,6 @@ History.prototype = {
             this.ctx.lineTo(0, (this.last[0] || 0) + this.min);
             this.ctx.fill();
             this.ctx.restore();
-
-            this.incrementLast(history);
         },
 
         stack: function(history){
@@ -416,6 +416,7 @@ History.prototype = {
             this.ctx.fill();
             this.ctx.restore();
 
+            // always needs to increment
             this.incrementLast(history);
         },
 
@@ -435,7 +436,7 @@ History.prototype = {
         }
     },
 
-    _connection: {
+    connectionTypes: {
         line: function(history, i, back){
             for(var l = history.length; i < l; ++i)
                 this.ctx.lineTo(i, history[i] + (this.last[i] || 0));
@@ -495,17 +496,16 @@ History.prototype = {
         this.min = min || 0;
         this.max = max || 1;
 
-        this.line = this._line[this.settings.appearance];
-
+        this.line = this.lineTypes[this.settings.appearance];
         if(!this.line)
-            this.line = this._line.area;
+            this.line = this.lineTypes.area;
 
         if(this.settings.appearance === "line")
             this.ctx.setLineJoin(Cairo.LineJoin.ROUND);
 
-        this.connection = this._connection[this.settings.graphConnection];
+        this.connection = this.connectionTypes[this.settings.graphConnection];
         if(!this.connection)
-            this.connection = this._connection.line;
+            this.connection = this.connectionTypes.line;
 
         this.last = [];
     },
