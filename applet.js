@@ -81,10 +81,9 @@ SettingsProvider.prototype = {
         Settings.AppletSettings.prototype._init.call(this, bindObject, uuid, instanceId);
     },
 
-    bindProperty: function(key, callback, bindingDirection = Settings.BindingDirection.IN){
+    bindProperty: function(key, callback){
         let keyCamelCase = dashToCamelCase(key);
-
-        Settings.AppletSettings.prototype.bindProperty.call(this, bindingDirection, key, keyCamelCase, callback);
+        this.bind(key, keyCamelCase, callback);
     },
 
     bindProperties: function(keys, callback){
@@ -118,7 +117,7 @@ SystemMonitorApplet.prototype = {
             "show-icon", "interval", "byte-unit", "rate-unit", "thermal-unit", "order",
             "graph-size", "graph-steps", "graph-overview", "graph-connection"
         ], bind(this.onSettingsChanged, this));
-        this.settingProvider.bindProperty("graph-type", bind(this.onGraphTypeChanged, this), Settings.BindingDirection.BIDIRECTIONAL);
+        this.settingProvider.bindProperty("graph-type", bind(this.onGraphTypeChanged, this));
 
         // a little wrapper object to access values
         this.container = {

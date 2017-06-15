@@ -232,8 +232,7 @@ ModuleSettings.prototype = {
         let keyCamelCase = dashToCamelCase(key);
         // prepend the module name and a dash
         key = this.name + "-" + key;
-
-        Settings.AppletSettings.prototype.bindProperty.call(this, Settings.BindingDirection.IN, key, keyCamelCase, callback);
+        this.bind(key, keyCamelCase, callback);
     }
 };
 
