@@ -28,7 +28,7 @@
         "cpu": {
             "type": "page",
             "title": "CPU",
-            "sections": ["loadavg", "cpu-section", "cpu-warning-section"]
+            "sections": ["loadavg", "cpu-section", "cpu-panel-section", "cpu-warning-section"]
         },
         "loadavg": {
             "type": "section",
@@ -39,8 +39,12 @@
             "type": "section",
             "title": "CPU",
             "keys": ["cpu-enabled", "cpu-color-core1", "cpu-color-core2", "cpu-color-core3",
-                "cpu-color-core4", "cpu-appearance", "cpu-split", "cpu-panel-label",
-                "cpu-panel-graph", "cpu-panel-width"]
+                "cpu-color-core4", "cpu-appearance", "cpu-split"]
+        },
+        "cpu-panel-section": {
+            "type": "section",
+            "title": "Panel widgets",
+            "keys": ["cpu-panel-label", "cpu-panel-graph", "cpu-panel-width"]
         },
         "cpu-warning-section": {
             "type": "section",
@@ -51,51 +55,67 @@
         "mem": {
             "type": "page",
             "title": "Memory",
-            "sections": ["mem-section"]
+            "sections": ["mem-section", "mem-panel-section"]
         },
         "mem-section": {
             "type": "section",
             "title": "Memory and Swap",
-            "keys": ["mem-enabled", "mem-color-mem", "mem-color-swap", "mem-appearance",
-                "mem-panel-label", "mem-panel-graph", "mem-panel-mode", "mem-panel-width"]
+            "keys": ["mem-enabled", "mem-color-mem", "mem-color-swap", "mem-appearance"]
+        },
+        "mem-panel-section": {
+            "type": "section",
+            "title": "Panel widgets",
+            "keys": ["mem-panel-label", "mem-panel-graph", "mem-panel-mode", "mem-panel-width"]
         },
 
         "disk": {
             "type": "page",
             "title": "Disk",
-            "sections": ["disk-section"]
+            "sections": ["disk-section", "disk-panel-section"]
         },
         "disk-section": {
             "type": "section",
             "title": "Disk",
-            "keys": ["disk-enabled", "disk-color-write", "disk-color-read", "disk-appearance",
-                "disk-panel-label", "disk-panel-graph", "disk-panel-width"]
+            "keys": ["disk-enabled", "disk-color-write", "disk-color-read", "disk-appearance"]
+        },
+        "disk-panel-section": {
+            "type": "section",
+            "title": "Panel widgets",
+            "keys": ["disk-panel-label", "disk-panel-graph", "disk-panel-width"]
         },
 
         "network": {
             "type": "page",
             "title": "Network",
-            "sections": ["network-section"]
+            "sections": ["network-section", "network-panel-section"]
         },
         "network-section": {
             "type": "section",
             "title": "Network",
             "keys": ["network-enabled", "network-color-up", "network-color-down",
-                "network-appearance", "network-panel-label", "network-panel-graph",
-                "network-panel-width"]
+                "network-appearance"]
+        },
+        "network-panel-section": {
+            "type": "section",
+            "title": "Panel widgets",
+            "keys": ["network-panel-label", "network-panel-graph", "network-panel-width"]
         },
 
         "thermal": {
             "type": "page",
             "title": "Thermal",
-            "sections": ["thermal-section", "thermal-warning-section"]
+            "sections": ["thermal-section", "thermal-panel-section", "thermal-warning-section"]
         },
         "thermal-section": {
             "type": "section",
             "title": "Thermal",
             "keys": ["thermal-enabled", "thermal-color-thermal", "thermal-mode",
-                "thermal-appearance", "thermal-panel-label", "thermal-panel-graph",
-                "thermal-panel-width"]
+                "thermal-appearance"]
+        },
+        "thermal-panel-section": {
+            "type": "section",
+            "title": "Panel widgets",
+            "keys": ["thermal-panel-label", "thermal-panel-graph", "thermal-panel-width"]
         },
         "thermal-warning-section": {
             "type": "section",
@@ -106,13 +126,17 @@
         "fan": {
             "type": "page",
             "title": "Fan",
-            "sections": ["fan-section", "fan-warning-section"]
+            "sections": ["fan-section", "fan-panel-section", "fan-warning-section"]
         },
         "fan-section": {
             "type": "section",
             "title": "Fan",
-            "keys": ["fan-enabled", "fan-color-fan", "fan-mode", "fan-appearance",
-                "fan-panel-label", "fan-panel-graph", "fan-panel-width"]
+            "keys": ["fan-enabled", "fan-color-fan", "fan-mode", "fan-appearance"]
+        },
+        "fan-panel-section": {
+            "type": "section",
+            "title": "Panel widgets",
+            "keys": ["fan-panel-label", "fan-panel-graph", "fan-panel-width"]
         },
         "fan-warning-section": {
             "type": "section",
@@ -122,7 +146,7 @@
     },
 
     "show-icon": {
-        "type": "checkbox",
+        "type": "switch",
         "default": true,
         "description": "Show icon"
     },
@@ -200,6 +224,7 @@
         "min": 100,
         "max": 400,
         "step": 10,
+        "units": "px",
         "description": "Height of graph"
     },
     "graph-steps": {
@@ -208,6 +233,7 @@
         "min": 5,
         "max": 200,
         "step": 5,
+        "units": "",
         "description": "Number of history steps",
         "tooltip": "How many steps will be saved for history graphs"
     },
@@ -233,7 +259,7 @@
 
 
     "loadavg-enabled": {
-        "type": "checkbox",
+        "type": "switch",
         "default": true,
         "description": "Enabled"
     },
@@ -246,7 +272,7 @@
     },
 
     "cpu-enabled": {
-        "type": "checkbox",
+        "type": "switch",
         "default": true,
         "description": "Enabled"
     },
@@ -320,12 +346,13 @@
         "min": 5,
         "max": 400,
         "step": 5,
+        "units": "",
         "description": "Width of graph",
         "indent": true,
         "dependency": "cpu-enabled"
     },
     "cpu-warning": {
-        "type": "checkbox",
+        "type": "switch",
         "default": false,
         "description": "Enabled",
         "dependency": "cpu-enabled"
@@ -347,6 +374,7 @@
         "max": 40,
         "default": 5,
         "step": 1,
+        "units": "sec",
         "description": "Time",
         "indent": true,
         "dependency": "cpu-warning"
@@ -365,7 +393,7 @@
 
 
     "mem-enabled": {
-        "type": "checkbox",
+        "type": "switch",
         "default": true,
         "description": "Enabled"
     },
@@ -426,6 +454,7 @@
         "min": 5,
         "max": 400,
         "step": 5,
+        "units": "",
         "description": "Width of graph",
         "indent": true,
         "dependency": "mem-enabled"
@@ -433,7 +462,7 @@
 
 
     "disk-enabled": {
-        "type": "checkbox",
+        "type": "switch",
         "default": true,
         "description": "Enabled"
     },
@@ -484,6 +513,7 @@
         "min": 5,
         "max": 400,
         "step": 5,
+        "units": "",
         "description": "Width of graph",
         "indent": true,
         "dependency": "disk-enabled"
@@ -491,7 +521,7 @@
 
 
     "network-enabled": {
-        "type": "checkbox",
+        "type": "switch",
         "default": true,
         "description": "Enabled"
     },
@@ -542,6 +572,7 @@
         "min": 5,
         "max": 400,
         "step": 5,
+        "units": "",
         "description": "Width of graph",
         "indent": true,
         "dependency": "network-enabled"
@@ -549,7 +580,7 @@
 
 
     "thermal-enabled": {
-        "type": "checkbox",
+        "type": "switch",
         "default": true,
         "description": "Enabled"
     },
@@ -604,12 +635,13 @@
         "min": 5,
         "max": 400,
         "step": 5,
+        "units": "",
         "description": "Width of graph",
         "indent": true,
         "dependency": "thermal-enabled"
     },
     "thermal-warning": {
-        "type": "checkbox",
+        "type": "switch",
         "default": false,
         "description": "Enabled",
         "dependency": "thermal-enabled"
@@ -631,6 +663,7 @@
         "max": 40,
         "default": 5,
         "step": 1,
+        "units": "sec",
         "description": "Time",
         "indent": true,
         "dependency": "thermal-warning"
@@ -638,7 +671,7 @@
 
 
     "fan-enabled": {
-        "type": "checkbox",
+        "type": "switch",
         "default": true,
         "description": "Enabled"
     },
@@ -693,12 +726,13 @@
         "min": 5,
         "max": 400,
         "step": 5,
+        "units": "",
         "description": "Width of graph",
         "indent": true,
         "dependency": "fan-enabled"
     },
     "fan-warning": {
-        "type": "checkbox",
+        "type": "switch",
         "default": false,
         "description": "Enabled",
         "dependency": "fan-enabled"
@@ -720,6 +754,7 @@
         "max": 40,
         "default": 5,
         "step": 1,
+        "units": "sec",
         "description": "Time",
         "indent": true,
         "dependency": "fan-warning"
