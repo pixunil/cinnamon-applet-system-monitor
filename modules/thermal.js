@@ -37,18 +37,19 @@ DataProvider.prototype = {
                 if(!object.drive_ata.smart_enabled || !object.drive_ata.smart_temperature)
                     return;
 
-                this.sensors.push({
+                let id = "udisks-" + object.drive.id;
+
+                this.sensorsAvailable[id] = {
                     type: "udisks",
                     proxy: object.drive_ata,
                     name: object.drive.id,
                     color: "disk"
-                });
+                };
                 this.history.push([]);
             });
         }
 
-        if(!this.sensors.length)
-            this.unavailable = true;
+        this.compareSensorsConfig();
     },
 
     parseSensorLine: function(line, lineNumber){
@@ -59,12 +60,13 @@ DataProvider.prototype = {
         if(coreMatch !== null)
             color = "core" + (parseInt(coreMatch[1]) % 4 + 1);
 
-        this.sensors.push({
+        let id = "sensors-" + lineNumber;
+        this.sensorsAvailable[id] = {
             type: "sensors",
             line: lineNumber,
             name: name,
             color: color
-        });
+        };
         this.history.push([]);
     },
 

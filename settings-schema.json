@@ -94,7 +94,7 @@
             "type": "section",
             "title": "Thermal",
             "keys": ["thermal-enabled", "thermal-color-thermal", "thermal-color-disk", "thermal-mode",
-                "thermal-appearance", "thermal-panel-label", "thermal-panel-graph",
+                "thermal-appearance", "thermal-sensors", "thermal-panel-label", "thermal-panel-graph",
                 "thermal-panel-width"]
         },
         "thermal-warning-section": {
@@ -111,7 +111,7 @@
         "fan-section": {
             "type": "section",
             "title": "Fan",
-            "keys": ["fan-enabled", "fan-color-fan", "fan-mode", "fan-appearance",
+            "keys": ["fan-enabled", "fan-color-fan", "fan-mode", "fan-appearance", "fan-sensors",
                 "fan-panel-label", "fan-panel-graph", "fan-panel-width"]
         },
         "fan-warning-section": {
@@ -586,6 +586,24 @@
         "description": "Appearance of history graphs",
         "dependency": "thermal-enabled"
     },
+    "thermal-sensors": {
+        "type": "list",
+        "description": "Sensors",
+        "columns" : [{
+            "id": "name",
+            "type": "string",
+            "title": "Name"
+        }, {
+            "id": "id",
+            "type": "string",
+            "title": "Identifier"
+        }, {
+            "id": "group",
+            "type": "string",
+            "title": "Group"
+        }],
+        "default" : []
+    },
     "thermal-panel-label": {
         "type": "entry",
         "default": "",
@@ -674,6 +692,24 @@
         },
         "description": "Appearance of history graphs",
         "dependency": "fan-enabled"
+    },
+    "fan-sensors": {
+        "type": "list",
+        "description": "Sensors",
+        "columns" : [{
+            "id": "name",
+            "type": "string",
+            "title": "Name"
+        }, {
+            "id": "id",
+            "type": "string",
+            "title": "Identifier"
+        }, {
+            "id": "group",
+            "type": "string",
+            "title": "Group"
+        }],
+        "default" : []
     },
     "fan-panel-label": {
         "type": "entry",

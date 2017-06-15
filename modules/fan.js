@@ -20,20 +20,19 @@ DataProvider.prototype = {
 
     init: function(){
         Modules.SensorDataProvider.prototype.init.apply(this, arguments);
-
-        if(!this.sensors.length)
-            this.unavailable = true;
+        this.compareSensorsConfig();
     },
 
     parseSensorLine: function(line, lineNumber){
         // extract the name (the chars before the first colon), but remove "fan speed"
         let name = line.match(/^(.+?)(?:fan speed)?:/i)[1];
 
-        this.sensors.push({
+        let id = "sensors-" + lineNumber;
+        this.sensorsAvailable[id] = {
             type: "sensors",
             line: lineNumber,
             name: name
-        });
+        };
         this.history.push([]);
     },
 

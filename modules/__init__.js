@@ -496,25 +496,67 @@ SensorDataProvider.prototype = {
     init: function(module, sensorLines){
         BaseDataProvider.prototype.init.apply(this, arguments);
 
+        this.module.settingsProvider.bindProperty("sensors", bind(this.compareSensorsConfig, this));
+
         this.data = [];
         this.history = [[]];
 
-        this.sensors = [];
-        let inAdapter = false;
+        this.sensorsAvailable = {};
 
         for(let i = 0, l = sensorLines.length; i < l; ++i){
             let line = sensorLines[i];
-
-            if(line.substr(0, 8) === "Adapter:"){
-                if(line.match(/virtual/i))
-                    inAdapter = false;
-                else
-                    inAdapter = true;
-            }
-
-            if(inAdapter && line.match(this.dataMatcher))
+            if(line.match(this.dataMatcher))
                 this.parseSensorLine(line, i);
         }
+    },
+
+    compareSensorsConfig: function(){
+        // remove all unknown sensors
+        let sensors = this.settings.sensors.filter(sensor => {
+            return this.sensorsAvailable[sensor.id] !== undefined;
+        });
+
+        // only change the config value if deletes were done, to prevent recursion
+        if(sensors.length !== this.settings.sensors.length)
+            this.settings.sensors = sensors;
+
+        if(this.settings.sensors.length === 0 && Object.getOwnPropertyNames(this.sensorsAvailable).length > 0){
+            // the config was not saved yet or all was deleted and should be recreated
+            // (in case the user does not want any sensors, they should disable the module)
+
+            // cache all changes to prevent recursion
+            let sensors = [];
+
+            for(let id in this.sensorsAvailable){
+                // extract only the important parts
+                let sensor = this.sensorsAvailable[id];
+                sensors.push({
+                    name: sensor.name,
+                    id: id,
+                    group: sensor.color
+                });
+            }
+
+            this.settings.sensors = sensors;
+        }
+
+        this.sensors = [];
+
+        // build a new sensors array to reflect the settings list
+        for(let i = 0, l = this.settings.sensors.length; i < l; ++i){
+            let config = this.settings.sensors[i];
+            let sensor = this.sensorsAvailable[config.id];
+
+            this.sensors.push({
+                type: sensor.type,
+                line: sensor.line,
+                proxy: sensor.proxy,
+                name: config.name,
+                color: config.group
+            });
+        };
+
+        this.unavailable = !this.sensors.length;
     },
 
     getData: function(result){
