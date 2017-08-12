@@ -736,14 +736,16 @@ PanelWidget.prototype = {
                 // in the case nothing applies, use the standard value
                 let subUsed = this.panelLabel.defaultSub;
 
-                for(let name in this.panelLabel.sub){
-                    // run the regEx against the matched sub part
-                    let result = sub.match(this.panelLabel.sub[name]);
+                if(sub){
+                    for(let name in this.panelLabel.sub){
+                        // run the regEx against the matched sub part
+                        let result = sub.match(this.panelLabel.sub[name]);
 
-                    // when it success, use it
-                    if(result){
-                        subUsed = name;
-                        break;
+                        // when it success, use it
+                        if(result){
+                            subUsed = name;
+                            break;
+                        }
                     }
                 }
 
@@ -863,7 +865,7 @@ const PanelLabelPrototype = {
 
     formatPercent: function(part, total = 1){
         let percent = 100 * part / total;
-        return this.addSpaces(percent) + percent.toFixed(2) + "%";
+        return this.addSpaces(percent) + percent.toFixed(1) + "%";
     },
 
     formatThermal: function(celsius = 0){
