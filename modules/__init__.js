@@ -541,16 +541,19 @@ BaseMenuItem.prototype = {
         if(labelWidths === undefined)
             labelWidths = this.labelWidths;
 
-        if(margin === undefined)
-            margin = this.margin || 0;
+        margin = (margin || this.margin || 0) + "px";
 
         let box = new St.BoxLayout;
         let container = [];
 
-        if(tooltip)
-            box.add_actor(new St.Label({text: this.module.display, width: 85, margin_right: margin, style: "text-align: left"}));
-        else
-            box.margin_left = margin;
+        if(tooltip){
+            box.add_actor(new St.Label({
+                text: this.module.display, width: 85,
+                style: "text-align: left; margin-right: " + margin
+            }));
+        } else {
+            box.style = "margin-left: " + margin;
+        }
 
         for(let i = 0, l = labelWidths.length; i < l; ++i){
             let label = new St.Label({width: labelWidths[i], style: "text-align: right"});
@@ -620,16 +623,10 @@ BaseSubMenuMenuItem.prototype = {
     makeBox: BaseMenuItem.prototype.makeBox,
     makeTooltip: BaseMenuItem.prototype.makeTooltip,
 
-    addRow: function(label, labels, margin){
-        if(labels === undefined)
-            labels = this.labels;
-
-        if(margin === undefined)
-            margin = this.margin;
-
+    addRow: function(label, labelWidths, margin){
         let menuItem = new PopupMenu.PopupMenuItem(label, {reactive: false});
         this.menu.addMenuItem(menuItem);
-        let box = this.makeBox(labels, margin);
+        let box = this.makeBox(labelWidths, margin);
         menuItem.addActor(box);
     },
 
