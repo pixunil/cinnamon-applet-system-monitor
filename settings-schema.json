@@ -44,7 +44,7 @@
         "cpu-panel-section": {
             "type": "section",
             "title": "Panel widgets",
-            "keys": ["cpu-panel-label", "cpu-panel-graph", "cpu-panel-width"]
+            "keys": ["cpu-panel-label", "cpu-panel-graph", "cpu-panel-size"]
         },
         "cpu-warning-section": {
             "type": "section",
@@ -65,7 +65,7 @@
         "mem-panel-section": {
             "type": "section",
             "title": "Panel widgets",
-            "keys": ["mem-panel-label", "mem-panel-graph", "mem-panel-mode", "mem-panel-width"]
+            "keys": ["mem-panel-label", "mem-panel-graph", "mem-panel-mode", "mem-panel-size"]
         },
 
         "disk": {
@@ -81,7 +81,7 @@
         "disk-panel-section": {
             "type": "section",
             "title": "Panel widgets",
-            "keys": ["disk-panel-label", "disk-panel-graph", "disk-panel-width"]
+            "keys": ["disk-panel-label", "disk-panel-graph", "disk-panel-size"]
         },
 
         "network": {
@@ -98,7 +98,7 @@
         "network-panel-section": {
             "type": "section",
             "title": "Panel widgets",
-            "keys": ["network-panel-label", "network-panel-graph", "network-panel-width"]
+            "keys": ["network-panel-label", "network-panel-graph", "network-panel-size"]
         },
 
         "thermal": {
@@ -115,7 +115,7 @@
         "thermal-panel-section": {
             "type": "section",
             "title": "Panel widgets",
-            "keys": ["thermal-panel-label", "thermal-panel-graph", "thermal-panel-width"]
+            "keys": ["thermal-panel-label", "thermal-panel-graph", "thermal-panel-size"]
         },
         "thermal-warning-section": {
             "type": "section",
@@ -136,7 +136,7 @@
         "fan-panel-section": {
             "type": "section",
             "title": "Panel widgets",
-            "keys": ["fan-panel-label", "fan-panel-graph", "fan-panel-width"]
+            "keys": ["fan-panel-label", "fan-panel-graph", "fan-panel-size"]
         },
         "fan-warning-section": {
             "type": "section",
@@ -340,14 +340,14 @@
         "description": "Graph in the panel",
         "dependency": "cpu-enabled"
     },
-    "cpu-panel-width": {
+    "cpu-panel-size": {
         "type": "spinbutton",
         "default": 50,
         "min": 5,
         "max": 400,
         "step": 5,
         "units": "",
-        "description": "Width of graph",
+        "description": "Size of graph",
         "indent": true,
         "dependency": "cpu-enabled"
     },
@@ -448,14 +448,14 @@
         "indent": true,
         "dependency": "mem-enabled"
     },
-    "mem-panel-width": {
+    "mem-panel-size": {
         "type": "spinbutton",
         "default": 50,
         "min": 5,
         "max": 400,
         "step": 5,
         "units": "",
-        "description": "Width of graph",
+        "description": "Size of graph",
         "indent": true,
         "dependency": "mem-enabled"
     },
@@ -507,14 +507,14 @@
         "description": "Graph in the panel",
         "dependency": "disk-enabled"
     },
-    "disk-panel-width": {
+    "disk-panel-size": {
         "type": "spinbutton",
         "default": 50,
         "min": 5,
         "max": 400,
         "step": 5,
         "units": "",
-        "description": "Width of graph",
+        "description": "Size of graph",
         "indent": true,
         "dependency": "disk-enabled"
     },
@@ -566,14 +566,14 @@
         "description": "Graph in the panel",
         "dependency": "network-enabled"
     },
-    "network-panel-width": {
+    "network-panel-size": {
         "type": "spinbutton",
         "default": 50,
         "min": 5,
         "max": 400,
         "step": 5,
         "units": "",
-        "description": "Width of graph",
+        "description": "Size of graph",
         "indent": true,
         "dependency": "network-enabled"
     },
@@ -629,14 +629,14 @@
         "description": "Graph in the panel",
         "dependency": "thermal-enabled"
     },
-    "thermal-panel-width": {
+    "thermal-panel-size": {
         "type": "spinbutton",
         "default": 50,
         "min": 5,
         "max": 400,
         "step": 5,
         "units": "",
-        "description": "Width of graph",
+        "description": "Size of graph",
         "indent": true,
         "dependency": "thermal-enabled"
     },
@@ -720,14 +720,14 @@
         "description": "Graph in the panel",
         "dependency": "fan-enabled"
     },
-    "fan-panel-width": {
+    "fan-panel-size": {
         "type": "spinbutton",
         "default": 50,
         "min": 5,
         "max": 400,
         "step": 5,
         "units": "",
-        "description": "Width of graph",
+        "description": "Size of graph",
         "indent": true,
         "dependency": "fan-enabled"
     },

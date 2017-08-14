@@ -156,6 +156,10 @@ const ModulePartPrototype = {
         return this.module.modules;
     },
 
+    get vertical(){
+        return this.module.container.vertical;
+    },
+
     get time(){
         return this.module.container.time;
     },
@@ -217,7 +221,7 @@ ModuleSettings.prototype = {
             keys = keys.concat(module.import.additionalSettingKeys);
 
         if(module.import.HistoryGraph)
-            keys.push("appearance", "panel-graph", "panel-width");
+            keys.push("appearance", "panel-graph", "panel-size");
 
         if(module.import.PanelLabel)
             keys.push("panel-label");
@@ -672,6 +676,9 @@ GraphMenuItem.prototype = {
     }
 };
 
+const newlineRegExp = /[%$\\]n/g;
+const panelLabelRegExp = /[%$](\w+(?:\(\d+\))?)(?:\.(\w+))?(?:#(\w+))?/g;
+
 function PanelWidget(){
     this.init.apply(this, arguments);
 }
@@ -686,8 +693,8 @@ PanelWidget.prototype = {
 
         if(module.import.PanelLabel){
             this.label = new St.Label({reactive: true, track_hover: true, style_class: "applet-label"});
-            this.label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
-            this.box.add(this.label, {y_align: St.Align.MIDDLE, y_fill: false});
+            this.box.add(this.label, {x_align: St.Align.MIDDLE, x_fill: false,
+                y_align: St.Align.MIDDLE, y_fill: false});
 
             this.panelLabel = new module.import.PanelLabel(module);
         }
@@ -701,17 +708,17 @@ PanelWidget.prototype = {
                 new module.import.BarGraph(this.canvas, module),
                 new module.import.HistoryGraph(this.canvas, module)
             ];
-
-            // inform the history graph that a horizontal packing is now required
-            this.graphs[1].packDir = "horizontal";
         }
     },
 
     update: function(){
         if(this.settings.panelLabel && this.label){
-            let text = this.settings.panelLabel.replace(/[%$](\w+(?:\(\d+\))?)(?:\.(\w+))?(?:#(\w+))?/g, bind(this.panelLabelReplace, this));
-            this.label.set_text(text);
-            this.label.margin_left = text.length? 6 : 0;
+            // replace the %n placeholder with the matching whitespace
+            let whitespace = this.vertical? "\n" : " ";
+            let text = this.settings.panelLabel.replace(newlineRegExp, whitespace);
+            // replace the module placeholders
+            text = text.replace(panelLabelRegExp, bind(this.panelLabelReplace, this));
+            this.label.text = text;
         }
     },
 
@@ -792,20 +799,39 @@ PanelWidget.prototype = {
         let showBox = false;
 
         if(this.label){
+            if(this.vertical)
+                this.label.clutter_text.ellipsize = Pango.EllipsizeMode.MIDDLE;
+            else
+                this.label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+
             let show = this.settings.enabled && this.settings.panelLabel !== "";
             this.label.visible = show;
             showBox = show;
         }
 
         if(this.canvas){
-            this.canvas.width = this.settings.panelWidth;
+            // the graph size setting is used for the height or width, depending
+            // on the orientation, the respective other dimension is set
+            // to zero, so it will take the space it needs
+            // additionally, the history graph will set to use
+            // horizontal or vertical packing
+            if(this.vertical){
+                this.canvas.width = 0;
+                this.canvas.height = this.settings.panelSize;
+                this.graphs[1].packDir = "vertical";
+            } else {
+                this.canvas.width = this.settings.panelSize;
+                this.canvas.height = 0;
+                this.graphs[1].packDir = "horizontal";
+            }
+
             let show = this.settings.enabled && this.settings.panelGraph !== -1;
             this.canvas.visible = show;
-            this.canvas.margin_left = show? 6 : 0;
 
             showBox = showBox || show;
         }
 
+        this.box.vertical = this.vertical;
         this.box.visible = showBox;
     }
 };
@@ -813,7 +839,12 @@ PanelWidget.prototype = {
 const PanelLabelPrototype = {
     __proto__: ModulePartPrototype,
 
+    // add spaces to prevent a "jumping around" of the applet due to resizing
     addSpaces: function(number, spaces = 3){
+        // in vertical panels, no extra characters are needed
+        if(this.vertical)
+            return "";
+
         // calculate written digits and remove those spaces
         if(number > 0)
             spaces -= Math.floor(Math.log(number) / Math.log(10)) + 1;

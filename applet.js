@@ -105,6 +105,7 @@ SystemMonitorApplet.prototype = {
 
         this._applet_tooltip = new SystemMonitorTooltip(this, orientation);
         this._applet_tooltip.addActor(new St.Label({text: _("System Monitor")}));
+        this.setAllowedLayout(Applet.AllowedLayout.BOTH);
         this.set_applet_icon_symbolic_name(iconName);
 
         this.modules = {};
@@ -121,6 +122,7 @@ SystemMonitorApplet.prototype = {
 
         // a little wrapper object to access values
         this.container = {
+            vertical: orientation == St.Side.LEFT || orientation == St.Side.RIGHT,
             modules: this.modules,
             settings: this.settings,
             time: GLib.get_monotonic_time() / 1e6
@@ -296,6 +298,18 @@ SystemMonitorApplet.prototype = {
     on_applet_clicked: function(){
         this.menu.toggle();
         if(this.menu.isOpen) this.updateText();
+    },
+
+    on_orientation_changed: function(orientation) {
+        let vertical = orientation == St.Side.LEFT || orientation == St.Side.RIGHT;
+        this.container.vertical = vertical;
+
+        for(let module in this.modules){
+            let panelWidget = this.modules[module].panelWidget;
+
+            if(panelWidget)
+                panelWidget.onSettingsChanged();
+        }
     },
 
     on_applet_removed_from_panel: function(){
