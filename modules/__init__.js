@@ -15,8 +15,6 @@ const _ = imports.applet._;
 const bind = imports.applet.bind;
 const dashToCamelCase = imports.applet.dashToCamelCase;
 
-const SettingsProvider = imports.applet.applet.SettingsProvider;
-
 // prefixes for byte sizes (kilo, mega, giga, …)
 const PREFIX = " KMGTEZY";
 
@@ -198,54 +196,12 @@ function ModulePart(superClass){
     return proto;
 }
 
-function ModuleSettings(){
-    this.init.apply(this, arguments);
-}
-
-ModuleSettings.prototype = {
-    __proto__: SettingsProvider.prototype,
-
-    init: function(module, appletSettings, instanceId){
-        this.name = module.import.name;
-        // some settings of the applet settings object will be used,
-        // for that reason the module settings object has it as prototype
-        module.settings = {
-            __proto__: appletSettings
-        };
-
-        SettingsProvider.prototype.init.call(this, module.settings, instanceId);
-
-        let keys = ["enabled"];
-
-        if(module.import.additionalSettingKeys)
-            keys = keys.concat(module.import.additionalSettingKeys);
-
-        if(module.import.HistoryGraph)
-            keys.push("appearance", "panel-graph", "panel-size");
-
-        if(module.import.PanelLabel)
-            keys.push("panel-label");
-
-        if(module.import.colorSettingKeys)
-            keys = keys.concat(module.import.colorSettingKeys.map(key => "color-" + key));
-
-        this.bindProperties(keys, bind(module.onSettingsChanged, module));
-    },
-
-    bindProperty: function(key, callback){
-        let keyCamelCase = dashToCamelCase(key);
-        // prepend the module name and a dash
-        key = this.name + "-" + key;
-        this.bind(key, keyCamelCase, callback);
-    }
-};
-
 function Module(){
     this.init.apply(this, arguments);
 }
 
 Module.prototype = {
-    init: function(imports, container, sensorLines, instanceId){
+    init: function(imports, container, sensorLines){
         this.import = imports;
         this.display = imports.display;
 
@@ -253,14 +209,14 @@ Module.prototype = {
             // the swap module shares its settings with memory, for this reason only a simple reference is needed
             this.settings = container.modules[imports.settingsName].settings;
             // as changed values will only be reported to the owning module, connect to them
-            let settingsProvider = container.modules[imports.settingsName].settingsProvider;
+            let settingsProvider = container.settingsProvider;
             settingsProvider.connect("settings-changed", bind(this.onSettingsChanged, this));
         } else {
             if(imports.colorSettingKeys)
                 this.colorSettingKeys = imports.colorSettingKeys;
 
-            // for all other modules an own settings object and provider is created
-            this.settingsProvider = new ModuleSettings(this, container.settings, instanceId);
+            // for all other modules an own settings object is created
+            container.settingsProvider.bindModule(this);
         }
 
         this.container = container;
@@ -337,11 +293,6 @@ Module.prototype = {
             this.panelWidget.onSettingsChanged();
         if(this.graphMenuItem)
             this.graphMenuItem.onSettingsChanged(this.settings.enabled);
-    },
-
-    finalize: function(){
-        if(this.settingsProvider)
-            this.settingsProvider.finalize();
     }
 };
 
