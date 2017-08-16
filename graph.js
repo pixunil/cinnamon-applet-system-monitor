@@ -344,6 +344,11 @@ History.prototype = {
         },
 
         area: function(history, increment){
+            // lower the min if it is higher than zero, as small values are
+            // not visible which looks like a zero value
+            if(this.min > 0)
+                this.min -= 1;
+
             this.ctx.save();
             if(this.packDir === "vertical"){
                 this.ctx.translate(this.dw * this.tx, this.h * (this.section + 1) / this.numberSections);

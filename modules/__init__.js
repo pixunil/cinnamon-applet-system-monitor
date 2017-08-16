@@ -330,12 +330,12 @@ BaseDataProvider.prototype = {
         while(history.length > this.settings.graphSteps + 2)
             history.shift();
 
-        if(this.min !== undefined && (!this.min || this.min > value)){
+        if(this.min !== undefined && (this.min === null || this.min > value)){
             this.min = value;
             this.minIndex = history.length;
         }
 
-        if(this.max !== undefined && (!this.max || this.max < value)){
+        if(this.max !== undefined && (this.max === null || this.max < value)){
             this.max = value;
             this.maxIndex = history.length;
         }
