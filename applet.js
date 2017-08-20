@@ -237,14 +237,13 @@ SystemMonitorApplet.prototype = {
             gsmApp.activate();
         });
 
-        this.onSettingsChanged();
-        this.onGraphTypeChanged();
-
-        this.getDataLoop();
-
         this.paintTimeline = new Clutter.Timeline({duration: 100, repeat_count: -1});
         this.paintTimeline.connect("new-frame", bind(this.paint, this));
         this.paintTimeline.start();
+
+        this.getData(sensorLines);
+        this.onSettingsChanged();
+        this.onGraphTypeChanged();
     },
 
     getDataLoop: function(){
@@ -257,7 +256,7 @@ SystemMonitorApplet.prototype = {
     },
 
     getData: function(result){
-        if(result)
+        if(typeof result == "string")
             result = result.split("\n");
 
         // calculate the time (in seconds) since the last update and save the time

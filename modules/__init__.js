@@ -142,10 +142,6 @@ const ModulePartPrototype = {
     },
 
     // shortcuts
-    get name(){
-        return this.module.name;
-    },
-
     get settings(){
         return this.module.settings;
     },
@@ -493,9 +489,7 @@ BaseMenuItem.prototype = {
     },
 
     makeBox: function(labelWidths, margin, tooltip){
-        if(labelWidths === undefined)
-            labelWidths = this.labelWidths;
-
+        labelWidths = labelWidths || this.labelWidths;
         margin = (margin || this.margin || 0) + "px";
 
         let box = new St.BoxLayout;
