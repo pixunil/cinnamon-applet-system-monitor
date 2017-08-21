@@ -209,13 +209,12 @@ PieOverview.prototype = {
     },
 
     center: function(radius){
-        this.centerSection++;
-
         if(!process(radius))
             return;
 
         let startAngle = this.centerSection * Math.PI * 2 / this.countCenter;
-        let endAngle = (this.centerSection + 1) * Math.PI * 2 / this.countCenter;
+        this.centerSection++;
+        let endAngle = startAngle + Math.PI * 2 / this.countCenter;
 
         this.ctx.arc(this.w / 2, this.h / 2, radius * this.dr, startAngle, endAngle);
         this.ctx.fill();
@@ -272,8 +271,9 @@ ArcOverview.prototype = {
             return;
 
         let startAngle = this.centerSection * Math.PI / this.countCenter - Math.PI;
-        let endAngle = (this.centerSection + 1) * Math.PI / this.countCenter - Math.PI;
+        let endAngle = startAngle + Math.PI / this.countCenter;
 
+        this.ctx.moveTo(this.w / 2, this.h);
         this.ctx.arc(this.w / 2, this.h, radius * this.dr, startAngle, endAngle);
         this.ctx.fill();
     }
