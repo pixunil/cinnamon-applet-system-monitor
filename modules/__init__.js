@@ -8,12 +8,13 @@ const Settings = imports.ui.settings;
 
 const messageTray = Main.messageTray;
 
-const uuid = imports.applet.uuid;
-const iconName = imports.applet.iconName;
+const uuid = "system-monitor@pixunil";
+const applet = imports.ui.appletManager.applets[uuid];
 
-const _ = imports.applet._;
-const bind = imports.applet.bind;
-const dashToCamelCase = imports.applet.dashToCamelCase;
+const _ = applet._;
+const bind = applet.bind;
+const iconName = applet.iconName;
+const dashToCamelCase = applet.dashToCamelCase;
 
 // prefixes for byte sizes (kilo, mega, giga, …)
 const PREFIX = " KMGTEZY";

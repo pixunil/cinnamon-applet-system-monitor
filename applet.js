@@ -13,16 +13,16 @@ const Tooltips = imports.ui.tooltips;
 
 const Mainloop = imports.mainloop;
 
-const _ = imports.applet._;
-const bind = imports.applet.bind;
-const dashToCamelCase = imports.applet.dashToCamelCase;
+const uuid = "system-monitor@pixunil";
+const applet = imports.ui.appletManager.applets[uuid];
 
-const uuid = imports.applet.uuid;
-const iconName = imports.applet.iconName;
+const _ = applet._;
+const bind = applet.bind;
+const dashToCamelCase = applet.dashToCamelCase;
+const iconName = applet.iconName;
 
-const Graph = imports.applet.graph;
-const Modules = imports.applet.modules;
-const Terminal = imports.applet.terminal;
+const Graph = applet.graph;
+const Modules = applet.modules;
 
 try {
     Modules.GTop = imports.gi.GTop;
@@ -36,14 +36,14 @@ try {
 }
 
 const ModuleImports = {
-    loadavg: imports.applet.modules.loadavg,
-    cpu: imports.applet.modules.cpu,
-    mem: imports.applet.modules.mem,
-    swap: imports.applet.modules.swap,
-    disk: imports.applet.modules.disk,
-    network: imports.applet.modules.network,
-    thermal: imports.applet.modules.thermal,
-    fan: imports.applet.modules.fan
+    loadavg: applet.modules.loadavg,
+    cpu: applet.modules.cpu,
+    mem: applet.modules.mem,
+    swap: applet.modules.swap,
+    disk: applet.modules.disk,
+    network: applet.modules.network,
+    thermal: applet.modules.thermal,
+    fan: applet.modules.fan
 };
 
 function SystemMonitorTooltip(){
@@ -249,7 +249,7 @@ SystemMonitorApplet.prototype = {
     getDataLoop: function(){
         // if a sensor module is active, first request the results of the sensor output
         if(this.modules.thermal.settings.enabled || this.modules.fan.settings.enabled)
-            Terminal.call(this.sensorPath, bind(this.getData, this));
+            Util.spawn_async(this.sensorPath, bind(this.getData, this));
         // if none is active, skip the request
         else
             this.getData();

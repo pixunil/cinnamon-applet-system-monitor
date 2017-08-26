@@ -2,7 +2,9 @@ const Cairo = imports.cairo;
 
 const GLib = imports.gi.GLib;
 
-const ModulePart = imports.applet.modules.ModulePart;
+const uuid = "system-monitor@pixunil";
+const applet = imports.ui.appletManager.applets[uuid];
+const ModulePart = applet.modules.ModulePart;
 
 function process(number){
     return number > 0 && !isNaN(number) && isFinite(number);
