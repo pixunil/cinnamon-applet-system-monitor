@@ -94,8 +94,12 @@ Overview.prototype = {
             for(let i = 0; i < this.cpu.count; ++i){
                 this.next("cpu", "core" + (i % 4 + 1));
                 this.normal(this.cpu.data.user[i], true);
+                this.setAlpha(.875);
+                this.normal(this.cpu.data.nice[i], true);
                 this.setAlpha(.75);
                 this.normal(this.cpu.data.system[i], true);
+                this.setAlpha(.625);
+                this.normal(this.cpu.data.iowait[i], true);
             }
         }
 

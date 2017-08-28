@@ -317,7 +317,8 @@
         "default": "total",
         "options": {
             "Total usage": "total",
-            "User and System usage": "user-system"
+            "User and System usage": "user-system",
+            "User, Nice, System and Iowait usage": "all"
         },
         "description": "Show which information in history graphs",
         "dependency": "cpu-enabled"

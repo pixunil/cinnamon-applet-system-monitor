@@ -35,19 +35,25 @@ DataProvider.prototype = {
         this.raw = {
             total: [],
             user: [],
-            system: []
+            nice: [],
+            system: [],
+            iowait: []
         };
 
         this.data = {
             usage: [],
             user: [],
-            system: []
+            nice: [],
+            system: [],
+            iowait: []
         };
 
         this.history = {
             usage: [],
             user: [],
-            system: []
+            nice: [],
+            system: [],
+            iowait: []
         };
 
         Modules.GTop.glibtop_get_cpu(this.gtop);
@@ -55,10 +61,17 @@ DataProvider.prototype = {
         for(let i = 0; i < this.count; ++i){
             this.history.usage.push([]);
             this.history.user.push([]);
+            this.history.nice.push([]);
             this.history.system.push([]);
+            this.history.iowait.push([]);
             this.saveRaw("total", i, this.gtop.xcpu_total[i]);
             this.saveRaw("user", i, this.gtop.xcpu_user[i]);
+            this.saveRaw("nice", i, this.gtop.xcpu_nice[i]);
             this.saveRaw("system", i, this.gtop.xcpu_sys[i]);
+            // strictly speaking is it not correct to merge io with irq, but
+            // for the sake of simplicity and space, sum them up
+            this.saveRaw("iowait", i, this.gtop.xcpu_iowait[i] +
+                this.gtop.xcpu_irq[i] + this.gtop.xcpu_softirq[i]);
         }
     },
 
@@ -66,11 +79,14 @@ DataProvider.prototype = {
         this.raw[type][core] = value;
     },
 
-    saveData: function(type, core, value, raw){
-        this.data[type][core] = value;
+    saveData: function(type, core, value, dtotal){
+        if(dtotal){
+            let delta = value - this.raw[type][core];
+            this.saveRaw(type, core, value);
+            value = delta / dtotal;
+        }
 
-        if(raw)
-            this.saveRaw(type, core, raw);
+        this.data[type][core] = value;
 
         this.updateHistory(this.history[type][core], value);
     },
@@ -82,16 +98,19 @@ DataProvider.prototype = {
     getData: function(){
         Modules.GTop.glibtop_get_cpu(this.gtop);
 
-        var dtotal, duser, dsystem, r = 0;
+        let r = 0;
         for(var i = 0; i < this.count; ++i){
-            dtotal = this.gtop.xcpu_total[i] - this.raw.total[i];
-            duser = this.gtop.xcpu_user[i] - this.raw.user[i];
-            dsystem = this.gtop.xcpu_sys[i] - this.raw.system[i];
-
+            let dtotal = this.gtop.xcpu_total[i] - this.raw.total[i];
             this.saveRaw("total", i, this.gtop.xcpu_total[i]);
-            this.saveData("user", i, duser / dtotal, this.gtop.xcpu_user[i]);
-            this.saveData("system", i, dsystem / dtotal, this.gtop.xcpu_sys[i]);
-            this.saveData("usage", i, (duser + dsystem) / dtotal);
+
+            this.saveData("user", i, this.gtop.xcpu_user[i], dtotal);
+            this.saveData("nice", i, this.gtop.xcpu_nice[i], dtotal);
+            this.saveData("system", i, this.gtop.xcpu_sys[i], dtotal);
+            this.saveData("iowait", i, this.gtop.xcpu_iowait[i] +
+                this.gtop.xcpu_irq[i] + this.gtop.xcpu_softirq[i], dtotal);
+
+            this.saveData("usage", i, this.data.user[i] + this.data.nice[i] +
+                this.data.system[i] + this.data.iowait[i]);
 
             if(this.settings.cpuWarning){
                 if(this.settings.cpuWarningMode === "avg")
@@ -136,14 +155,18 @@ MenuItem.prototype = {
         Modules.BaseSubMenuMenuItem.prototype.init.call(this, module);
 
         this.addRow(_("User"));
+        this.addRow(_("Nice"));
         this.addRow(_("System"));
+        this.addRow(_("Waiting for I/O"));
     },
 
     update: function(){
         for(let i = 0; i < this.count; ++i){
             this.setText(0, i, "percent", this.data.usage[i]);
             this.setText(1, i, "percent", this.data.user[i]);
-            this.setText(2, i, "percent", this.data.system[i]);
+            this.setText(2, i, "percent", this.data.nice[i]);
+            this.setText(3, i, "percent", this.data.system[i]);
+            this.setText(4, i, "percent", this.data.iowait[i]);
         }
     }
 };
@@ -163,7 +186,9 @@ PanelLabel.prototype = {
     defaultSub: "usage",
     sub: {
         user: /^(?:user|usr|u)$/i,
-        system: /^(?:system|sys|s)$/i
+        nice: /^(?:nice|ni|n)$/i,
+        system: /^(?:system|sys|s)$/i,
+        iowait: /^(?:iowait|io)$/
     },
 
     core: function(core, sub){
@@ -197,9 +222,12 @@ BarGraph.prototype = {
         for(let i = 0; i < this.count; ++i){
             this.next("core" + (i % 4 + 1));
             this.bar(this.data.user[i]);
-
+            this.setAlpha(.875);
+            this.bar(this.data.nice[i]);
             this.setAlpha(.75);
             this.bar(this.data.system[i]);
+            this.setAlpha(.625);
+            this.bar(this.data.iowait[i]);
         }
     }
 };
@@ -216,27 +244,40 @@ HistoryGraph.prototype = {
     draw: function(){
         this.begin(this.count, this.history.user[0].length);
 
-        if(this.settings.appearance === "stack"){
-            for(let i = this.count; i--; ){
-                this.next("core" + (i % 4 + 1));
+        for(let i = 0; i < this.count; ++i){
+            let core = i;
 
-                if(this.settings.split === "user-system"){
-                    this.line(this.history.user[i]);
-                    this.setAlpha(.75);
-                    this.line(this.history.system[i]);
-                } else
-                    this.line(this.history.usage[i]);
-            }
-        } else {
-            for(let i = 0; i < this.count; ++i){
-                this.next("core" + (i % 4 + 1));
+            // visit cores in reverse order for stack
+            if(this.settings.appearance === "stack")
+                core = this.count - i - 1;
 
-                if(this.settings.split === "user-system"){
-                    this.line(this.history.user[i], true);
-                    this.setAlpha(.75);
-                    this.line(this.history.system[i]);
-                } else
-                    this.line(this.history.usage[i]);
+            this.next("core" + (core % 4 + 1));
+
+            if(this.settings.split === "total"){
+                this.line(this.history.usage[core]);
+            } else if(this.settings.split === "user-system") {
+                // merge nice usage into user
+                let user = this.history.user[core].map((value, j) => {
+                    return value + this.history.nice[core][j];
+                });
+
+                // merge iowait and irq usage into system
+                let system = this.history.system[core].map((value, j) => {
+                    return value + this.history.iowait[core][j];
+                });
+
+                this.line(user, true);
+
+                this.setAlpha(.75);
+                this.line(system);
+            } else {
+                this.line(this.history.user[core], true);
+                this.setAlpha(.875);
+                this.line(this.history.nice[core], true);
+                this.setAlpha(.75);
+                this.line(this.history.system[core], true);
+                this.setAlpha(.625);
+                this.line(this.history.iowait[core]);
             }
         }
     }
