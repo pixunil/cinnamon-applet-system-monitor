@@ -21,6 +21,7 @@ function DataProvider(){
 DataProvider.prototype = {
     __proto__: Modules.BaseDataProvider.prototype,
 
+    dev: [],
     max: 1,
     maxIndex: 0,
 
@@ -49,15 +50,19 @@ DataProvider.prototype = {
             read: []
         };
 
-        this.updateDevices();
+        this.queueUpdateDevices();
     },
 
-    updateDevices: function(){
+    queueUpdateDevices: function(){
+        let callback = bind(this.updateDevices, this);
+        Cinnamon.get_file_contents_utf8("/etc/mtab", callback);
+    },
+
+    updateDevices: function(mountFile){
         this.dev = [];
 
-        let mountFile = Cinnamon.get_file_contents_utf8_sync("/etc/mtab").split("\n");
-        for(let mountLine in mountFile){
-            let mount = mountFile[mountLine].split(" ");
+        mountFile.split("\n").forEach(mountLine => {
+            let mount = mountLine.split(" ");
 
             if(mount[0].indexOf("/dev/") === 0){
                 Modules.GTop.glibtop_get_fsusage(this.gtop, mount[1]);
@@ -69,12 +74,12 @@ DataProvider.prototype = {
                     blocks: this.gtop.blocks
                 });
             }
-        }
+        });
 
         if(this.module.menuItem)
             this.module.menuItem.updateDevices();
 
-        Mainloop.timeout_add(30000, bind(this.updateDevices, this));
+        Mainloop.timeout_add(30000, () => this.queueUpdateDevices());
     },
 
     getData: function(delta){
@@ -111,12 +116,6 @@ MenuItem.prototype = {
     __proto__: Modules.BaseSubMenuMenuItem.prototype,
 
     labelWidths: [130, 130],
-
-    init: function(){
-        Modules.BaseSubMenuMenuItem.prototype.init.apply(this, arguments);
-
-        this.updateDevices();
-    },
 
     updateDevices: function(){
         this.containers.splice(1, this.containers.length - 1);
