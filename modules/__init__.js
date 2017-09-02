@@ -198,7 +198,7 @@ function Module(){
 }
 
 Module.prototype = {
-    init: function(imports, container, sensorLines){
+    init: function(imports, container){
         this.import = imports;
         this.display = imports.display;
 
@@ -219,18 +219,19 @@ Module.prototype = {
         this.container = container;
         this.modules = container.modules;
 
-        this.dataProvider = new imports.DataProvider(this, sensorLines);
+        this.dataProvider = new imports.DataProvider(this);
 
-        if(this.dataProvider.unavailable)
-            this.unavailable = true;
-        else {
-            this.menuItem = new imports.MenuItem(this);
-            this.tooltip = this.menuItem.makeTooltip();
+        if(!this.dataProvider.unavailable)
+            this.build();
+    },
 
-            // only if one of panel label or graph is available, create a panel widget
-            if(imports.PanelLabel || imports.BarGraph)
-                this.panelWidget = new PanelWidget(this);
-        }
+    build: function(){
+        this.menuItem = new this.import.MenuItem(this);
+        this.tooltip = this.menuItem.makeTooltip();
+
+        // only if one of panel label or graph is available, create a panel widget
+        if(this.import.PanelLabel || this.import.BarGraph)
+            this.panelWidget = new PanelWidget(this);
 
         this.onSettingsChanged();
     },
@@ -262,8 +263,10 @@ Module.prototype = {
     },
 
     onSettingsChanged: function(){
-        if(this.dataProvider.unavailable && this.settings.enabled)
+        if(this.dataProvider.unavailable && this.settings.enabled){
+            this.settings.previousEnabled = true;
             this.settings.enabled = false;
+        }
 
         this.color = {};
 
@@ -407,6 +410,8 @@ function SensorDataProvider(){
 SensorDataProvider.prototype = {
     __proto__: BaseDataProvider.prototype,
 
+    // be pessimistic about the sensors command
+    unavailable: true,
     min: null,
     max: null,
 
@@ -418,13 +423,13 @@ SensorDataProvider.prototype = {
 
         this.sensors = [];
         this.sensorNames = [];
+    },
+
+    checkSensors: function(sensorLines){
+        if(!sensorLines)
+            return;
 
         let inAdapter = false;
-
-        if(!sensorLines){
-            this.unavailable = true;
-            return;
-        }
 
         for(let i = 0, l = sensorLines.length; i < l; ++i){
             let line = sensorLines[i];
@@ -440,8 +445,16 @@ SensorDataProvider.prototype = {
                 this.parseSensorLine(line, i);
         }
 
-        if(!this.sensors.length)
-            this.unavailable = true;
+        if(this.sensors.length){
+            this.unavailable = false;
+
+            if(this.settings.previousEnabled)
+                this.settings.enabled = true;
+
+            this.module.build();
+        }
+
+        this.getData(sensorLines);
     },
 
     getData: function(result){

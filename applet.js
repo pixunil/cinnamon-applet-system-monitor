@@ -129,8 +129,6 @@ function SystemMonitorApplet(){
 SystemMonitorApplet.prototype = {
     __proto__: Applet.IconApplet.prototype,
 
-    sensorPath: "",
-
     init: function(orientation, panelHeight, instanceId){
         Applet.IconApplet.prototype._init.call(this, orientation, panelHeight);
 
@@ -138,6 +136,8 @@ SystemMonitorApplet.prototype = {
         this._applet_tooltip.addActor(new St.Label({text: _("System Monitor")}));
         this.setAllowedLayout(Applet.AllowedLayout.BOTH);
         this.set_applet_icon_symbolic_name(iconName);
+
+        Util.spawn_async("sensors", bind(this.checkSensors, this));
 
         this.modules = {};
 
@@ -163,11 +163,15 @@ SystemMonitorApplet.prototype = {
         this.menu = new Applet.AppletPopupMenu(this, orientation);
         this.menuManager.addMenu(this.menu);
 
+        this.modulesSection = new PopupMenu.PopupMenuSection;
+        this.menu.addMenuItem(this.modulesSection);
+
         this.canvas = new St.DrawingArea({height: this.settings.graphSize});
         this.canvas.connect("repaint", bind(this.draw, this));
         this.canvasHolder = new PopupMenu.PopupBaseMenuItem({activate: false, sensitive: false});
         this.canvasHolder.actor.connect("scroll-event", bind(this.onScroll, this));
         this.canvasHolder.addActor(this.canvas, {span: -1, expand: true});
+        this.menu.addMenuItem(this.canvasHolder);
 
         this.graphs = [null];
 
@@ -175,6 +179,7 @@ SystemMonitorApplet.prototype = {
         this.graphSubMenu.actor.connect("scroll-event", bind(this.onScroll, this));
         // ignore the width of the text content, avoids big menu
         this.graphSubMenu.getColumnWidths = () => [0];
+        this.menu.addMenuItem(this.graphSubMenu);
 
         this.graphMenuItems = [
             new Modules.GraphMenuItem(this, _("Overview"), 0)
@@ -182,43 +187,13 @@ SystemMonitorApplet.prototype = {
 
         this.graphSubMenu.menu.addMenuItem(this.graphMenuItems[0]);
 
-        let result = GLib.spawn_command_line_sync("which sensors");
-        let sensorLines;
-
-        // if the command is not found, set the result to null, sensor modules will fail then
-        if(!result[0] || result[3] !== 0)
-            sensorLines = null;
-        else {
-            // get the first line
-            this.sensorPath = result[1].toString().split("\n", 1)[0];
-            sensorLines = GLib.spawn_command_line_sync(this.sensorPath)[1].toString().split("\n");
-        }
-
-        let index = 1;
-        for(let module in ModuleImports){
+        for(let name in ModuleImports){
             // create the module
-            this.modules[module] = new Modules.Module(ModuleImports[module], this.container, sensorLines);
-            module = this.modules[module];
+            let module = new Modules.Module(ModuleImports[name], this.container);
+            this.modules[name] = module;
 
-            if(module.unavailable)
-                continue;
-
-            // add data displaying widgets
-            this.menu.addMenuItem(module.menuItem);
-            this._applet_tooltip.addActor(module.tooltip);
-
-            // build the menu graph and graph menu item
-            let graph = module.buildMenuGraph(this, index);
-
-            if(graph){
-                this.graphs.push(graph);
-                this.graphMenuItems.push(module.graphMenuItem);
-                this.graphSubMenu.menu.addMenuItem(module.graphMenuItem);
-                index++;
-            }
-
-            if(module.panelWidget)
-                this.actor.add(module.panelWidget.box);
+            if(!module.dataProvider.unavailable)
+                this.addModule(module);
         }
 
         // after all modules are ready, create the overview graphs
@@ -226,9 +201,6 @@ SystemMonitorApplet.prototype = {
             new Graph.PieOverview(this.canvas, this.modules, this.settings),
             new Graph.ArcOverview(this.canvas, this.modules, this.settings)
         ];
-
-        this.menu.addMenuItem(this.canvasHolder);
-        this.menu.addMenuItem(this.graphSubMenu);
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem);
         this.menu.addAction(_("System Monitor"), function(){
@@ -241,23 +213,63 @@ SystemMonitorApplet.prototype = {
         this.paintTimeline.connect("new-frame", bind(this.paint, this));
         this.paintTimeline.start();
 
-        this.getData(sensorLines);
+        this.getData();
         this.onSettingsChanged();
         this.onGraphTypeChanged();
     },
 
+    checkSensors: function(sensorLines){
+        sensorLines = sensorLines.split("\n");
+
+        for(let name in this.modules) {
+            let module = this.modules[name];
+            let dataProvider = module.dataProvider;
+
+            if(dataProvider.checkSensors){
+                dataProvider.checkSensors(sensorLines);
+
+                if(!module.dataProvider.unavailable)
+                    this.addModule(module);
+            }
+        }
+
+        this.sensorsInited = true;
+    },
+
+    addModule: function(module){
+        // add data displaying widgets
+        this.modulesSection.addMenuItem(module.menuItem);
+        this._applet_tooltip.addActor(module.tooltip);
+
+        // build the menu graph and graph menu item
+        let graph = module.buildMenuGraph(this, this.graphs.length);
+
+        if(graph){
+            this.graphs.push(graph);
+            this.graphMenuItems.push(module.graphMenuItem);
+            this.graphSubMenu.menu.addMenuItem(module.graphMenuItem);
+        }
+
+        if(module.panelWidget)
+            this.actor.add(module.panelWidget.box);
+    },
+
     getDataLoop: function(){
-        // if a sensor module is active, first request the results of the sensor output
-        if(this.modules.thermal.settings.enabled || this.modules.fan.settings.enabled)
-            Util.spawn_async(this.sensorPath, bind(this.getData, this));
+        // check if sensor modules are enabled
+        let sensorModuleEnabled = this.modules.thermal.settings.enabled ||
+            this.modules.fan.settings.enabled;
+
+        // run the sensors command when it is needed and possible
+        if(this.sensorsInited && sensorModuleEnabled)
+            Util.spawn_async("sensors", bind(this.getData, this));
         // if none is active, skip the request
         else
             this.getData();
     },
 
-    getData: function(result){
-        if(typeof result == "string")
-            result = result.split("\n");
+    getData: function(sensorLines){
+        if(sensorLines)
+            sensorLines = sensorLines.split("\n");
 
         // calculate the time (in seconds) since the last update and save the time
         let time = GLib.get_monotonic_time() / 1e6;
@@ -275,12 +287,15 @@ SystemMonitorApplet.prototype = {
 
             let dataProvider = this.modules[module].dataProvider;
 
-            // if it is a sensor module, pass the output of the sensor command to it
-            if(dataProvider instanceof Modules.SensorDataProvider)
-                dataProvider.getData(result);
-            // for all other modules, pass the difference of the time since last data generating (used only by disk and network, but for other it is no harm)
-            else
+            if(dataProvider instanceof Modules.SensorDataProvider){
+                // if it is a sensor module, pass the output of the sensor command to it
+                if(this.sensorsInited)
+                    dataProvider.getData(sensorLines);
+            } else {
+                // for all other modules, pass the difference of the time since last data generating
+                // (used only by disk and network, but for other it is no harm)
                 dataProvider.getData(delta);
+            }
         }
 
         // data generated, now update the text
